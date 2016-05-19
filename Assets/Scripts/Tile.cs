@@ -68,7 +68,7 @@ public class Tile : MonoBehaviour
         }
         else
         {
-            if (m_index % gridSize != gridSize - 1)
+            if (m_index % gridSize != 0)
                 nextTileIndex = m_index - 1;
         }
 

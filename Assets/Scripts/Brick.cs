@@ -219,7 +219,7 @@ public class Brick : MonoBehaviour
         if (m_state == BrickState.ROLLING) //brick is already rolling do nothing
             return;
 
-        m_state = BrickState.ROLLING;        
+        m_state = BrickState.ROLLING;
 
         //Associate one vector to every direction
         Vector3 direction;
@@ -250,13 +250,10 @@ public class Brick : MonoBehaviour
         BrickFace rollToFace = m_faces[rollToFaceIdx];
 
         if (!CanRoll(currentFace, rollToFace, rollDirection)) //there is no tile on which we can land, just interrupt the rolling action
+        {
+            m_state = BrickState.IDLE;
             return;
-
-        //Change the state of new covered tiles
-        if (m_coveredTiles[0] != null)
-            m_coveredTiles[0].SetState(Tile.State.SELECTED);
-        if (m_coveredTiles[1] != null)
-            m_coveredTiles[1].SetState(Tile.State.SELECTED);
+        }       
 
         //Determine which of the 4 adjacent faces the rollToFace is equal to        
         int adjacentFaceIdx = -1;
@@ -281,8 +278,7 @@ public class Brick : MonoBehaviour
         brickAnimator.RotateBy(90, 0.3f);
         
         //set the new index for the face touching the floor
-        m_downFaceIndex = rollToFace.m_index;
-       
+        m_downFaceIndex = rollToFace.m_index;       
     }
 
     /**
@@ -386,8 +382,11 @@ public class Brick : MonoBehaviour
     {
         m_state = BrickState.IDLE;
 
-        //mark the tiles under the brick as selected
-
+        //Change the state of new covered tiles
+        if (m_coveredTiles[0] != null)
+            m_coveredTiles[0].SetState(Tile.State.SELECTED);
+        if (m_coveredTiles[1] != null)
+            m_coveredTiles[1].SetState(Tile.State.SELECTED);
     }
 
     public GameController GetGameController()
