@@ -4,6 +4,7 @@ public class Brick : MonoBehaviour
 {
     private Vector3[] m_vertices; //brick's 8 vertices
     public BrickFace[] m_faces; //brick's 6 faces
+    private Tile[] m_coveredTiles; //the tiles that are covered by this brick (max 2)
 
     public struct BrickEdge
     {
@@ -77,6 +78,16 @@ public class Brick : MonoBehaviour
             return new BrickEdge(m_parentBrick.m_vertices[m_indices[adjacentFaceIdx]],
                                  m_parentBrick.m_vertices[m_indices[(adjacentFaceIdx == 3) ? 0 : adjacentFaceIdx + 1]]);
         }
+
+        /**
+        * Return the area of the face in tile units. It can be either 1 or 2
+        **/
+        public float GetAreaInTileUnits()
+        {
+            if (m_index < 2)
+                return 1;
+            return 2;
+        }
     }
 
     public int m_downFaceIndex; //the index of the face currently touching down the floor
@@ -89,6 +100,8 @@ public class Brick : MonoBehaviour
     }
 
     private BrickState m_state;
+
+    private GameController m_gameController;
 
     /**
     * Build a rectangular cuboid that will serve as our main object in the scene.
@@ -160,12 +173,21 @@ public class Brick : MonoBehaviour
         MeshFilter brickMeshFilter = this.GetComponent<MeshFilter>();
         brickMeshFilter.sharedMesh = brickMesh;
 
-        BrickAnimator brickAnimator = this.GetComponent<BrickAnimator>();        
-        //brickAnimator.UpdatePivotPoint(new Vector3(0.5f, 0.5f, 0.5f));
+        BrickAnimator brickAnimator = this.GetComponent<BrickAnimator>();
 
         //at start the first face is touching the ground and idle
         m_downFaceIndex = 0;
         m_state = BrickState.IDLE;
+
+        //offset the brick so its initial position fits the floor tiles
+        this.transform.localPosition = new Vector3(-0.5f, 0,-0.5f);
+
+        //mark the first tile as selected
+        m_coveredTiles = new Tile[2];
+        GameObject tileObject = GetGameController().m_floor.GetTileForPosition(Vector3.zero);
+        Tile coveredTile = tileObject.GetComponent<Tile>();        
+        coveredTile.SetState(Tile.State.SELECTED);
+        m_coveredTiles[0] = coveredTile;
     }
 
     /***DEBUG FUNCTIONS***/
@@ -195,9 +217,10 @@ public class Brick : MonoBehaviour
     public void Roll(RollDirection rollDirection)
     {
         if (m_state == BrickState.ROLLING) //brick is already rolling do nothing
-            return;        
+            return;
 
-        m_state = BrickState.ROLLING;
+        m_state = BrickState.ROLLING;        
+
         //Associate one vector to every direction
         Vector3 direction;
         if (rollDirection == RollDirection.LEFT)
@@ -222,16 +245,25 @@ public class Brick : MonoBehaviour
                 rollToFaceIdx = i;
             }
         }
-        
+
+        BrickFace currentFace = m_faces[m_downFaceIndex];
         BrickFace rollToFace = m_faces[rollToFaceIdx];
 
-        //Determine which of the 4 adjacent faces the rollToFace is equal to
-        BrickFace currentFace = m_faces[m_downFaceIndex];
+        if (!CanRoll(currentFace, rollToFace, rollDirection)) //there is no tile on which we can land, just interrupt the rolling action
+            return;
+
+        //Change the state of new covered tiles
+        if (m_coveredTiles[0] != null)
+            m_coveredTiles[0].SetState(Tile.State.SELECTED);
+        if (m_coveredTiles[1] != null)
+            m_coveredTiles[1].SetState(Tile.State.SELECTED);
+
+        //Determine which of the 4 adjacent faces the rollToFace is equal to        
         int adjacentFaceIdx = -1;
         for (int i = 0; i != currentFace.m_adjacentsFaces.Length; i++)
         {
             BrickFace adjacentFace = m_faces[currentFace.m_adjacentsFaces[i]];
-            if (adjacentFace.Equals(rollToFace))
+            if (adjacentFace.m_index == rollToFace.m_index)
             {
                 adjacentFaceIdx = i;
                 continue;
@@ -250,6 +282,93 @@ public class Brick : MonoBehaviour
         
         //set the new index for the face touching the floor
         m_downFaceIndex = rollToFace.m_index;
+       
+    }
+
+    /**
+    * Determine if the rolling movement from currentFace to rollToFace of the brick is possible
+    * Also set the new covered tiles if movement is declared possible
+    **/
+    public bool CanRoll(BrickFace currentFace, BrickFace rollToFace, RollDirection rollDirection)
+    {
+        //Determine if rolling movement is legit (i.e brick will not fall off the floor) and mark the new covered tiles
+        bool bValidRoll = true;
+        if (currentFace.GetAreaInTileUnits() == 1)
+        {
+            //find the next 2 tiles in the rolling direction
+            Tile coveredTile = m_coveredTiles[0];
+            Tile nextTile1 = coveredTile.GetNextTileForDirection(rollDirection);
+
+            if (nextTile1 != null)
+            {
+                Tile nextTile2 = nextTile1.GetNextTileForDirection(rollDirection);
+                if (nextTile2 != null)
+                {
+                    m_coveredTiles[0] = nextTile1;
+                    m_coveredTiles[1] = nextTile2;
+                }
+                else
+                    bValidRoll = false;
+            }
+            else
+                bValidRoll = false;
+        }
+        else
+        {
+            if (rollToFace.GetAreaInTileUnits() == 1)
+            {
+                //find the tile next to m_coveredTile[0] or m_coveredTile[1] in the rolling direction
+                Tile coveredTile1 = m_coveredTiles[0];
+                Tile coveredTile2 = m_coveredTiles[1];
+                Tile nextTile = coveredTile1.GetNextTileForDirection(rollDirection);
+                if (coveredTile1.GetNextTileForDirection(rollDirection) != null)
+                {
+                    if (nextTile == coveredTile2)
+                    {
+                        nextTile = coveredTile2.GetNextTileForDirection(rollDirection);
+                        if (nextTile != null)
+                        {
+                            m_coveredTiles[0] = nextTile;
+                            m_coveredTiles[1] = null;
+                        }
+                        else
+                            bValidRoll = false;
+                    }
+                    else
+                    {
+                        m_coveredTiles[0] = nextTile;
+                        m_coveredTiles[1] = null;
+                    }
+                }
+                else
+                    bValidRoll = false;
+            }
+            else
+            {
+                Tile nextTile1 = m_coveredTiles[0].GetNextTileForDirection(rollDirection);
+                Tile nextTile2 = m_coveredTiles[1].GetNextTileForDirection(rollDirection);
+                if (nextTile1 != null && nextTile2 != null)
+                {
+                    m_coveredTiles[0] = nextTile1;
+                    m_coveredTiles[1] = nextTile2;
+                }
+                else
+                    bValidRoll = false;
+            }
+        }
+
+        return bValidRoll;
+    }
+
+    /**
+    * Return the number of tiles covered by the brick (1 or 2)
+    **/
+    private int GetCoveredTilesCount()
+    {
+        if (m_coveredTiles[1] == null)
+            return 1;
+
+        return 2; 
     }
 
     /**
@@ -266,5 +385,16 @@ public class Brick : MonoBehaviour
     public void OnFinishRolling()
     {
         m_state = BrickState.IDLE;
+
+        //mark the tiles under the brick as selected
+
+    }
+
+    public GameController GetGameController()
+    {
+        if (m_gameController == null)
+            m_gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
+
+        return m_gameController;
     }
 }
