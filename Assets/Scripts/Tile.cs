@@ -2,6 +2,8 @@
 
 public class Tile : MonoBehaviour
 {
+    public float m_size { get; set; }
+
     public enum State
     {
         DISABLED,
@@ -12,19 +14,26 @@ public class Tile : MonoBehaviour
     public State m_state { get; set; }
 
     private Floor m_parentFloor;
-    public int m_index { get; set; } //index of the tile inside the floor grid
-    
+
+    //the (column,line) coordinates of the tile inside the rectangular grid floor
+    public int m_lineIndex { get; set; }
+    public int m_columnIndex { get; set; }
+
     //materials
     public Material m_defaultTileMaterial;
     public Material m_disabledTileMaterial;
     public Material m_selectedTileMaterial;
 
-    public void Init(Floor parentFloor, int index, State state)
+    public void Init(Floor parentFloor, int columnIndex, int lineIndex, State state, float size = 1)
     {
+        m_size = size;
         m_parentFloor = parentFloor;
-        m_index = index;
+        m_lineIndex = lineIndex;
+        m_columnIndex = columnIndex;
 
         SetState(state);
+
+        this.transform.localScale = new Vector3(0.95f * size, this.transform.localScale.y, 0.95f * size);
     }
 
     public void SetState(State state)
@@ -49,32 +58,51 @@ public class Tile : MonoBehaviour
     **/
     public Tile GetNextTileForDirection(Brick.RollDirection direction)
     {
-        int nextTileIndex = -1;
-        int gridSize = m_parentFloor.m_gridSize;
+        int nextTileColumnIndex = -1;
+        int nextTileLineIndex = -1;
         if (direction == Brick.RollDirection.LEFT)
         {
-            if (m_index >= gridSize)
-                nextTileIndex = m_index - gridSize;
+            nextTileColumnIndex = this.m_columnIndex - 1;
+            nextTileLineIndex = this.m_lineIndex;
         }
         else if (direction == Brick.RollDirection.TOP)
         {
-            if (m_index % gridSize != gridSize - 1)
-                nextTileIndex = m_index + 1;
+            nextTileColumnIndex = this.m_columnIndex;
+            nextTileLineIndex = this.m_lineIndex + 1;
         }
         else if (direction == Brick.RollDirection.RIGHT)
         {
-            if (m_index <= (gridSize * (gridSize - 1)))
-                nextTileIndex = m_index + gridSize;
+            nextTileColumnIndex = this.m_columnIndex + 1;
+            nextTileLineIndex = this.m_lineIndex;
         }
         else
         {
-            if (m_index % gridSize != 0)
-                nextTileIndex = m_index - 1;
+            nextTileColumnIndex = this.m_columnIndex;
+            nextTileLineIndex = this.m_lineIndex - 1;
         }
 
-        if (nextTileIndex == -1)
-            return null;
+        if (nextTileColumnIndex >= 0 && nextTileColumnIndex < m_parentFloor.m_gridWidth
+            &&
+            nextTileLineIndex >= 0 && nextTileLineIndex < m_parentFloor.m_gridHeight)
+        {
+
+            int nextTileIndex = m_parentFloor.GetTileIndexForColumnLine(nextTileColumnIndex, nextTileLineIndex);
+            return m_parentFloor.Tiles[nextTileIndex];
+        }
         else
-            return m_parentFloor.Tiles[nextTileIndex].GetComponent<Tile>();
+            return null;        
+    }
+
+    /**
+    * Tell if this tile contains a point without taking account of its y coordinate
+    **/
+    public bool ContainsXZPoint(Vector3 point)
+    {
+        float tileMinX = this.transform.position.x - 0.5f * m_size;
+        float tileMaxX = this.transform.position.x + 0.5f * m_size;
+        float tileMinZ = this.transform.position.z - 0.5f * m_size;
+        float tileMaxZ = this.transform.position.z + 0.5f * m_size;
+
+        return (point.x >= tileMinX && point.x <= tileMaxX && point.z >= tileMinZ && point.z <= tileMaxZ);
     }
 }

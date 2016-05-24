@@ -426,7 +426,7 @@ public class ValueAnimator : MonoBehaviour
                 float deltaColorY = CalculateDeltaForInterpolationType(t1, t2, m_colorChangingDuration, colorVariation.y, m_colorChangingInterpolationType);
                 float deltaColorZ = CalculateDeltaForInterpolationType(t1, t2, m_colorChangingDuration, colorVariation.z, m_colorChangingInterpolationType);
                 float deltaColorW = CalculateDeltaForInterpolationType(t1, t2, m_colorChangingDuration, colorVariation.w, m_colorChangingInterpolationType);
-                Vector4 deltaColor = new Color(deltaColorX, deltaColorY, deltaColorZ);
+                Vector4 deltaColor = new Color(deltaColorX, deltaColorY, deltaColorZ, deltaColorW);
 
                 if (effectiveElapsedTime > m_colorChangingDuration)
                 {

@@ -90,7 +90,7 @@ public class Brick : MonoBehaviour
         }
     }
 
-    public int m_downFaceIndex; //the index of the face currently touching down the floor
+    private int m_downFaceIndex; //the index of the face currently touching down the floor
 
     //current animation state of the brick
     private enum BrickState
@@ -106,8 +106,9 @@ public class Brick : MonoBehaviour
     /**
     * Build a rectangular cuboid that will serve as our main object in the scene.
     * To handle lighting correctly, our cuboid will need 24 vertices (instead of 8) so light is interpolated correctly so one face has one single color.
+    * Pass the tile or tiles (max 2) the brick should be upon
     **/
-    public void Build()
+    public void BuildOnTiles(Tile tile1, Tile tile2)
     {
         m_vertices = new Vector3[8];
         m_vertices[0] = new Vector3(0, 0, 0);
@@ -179,15 +180,42 @@ public class Brick : MonoBehaviour
         m_downFaceIndex = 0;
         m_state = BrickState.IDLE;
 
-        //offset the brick so its initial position fits the floor tiles
-        this.transform.localPosition = new Vector3(-0.5f, 0,-0.5f);
+        //place the brick upon the tile parameter
+        PlaceOnTiles(tile1, tile2);
 
         //mark the first tile as selected
         m_coveredTiles = new Tile[2];
-        GameObject tileObject = GetGameController().m_floor.GetTileForPosition(Vector3.zero);
-        Tile coveredTile = tileObject.GetComponent<Tile>();        
-        coveredTile.SetState(Tile.State.SELECTED);
-        m_coveredTiles[0] = coveredTile;
+        tile1.SetState(Tile.State.SELECTED);
+        if (tile2 != null)
+            tile2.SetState(Tile.State.SELECTED);
+        m_coveredTiles[0] = tile1;
+        m_coveredTiles[1] = tile2;
+    }
+
+    /**
+    * Adjust the position and the rotation of the brick so it covers the tiles passed as parameters
+    * tile2 can be null if there is only one covered tile
+    **/
+    public void PlaceOnTiles(Tile tile1, Tile tile2)
+    {
+        GameObjectAnimator brickAnimator = this.GetComponent<GameObjectAnimator>();
+        brickAnimator.UpdatePivotPoint(new Vector3(0.5f, 0.5f, 0.5f)); //place the pivot point at the center of the brick
+
+        if (tile2 == null)
+        {
+            brickAnimator.transform.rotation = Quaternion.Euler(0, 0, 0); //null rotation
+            brickAnimator.SetPosition(tile1.transform.position + new Vector3(0, 1, 0)); //place the brick 1 unit above tile
+        }
+        else
+        {
+            Vector3 diff = tile2.transform.localPosition - tile1.transform.localPosition;
+            Vector3 rotationAxis = Vector3.Cross(diff, Vector3.up);
+
+            brickAnimator.SetRotationAxis(rotationAxis);
+            brickAnimator.ApplyRotationAngle(90);
+
+            brickAnimator.SetPosition(0.5f * (tile1.transform.position + tile2.transform.position) + new Vector3(0, 0.5f, 0));
+        }
     }
 
     /***DEBUG FUNCTIONS***/
@@ -205,6 +233,7 @@ public class Brick : MonoBehaviour
 
     public enum RollDirection
     {
+        NONE = 0,
         LEFT = 1,
         TOP,
         RIGHT,

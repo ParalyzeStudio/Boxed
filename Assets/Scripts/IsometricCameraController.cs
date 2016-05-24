@@ -3,8 +3,6 @@ using System.Collections;
 
 public class IsometricCameraController : MonoBehaviour
 {
-    float height = 40f;
-
     float camMoveSpeed = 30f;
     float zoomSpeed = 2.0f;
 
