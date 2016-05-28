@@ -174,8 +174,6 @@ public class Brick : MonoBehaviour
         MeshFilter brickMeshFilter = this.GetComponent<MeshFilter>();
         brickMeshFilter.sharedMesh = brickMesh;
 
-        BrickAnimator brickAnimator = this.GetComponent<BrickAnimator>();
-
         //at start the first face is touching the ground and idle
         m_downFaceIndex = 0;
         m_state = BrickState.IDLE;

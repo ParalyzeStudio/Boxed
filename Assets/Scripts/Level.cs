@@ -10,16 +10,12 @@ public class Level
     public int m_gridSize;
     
     public Tile[] m_tiles; //rectangular grid of tiles in this level
-    public Tile m_startTile; //tile initially covered by the brick
-    public Tile m_endTile; //tile the brick need to reach.
 
-    public Level(int number, int gridSize, Tile[] tiles, Tile startTile, Tile endTile)
+    public Level(int number, int gridSize, Tile[] tiles)
     {
         m_number = number;
         m_gridSize = gridSize;
         m_tiles = tiles;
-        m_startTile = startTile;
-        m_endTile = endTile;
     }
 
     /**
@@ -51,21 +47,29 @@ public class Level
      * **/
     public static Level LoadFromFile(int iLevelNumber)
     {
-        Level levelData = null;
-
         string filePath = Application.persistentDataPath + "/level_" + iLevelNumber + ".dat";
-        if (File.Exists(filePath))
+        return LoadFromFile(filePath);
+    }
+
+    /**
+     * Load level saved at location 'path'
+     * **/
+    public static Level LoadFromFile(string path)
+    {
+        Level levelData = null;
+        
+        if (File.Exists(path))
         {
             BinaryFormatter bf = new BinaryFormatter();
             FileStream fs = null;
             try
             {
-                fs = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
+                fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None);
             }
             catch (System.Exception)
             {
                 fs.Close();
-                throw new IOException("Cannot load level " + iLevelNumber);
+                throw new IOException("Cannot load level at location:" + path);
             }
 
             levelData = (Level)bf.Deserialize(fs);
@@ -74,5 +78,21 @@ public class Level
         }
 
         return levelData;
+    }
+
+    /**
+    * Return the level number as a string, adding zeros before it to match a 3 digit number
+    **/
+    public static string GetNumberAsString(int number)
+    {
+        string strNumber;
+        if (number < 10)
+            strNumber = "00" + number.ToString();
+        else if (number < 100)
+            strNumber = "0" + number.ToString();
+        else
+            strNumber = number.ToString();
+
+        return strNumber;
     }
 }

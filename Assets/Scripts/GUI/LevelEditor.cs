@@ -10,24 +10,28 @@ public class LevelEditor : MonoBehaviour
     public GameObject m_checkpointsMenu;
     public GameObject m_bonusesMenu;
     public GameObject m_resetMenu;
+    public GameObject m_saveLevelWindow;
 
     private GameObject m_activeMenu;
 
-    public enum State
+    public enum EditingMode
     {
         NONE = 0,
-        SELECTING_TILES_BY_CLICKING,
-        PICKING_STARTING_TILES,
-        PICKING_ENDING_TILES
+        TILES_EDITING,
+        CHECKPOINTS_EDITING,
+        BONUSES_EDITING        
     }
 
-    public State m_state { get; set; }
+    public EditingMode m_editingMode { get; set; }
+
+    public Tile m_startTile { get; set; }
+    public Tile m_finishTile { get; set; }
 
     private bool m_guiProcessedClick; //variable used to know if the Level Editor GUI has processed the click event
 
     public void Start()
     {
-        ShowMainMenu();
+        m_activeMenu = m_mainMenu;
     }
 
     public void ShowMainMenu()
@@ -44,13 +48,13 @@ public class LevelEditor : MonoBehaviour
     {
         Debug.Log("EditTiles");
         m_guiProcessedClick = true;
+        m_editingMode = EditingMode.TILES_EDITING;
 
-        GetCallFuncHandler().AddCallFuncInstance(new CallFuncHandler.CallFunc(ShowTilesSelectionMenu), 0.03f);        
+        ShowTilesSelectionMenu();      
     }
 
     private void ShowTilesSelectionMenu()
     {
-        m_state = State.SELECTING_TILES_BY_CLICKING;
 
         m_tileEditingMenu.SetActive(true);
         m_activeMenu.SetActive(false);
@@ -59,6 +63,8 @@ public class LevelEditor : MonoBehaviour
 
     public void ValidateTilesSelection()
     {
+        m_guiProcessedClick = true;
+        Debug.Log("ValidateTilesSelection");
         ShowMainMenu();
     }
 
@@ -69,6 +75,9 @@ public class LevelEditor : MonoBehaviour
     {
         Debug.Log("Checkpoints");
         m_guiProcessedClick = true;
+        m_editingMode = EditingMode.CHECKPOINTS_EDITING;
+
+        ShowCheckpointsMenu();
     }
 
     private void ShowCheckpointsMenu()
@@ -78,6 +87,13 @@ public class LevelEditor : MonoBehaviour
         m_activeMenu = m_checkpointsMenu;
     }
 
+    public void ValidateCheckpoints()
+    {
+        m_guiProcessedClick = true;
+        Debug.Log("ValidateCheckpoints");
+        ShowMainMenu();
+    }
+
     /**
     * Action called when clicking on 'Bonuses' button
     **/
@@ -85,6 +101,9 @@ public class LevelEditor : MonoBehaviour
     {
         Debug.Log("Bonuses");
         m_guiProcessedClick = true;
+        m_editingMode = EditingMode.BONUSES_EDITING;
+
+        ShowBonusesMenu();
     }
 
     private void ShowBonusesMenu()
@@ -92,6 +111,13 @@ public class LevelEditor : MonoBehaviour
         m_bonusesMenu.SetActive(true);
         m_activeMenu.SetActive(false);
         m_activeMenu = m_bonusesMenu;
+    }
+
+    public void ValidateBonuses()
+    {
+        m_guiProcessedClick = true;
+        Debug.Log("ValidateBonuses");
+        ShowMainMenu();
     }
 
     /**
@@ -115,20 +141,38 @@ public class LevelEditor : MonoBehaviour
     public void ConfirmResetLevel()
     {
         m_guiProcessedClick = true;
-        GameController gameController = this.GetComponent<GameController>();
+        GameController gameController = GameController.GetInstance();
 
         //Delete current floor and build a new one
-        Destroy(gameController.m_floor);
-        gameController.EnterLevelEditor();
+        gameController.BuildFloor(null);
+
+        //Destroy bonuses
+        Destroy(gameController.m_bonuses);
+        gameController.BuildBonusesHolder();
+
+        //gameController.EnterLevelEditor();
+        ShowMainMenu();
+    }
+
+    public void CancelResetLevel()
+    {
+        ShowMainMenu();
     }
 
     /**
     * Action called when clicking on 'Save level' button
     **/
-    public void SaveLevel()
+    public void DoSaveLevel()
     {
         m_guiProcessedClick = true;
         Debug.Log("Save level");
+
+        GameObject saveLevelWindowObject = (GameObject)Instantiate(m_saveLevelWindow);
+        saveLevelWindowObject.transform.SetParent(GameController.GetInstance().m_canvas.transform, false);
+
+        SaveLevelWindow window = saveLevelWindowObject.GetComponent<SaveLevelWindow>();
+        window.Init(null);
+
         //Floor floor = this.GetComponent<GameController>().m_floor;
         //floor.PrepareForSaving();
     }

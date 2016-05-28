@@ -191,9 +191,16 @@ public class ValueAnimator : MonoBehaviour
         OnRotationChanged();
     }
 
-    public virtual void SetRotationAxis(Vector3 axis)
+    /**
+    * Define the rotation axis on this object.
+    * It can be defined as a global vector or a local one 
+    **/
+    public virtual void SetRotationAxis(Vector3 axis, bool local = true)
     {
-        m_rotationAxis = axis;
+        if (!local)
+            axis = Quaternion.Inverse(this.transform.rotation) * axis;
+
+        m_rotationAxis = axis;        
     }
 
     public virtual void SetColor(Color color)

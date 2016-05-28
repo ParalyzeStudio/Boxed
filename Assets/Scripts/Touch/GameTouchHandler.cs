@@ -21,21 +21,64 @@ public class GameTouchHandler : TouchHandler
 
     protected override void OnClick(Vector2 clickLocation)
     {
-        Debug.Log(clickLocation);
         GameController gameController = GetGameController();
         if (gameController.m_levelEditorMode)
         {
             LevelEditor levelEditor = GameObject.FindGameObjectWithTag("LevelEditor").GetComponent<LevelEditor>();
             if (levelEditor.GUIProcessedClick())
                 return;
+
             //Raycast the tiles to select them
-            if (levelEditor.m_state == LevelEditor.State.SELECTING_TILES_BY_CLICKING)
-            {                                
-                Tile raycastTile = RayCastFloor();
+            Tile raycastTile = RayCastFloor();
+            if (levelEditor.m_editingMode == LevelEditor.EditingMode.TILES_EDITING)
+            {
                 if (raycastTile.m_state == Tile.State.SELECTED)
                     raycastTile.SetState(Tile.State.NORMAL);
                 else
                     raycastTile.SetState(Tile.State.SELECTED);
+            }
+            else if (levelEditor.m_editingMode == LevelEditor.EditingMode.CHECKPOINTS_EDITING)
+            {
+               
+                if (raycastTile.m_state == Tile.State.SELECTED)
+                {
+                    if (levelEditor.m_startTile == null) //there is no other tile that has been marked as start tile
+                    {
+                        raycastTile.SetState(Tile.State.START);
+                        levelEditor.m_startTile = raycastTile;
+                    }
+                    else if (levelEditor.m_finishTile == null) //there is no other tile that has been marked as finish tile
+                    {
+                        raycastTile.SetState(Tile.State.FINISH);
+                        levelEditor.m_finishTile = raycastTile;
+                    }
+                }
+                else if (raycastTile.m_state == Tile.State.START)
+                {
+                    if (levelEditor.m_finishTile == null)
+                    {
+                        raycastTile.SetState(Tile.State.FINISH);
+                        levelEditor.m_finishTile = raycastTile;
+                        levelEditor.m_startTile = null;
+                    }
+                    else
+                    {
+                        raycastTile.SetState(Tile.State.SELECTED);
+                        levelEditor.m_startTile = null;
+                    }
+                }
+                else if (raycastTile.m_state == Tile.State.FINISH)
+                {
+                    raycastTile.SetState(Tile.State.SELECTED);
+                    levelEditor.m_finishTile = null;
+                }
+            }
+            else if (levelEditor.m_editingMode == LevelEditor.EditingMode.BONUSES_EDITING)
+            {
+                if (raycastTile.m_state == Tile.State.SELECTED)
+                {
+                    raycastTile.AddBonus();
+                }
             }
         }
     }
@@ -51,7 +94,6 @@ public class GameTouchHandler : TouchHandler
         if (tilesPlane.Raycast(ray, out rayDistance))
         {
             Vector3 rayIntersectionPoint = ray.GetPoint(rayDistance);
-            Debug.Log(rayIntersectionPoint);
 
             //Find the tile which contain the intersection point
             Floor floor = GetGameController().m_floor;

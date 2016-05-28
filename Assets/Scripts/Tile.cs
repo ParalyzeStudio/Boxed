@@ -9,6 +9,8 @@ public class Tile : MonoBehaviour
         DISABLED,
         NORMAL,
         SELECTED,
+        START, //tile used to show the start tile on the floor (where the brick starts)
+        FINISH //tile used to show the finish tile on the floor (where the brick has to end)
     }
 
     public State m_state { get; set; }
@@ -23,6 +25,13 @@ public class Tile : MonoBehaviour
     public Material m_defaultTileMaterial;
     public Material m_disabledTileMaterial;
     public Material m_selectedTileMaterial;
+    public Material m_startTileMaterial;
+    public Material m_finishTileMaterial;
+
+    //Bonus
+    public GameObject m_bonusPfb;
+    private Bonus m_bonus;
+
 
     public void Init(Floor parentFloor, int columnIndex, int lineIndex, State state, float size = 1)
     {
@@ -46,6 +55,10 @@ public class Tile : MonoBehaviour
             material = m_selectedTileMaterial;
         else if (state == State.DISABLED)
             material = m_disabledTileMaterial;
+        else if (state == State.START)
+            material = m_startTileMaterial;
+        else if (state == State.FINISH)
+            material = m_finishTileMaterial;
 
         this.GetComponent<MeshRenderer>().sharedMaterial = material;
     }
@@ -104,5 +117,25 @@ public class Tile : MonoBehaviour
         float tileMaxZ = this.transform.position.z + 0.5f * m_size;
 
         return (point.x >= tileMinX && point.x <= tileMaxX && point.z >= tileMinZ && point.z <= tileMaxZ);
+    }
+
+    /**
+    * Set a bonus on this tile
+    **/
+    public void AddBonus()
+    {
+        GameObject bonusObject = (GameObject)Instantiate(m_bonusPfb);
+        bonusObject.name = "Bonus";
+
+        GameObject bonusContainer = GameController.GetInstance().m_bonuses;
+        bonusObject.transform.parent = bonusContainer.transform;
+
+        GameObjectAnimator bonusAnimator = bonusObject.GetComponent<GameObjectAnimator>();
+        bonusAnimator.SetPosition(this.transform.position + new Vector3(0,0.3f,0));
+    }
+
+    public Bonus GetBonus()
+    {
+        return m_bonus;
     }
 }
