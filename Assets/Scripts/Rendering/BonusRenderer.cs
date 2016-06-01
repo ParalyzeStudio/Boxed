@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 
-[ExecuteInEditMode]
-public class Bonus : MonoBehaviour
+/**
+* Class used to modify the rendering of a bonus game object
+**/
+public class BonusRenderer : MonoBehaviour
 {
     private const float rotationSpeed = 120.0f; //360 degrees/sec
 

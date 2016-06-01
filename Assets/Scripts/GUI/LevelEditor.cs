@@ -10,7 +10,7 @@ public class LevelEditor : MonoBehaviour
     public GameObject m_checkpointsMenu;
     public GameObject m_bonusesMenu;
     public GameObject m_resetMenu;
-    public GameObject m_saveLevelWindow;
+    public GameObject m_saveLoadLevelWindow;
 
     private GameObject m_activeMenu;
 
@@ -19,7 +19,9 @@ public class LevelEditor : MonoBehaviour
         NONE = 0,
         TILES_EDITING,
         CHECKPOINTS_EDITING,
-        BONUSES_EDITING        
+        BONUSES_EDITING,
+        LOADING_LEVEL, //a window is displayed to load a level from file
+        SAVING_LEVEL //a window is displayed to save the current level to file        
     }
 
     public EditingMode m_editingMode { get; set; }
@@ -39,6 +41,7 @@ public class LevelEditor : MonoBehaviour
         m_activeMenu.SetActive(false);
         m_mainMenu.SetActive(true);
         m_activeMenu = m_mainMenu;
+        m_editingMode = EditingMode.NONE;
     }
 
     /**
@@ -159,22 +162,45 @@ public class LevelEditor : MonoBehaviour
         ShowMainMenu();
     }
 
+
+    /**
+    * Action called when clicking on 'Load level' button
+    **/
+    public void DoLoadLevel()
+    {
+        m_guiProcessedClick = true;
+        m_editingMode = EditingMode.LOADING_LEVEL;
+
+        GameObject loadLevelWindowObject = (GameObject)Instantiate(m_saveLoadLevelWindow);
+        loadLevelWindowObject.transform.SetParent(GameController.GetInstance().m_canvas.transform, false);
+
+        SaveLoadLevelWindow window = loadLevelWindowObject.GetComponent<SaveLoadLevelWindow>();
+        window.Init(this);
+    }
+
     /**
     * Action called when clicking on 'Save level' button
     **/
-    public void DoSaveLevel()
+    public void DoSaveLoadLevel()
     {
         m_guiProcessedClick = true;
-        Debug.Log("Save level");
+        m_editingMode = EditingMode.SAVING_LEVEL;
 
-        GameObject saveLevelWindowObject = (GameObject)Instantiate(m_saveLevelWindow);
+        GameObject saveLevelWindowObject = (GameObject)Instantiate(m_saveLoadLevelWindow);
         saveLevelWindowObject.transform.SetParent(GameController.GetInstance().m_canvas.transform, false);
 
-        SaveLevelWindow window = saveLevelWindowObject.GetComponent<SaveLevelWindow>();
-        window.Init(null);
+        SaveLoadLevelWindow window = saveLevelWindowObject.GetComponent<SaveLoadLevelWindow>();
+        window.Init(this, null);
+    }
 
-        //Floor floor = this.GetComponent<GameController>().m_floor;
-        //floor.PrepareForSaving();
+    public void OnDismissSaveLevelWindow()
+    {
+        m_editingMode = EditingMode.NONE;
+    }
+
+    public bool IsSaveLevelWindowActive()
+    {
+        return m_editingMode == EditingMode.SAVING_LEVEL;
     }
 
     public CallFuncHandler GetCallFuncHandler()

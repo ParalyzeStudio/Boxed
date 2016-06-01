@@ -9,7 +9,7 @@ public class GameController : MonoBehaviour
     public GameObject m_floorPfb;
 
     public Brick m_brick { get; set; }
-    public Floor m_floor { get; set; }
+    public FloorRenderer m_floor { get; set; }
     public GameObject m_bonuses { get; set; } //use this object to hold bonus objects
 
     public bool m_levelEditorMode;
@@ -24,7 +24,7 @@ public class GameController : MonoBehaviour
         }
         else
         {
-            StartLevel(1);
+            
         }
     }
 
@@ -38,20 +38,27 @@ public class GameController : MonoBehaviour
 
     public void EnterLevelEditor()
     {
-        BuildFloor(null);
-        BuildBonusesHolder();
-
         //build the level editor object
         GameObject levelEditorObject = (GameObject)Instantiate(m_levelEditorPfb);
         levelEditorObject.name = "LevelEditor";
         levelEditorObject.transform.SetParent(m_canvas.transform, false);
+
+        StartLevel(null);
     }
 
-    public void StartLevel(int levelNumber)
+    public void ClearLevel()
     {
-        Level level = this.GetComponent<LevelManager>().GetLevelForNumber(levelNumber);
+        Destroy(m_floor.gameObject);
+        if (m_brick != null)
+            Destroy(m_brick.gameObject);
+        Destroy(m_bonuses.gameObject);
+    }
+
+    public void StartLevel(Level level)
+    {
+        BuildBonusesHolder();
         BuildFloor(level);
-        BuildBrick(level);
+        //BuildBrick(level);
     }
 
     public void BuildFloor(Level level)
@@ -62,18 +69,31 @@ public class GameController : MonoBehaviour
             m_floor = null;
         }
 
+        Floor floor;
+        if (level == null)
+        {
+            //Build a default floor
+            floor = new Floor(5, 5);
+        }
+        else
+            floor = level.m_floor;
+
+        //Render the floor
         GameObject floorObject = (GameObject)Instantiate(m_floorPfb);
-        m_floor = floorObject.GetComponent<Floor>();
-        m_floor.Build();
+        m_floor = floorObject.GetComponent<FloorRenderer>();
+        m_floor.Render(floor);
     }
 
     private void BuildBrick(Level level)
     {
-        GameObject brickObject = (GameObject)Instantiate(m_brickPfb);
-        m_brick = brickObject.GetComponent<Brick>();
-        
-        //m_brick.BuildOnTiles((level == null) ? m_floor.GetCenterTile() : level.m_startTile, null);
-        m_brick.BuildOnTiles(m_floor.Tiles[1], m_floor.Tiles[2]);
+        if (level != null)
+        {
+            GameObject brickObject = (GameObject)Instantiate(m_brickPfb);
+            m_brick = brickObject.GetComponent<Brick>();
+
+            //m_brick.BuildOnTiles((level == null) ? m_floor.GetCenterTile() : level.m_startTile, null);
+            m_brick.BuildOnTiles(m_floor.m_floorData.Tiles[1], m_floor.m_floorData.Tiles[2]);
+        }
     }
 
     public void BuildBonusesHolder()

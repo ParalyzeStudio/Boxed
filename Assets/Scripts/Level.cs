@@ -3,35 +3,37 @@ using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
+[Serializable]
 public class Level
 {
     public int m_number;
+    public Floor m_floor;
+    public string m_title;
 
-    public int m_gridSize;
-    
-    public Tile[] m_tiles; //rectangular grid of tiles in this level
-
-    public Level(int number, int gridSize, Tile[] tiles)
+    public Level(int number, Floor floor, string title)
     {
         m_number = number;
-        m_gridSize = gridSize;
-        m_tiles = tiles;
+        m_floor = floor;
+        m_title = title;
     }
 
     /**
      * Save level data to the associated file
      * **/
-    private bool SaveToFile()
+    public bool SaveToFile()
     {
         BinaryFormatter bf = new BinaryFormatter();
 
         FileStream fs = null;
+        string levelsFolderPath = Application.persistentDataPath + "/Levels";
         try
         {
-            fs = File.Open(Application.persistentDataPath + "/level_" + this.m_number + ".dat", FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+            fs = File.Open(levelsFolderPath + "/level_" + this.m_number + ".dat", FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+            Debug.Log("level saved to path:" + levelsFolderPath + "/level_" + this.m_number + ".dat");
         }
         catch (Exception)
         {
+            Debug.Log("FAILED saving level to path:" + levelsFolderPath + "/level_" + this.m_number + ".dat");
             fs.Close();
             return false; //failed to open or create the file
         }
@@ -47,7 +49,7 @@ public class Level
      * **/
     public static Level LoadFromFile(int iLevelNumber)
     {
-        string filePath = Application.persistentDataPath + "/level_" + iLevelNumber + ".dat";
+        string filePath = Application.persistentDataPath + "Levels\\level_" + iLevelNumber + ".dat";
         return LoadFromFile(filePath);
     }
 

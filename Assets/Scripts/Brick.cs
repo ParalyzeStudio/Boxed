@@ -183,9 +183,9 @@ public class Brick : MonoBehaviour
 
         //mark the first tile as selected
         m_coveredTiles = new Tile[2];
-        tile1.SetState(Tile.State.SELECTED);
+        tile1.CurrentState = Tile.State.SELECTED;
         if (tile2 != null)
-            tile2.SetState(Tile.State.SELECTED);
+            tile2.CurrentState = Tile.State.SELECTED;
         m_coveredTiles[0] = tile1;
         m_coveredTiles[1] = tile2;
     }
@@ -199,20 +199,23 @@ public class Brick : MonoBehaviour
         GameObjectAnimator brickAnimator = this.GetComponent<GameObjectAnimator>();
         brickAnimator.UpdatePivotPoint(new Vector3(0.5f, 0.5f, 0.5f)); //place the pivot point at the center of the brick
 
+        Vector3 tile1WorldPosition = tile1.GetWorldPosition();
+        Vector3 tile2WorldPosition = tile2.GetWorldPosition();
+
         if (tile2 == null)
         {
             brickAnimator.transform.rotation = Quaternion.Euler(0, 0, 0); //null rotation
-            brickAnimator.SetPosition(tile1.transform.position + new Vector3(0, 1, 0)); //place the brick 1 unit above tile
+            brickAnimator.SetPosition(tile1WorldPosition + new Vector3(0, 1, 0)); //place the brick 1 unit above tile
         }
         else
         {
-            Vector3 diff = tile2.transform.localPosition - tile1.transform.localPosition;
+            Vector3 diff = tile2WorldPosition - tile1WorldPosition;
             Vector3 rotationAxis = Vector3.Cross(diff, Vector3.up);
 
             brickAnimator.SetRotationAxis(rotationAxis);
             brickAnimator.ApplyRotationAngle(90);
 
-            brickAnimator.SetPosition(0.5f * (tile1.transform.position + tile2.transform.position) + new Vector3(0, 0.5f, 0));
+            brickAnimator.SetPosition(0.5f * (tile1WorldPosition + tile2WorldPosition) + new Vector3(0, 0.5f, 0));
         }
     }
 
@@ -314,17 +317,19 @@ public class Brick : MonoBehaviour
     **/
     public bool CanRoll(BrickFace currentFace, BrickFace rollToFace, RollDirection rollDirection)
     {
+        Floor floor = GameController.GetInstance().m_floor.m_floorData;
+
         //Determine if rolling movement is legit (i.e brick will not fall off the floor) and mark the new covered tiles
         bool bValidRoll = true;
         if (currentFace.GetAreaInTileUnits() == 1)
         {
             //find the next 2 tiles in the rolling direction
             Tile coveredTile = m_coveredTiles[0];
-            Tile nextTile1 = coveredTile.GetNextTileForDirection(rollDirection);
+            Tile nextTile1 = floor.GetNextTileForDirection(coveredTile, rollDirection);
 
             if (nextTile1 != null)
             {
-                Tile nextTile2 = nextTile1.GetNextTileForDirection(rollDirection);
+                Tile nextTile2 = floor.GetNextTileForDirection(nextTile1, rollDirection);
                 if (nextTile2 != null)
                 {
                     m_coveredTiles[0] = nextTile1;
@@ -343,12 +348,12 @@ public class Brick : MonoBehaviour
                 //find the tile next to m_coveredTile[0] or m_coveredTile[1] in the rolling direction
                 Tile coveredTile1 = m_coveredTiles[0];
                 Tile coveredTile2 = m_coveredTiles[1];
-                Tile nextTile = coveredTile1.GetNextTileForDirection(rollDirection);
-                if (coveredTile1.GetNextTileForDirection(rollDirection) != null)
+                Tile nextTile = floor.GetNextTileForDirection(coveredTile1, rollDirection);
+                if (nextTile != null)
                 {
                     if (nextTile == coveredTile2)
                     {
-                        nextTile = coveredTile2.GetNextTileForDirection(rollDirection);
+                        nextTile = floor.GetNextTileForDirection(coveredTile2, rollDirection);
                         if (nextTile != null)
                         {
                             m_coveredTiles[0] = nextTile;
@@ -368,8 +373,8 @@ public class Brick : MonoBehaviour
             }
             else
             {
-                Tile nextTile1 = m_coveredTiles[0].GetNextTileForDirection(rollDirection);
-                Tile nextTile2 = m_coveredTiles[1].GetNextTileForDirection(rollDirection);
+                Tile nextTile1 = floor.GetNextTileForDirection(m_coveredTiles[0], rollDirection);
+                Tile nextTile2 = floor.GetNextTileForDirection(m_coveredTiles[1], rollDirection);
                 if (nextTile1 != null && nextTile2 != null)
                 {
                     m_coveredTiles[0] = nextTile1;
@@ -411,9 +416,9 @@ public class Brick : MonoBehaviour
 
         //Change the state of new covered tiles
         if (m_coveredTiles[0] != null)
-            m_coveredTiles[0].SetState(Tile.State.SELECTED);
+            m_coveredTiles[0].CurrentState = Tile.State.SELECTED;
         if (m_coveredTiles[1] != null)
-            m_coveredTiles[1].SetState(Tile.State.SELECTED);
+            m_coveredTiles[1].CurrentState = Tile.State.SELECTED;
     }
 
     public GameController GetGameController()
