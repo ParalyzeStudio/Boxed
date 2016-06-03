@@ -4,7 +4,7 @@ public class BrickAnimator : GameObjectAnimator
 {
     public override void OnFinishRotating()
     {
-        Brick brick = this.GetComponent<Brick>();
+        BrickRenderer brick = this.GetComponent<BrickRenderer>();
         brick.OnFinishRolling();
     }
 }

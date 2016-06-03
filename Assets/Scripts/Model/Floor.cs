@@ -60,6 +60,28 @@ public class Floor
         int index = GetTileIndexForColumnLine(m_gridWidth / 2, m_gridHeight / 2);
         return Tiles[index];
     }
+    
+    public Tile GetStartTile()
+    {
+        for (int i = 0; i != m_tiles.Length; i++)
+        {
+            if (m_tiles[i].CurrentState == Tile.State.START)
+                return m_tiles[i];
+        }
+
+        return null;
+    }
+
+    public Tile GetFinishTile()
+    {
+        for (int i = 0; i != m_tiles.Length; i++)
+        {
+            if (m_tiles[i].CurrentState == Tile.State.FINISH)
+                return m_tiles[i];
+        }
+
+        return null;
+    }
 
     /**
     * Return the index of the tile next to this tile given a direction (left, top, right or bottom)
@@ -164,13 +186,11 @@ public class Floor
                 {
                     Tile replacedTile = m_tiles[GetTileIndexForColumnLine(i + minColumnIndex - 2, j + minLineIndex - 2)]; //the tile that is replaced by a new one
                     if (replacedTile.CurrentState == Tile.State.SELECTED)
-                    {
                         tile = new Tile(i, j, Tile.State.NORMAL, replacedTile.AttachedBonus);
-                    }
-                    else
-                    {
+                    else if (replacedTile.CurrentState == Tile.State.NORMAL)
                         tile = new Tile(i, j, Tile.State.DISABLED, replacedTile.AttachedBonus);
-                    }
+                    else
+                        tile = new Tile(i, j, replacedTile.CurrentState, replacedTile.AttachedBonus);
                 }
 
                 int newTileIndex = i * newFloorHeight + j;

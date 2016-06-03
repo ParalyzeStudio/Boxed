@@ -5,11 +5,11 @@
 **/
 public class BrickController : MonoBehaviour
 {
-    private Brick m_brick;
+    private BrickRenderer m_brick;
 
     public void Start()
     {
-        m_brick = this.GetComponent<Brick>();
+        m_brick = this.GetComponent<BrickRenderer>();
     }
 
     void Update()

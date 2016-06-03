@@ -8,7 +8,7 @@ public class GameController : MonoBehaviour
     public GameObject m_brickPfb;
     public GameObject m_floorPfb;
 
-    public Brick m_brick { get; set; }
+    public BrickRenderer m_brick { get; set; }
     public FloorRenderer m_floor { get; set; }
     public GameObject m_bonuses { get; set; } //use this object to hold bonus objects
 
@@ -24,7 +24,9 @@ public class GameController : MonoBehaviour
         }
         else
         {
-            
+            LevelManager levelManager = this.GetComponent<LevelManager>();
+            levelManager.CacheLevels();
+            StartLevel(levelManager.GetLevelForNumber(4));
         }
     }
 
@@ -58,7 +60,7 @@ public class GameController : MonoBehaviour
     {
         BuildBonusesHolder();
         BuildFloor(level);
-        //BuildBrick(level);
+        BuildBrick(level);
     }
 
     public void BuildFloor(Level level)
@@ -73,7 +75,7 @@ public class GameController : MonoBehaviour
         if (level == null)
         {
             //Build a default floor
-            floor = new Floor(5, 5);
+            floor = new Floor(50, 50);
         }
         else
             floor = level.m_floor;
@@ -89,10 +91,10 @@ public class GameController : MonoBehaviour
         if (level != null)
         {
             GameObject brickObject = (GameObject)Instantiate(m_brickPfb);
-            m_brick = brickObject.GetComponent<Brick>();
+            m_brick = brickObject.GetComponent<BrickRenderer>();
 
-            //m_brick.BuildOnTiles((level == null) ? m_floor.GetCenterTile() : level.m_startTile, null);
-            m_brick.BuildOnTiles(m_floor.m_floorData.Tiles[1], m_floor.m_floorData.Tiles[2]);
+            m_brick.BuildOnTile((level == null) ? m_floor.m_floorData.GetCenterTile() : level.m_floor.GetStartTile());
+            //m_brick.BuildOnTile(m_floor.m_floorData.Tiles[1]);
         }
     }
 

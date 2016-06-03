@@ -10,11 +10,28 @@ public class Level
     public Floor m_floor;
     public string m_title;
 
+    //cache the values of start tiles and finish tiles here to avoid traversing the floor to find them
+    public Tile m_startTile;
+    public Tile m_finishTile;
+
     public Level(int number, Floor floor, string title)
     {
         m_number = number;
         m_floor = floor;
         m_title = title;
+
+        m_startTile = floor.GetStartTile();
+        m_finishTile = floor.GetFinishTile();
+    }
+
+    /**
+    * Programmatically solve this level by testing every possible movement of the brick
+    * Define a number of maximum movements a brick is allowed to do for a given path
+    **/
+    public void Solve(int maxMovements)
+    {
+        SolutionTree solutionTree = new SolutionTree(this, maxMovements);
+        SolutionNode[][] solutions = solutionTree.SearchForSolutions();
     }
 
     /**
