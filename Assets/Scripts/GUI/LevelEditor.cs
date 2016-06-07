@@ -3,16 +3,24 @@ using UnityEngine.UI;
 
 public class LevelEditor : MonoBehaviour
 {
-    private CallFuncHandler m_callFuncHandler;
+    public GameObject m_levelEditorMenuPfb;
+    public SaveLoadLevelWindow m_saveLoadLevelWindowPfb;
+    public ValidationWindow m_validationWindowPfb;
+    public Button m_testLevelBtnPfb;
+    private Button m_testLevelBtn;
 
-    public GameObject m_mainMenu;
-    public GameObject m_tileEditingMenu;
-    public GameObject m_checkpointsMenu;
-    public GameObject m_bonusesMenu;
-    public GameObject m_resetMenu;
-    public GameObject m_saveLoadLevelWindow;
+    public Level m_editedLevel { get; set; }
+    private Level m_testLevel; //the level that is being test after clicking on the Test Level button
 
-    private GameObject m_activeMenu;
+    private static LevelEditor s_instance;
+
+    public static LevelEditor GetInstance()
+    {
+        if (s_instance == null)
+            s_instance = GameObject.FindGameObjectWithTag("LevelEditor").GetComponent<LevelEditor>();
+
+        return s_instance;
+    }
 
     public enum EditingMode
     {
@@ -20,195 +28,112 @@ public class LevelEditor : MonoBehaviour
         TILES_EDITING,
         CHECKPOINTS_EDITING,
         BONUSES_EDITING,
-        LOADING_LEVEL, //a window is displayed to load a level from file
-        SAVING_LEVEL //a window is displayed to save the current level to file        
+        SAVING_LOADING_LEVEL, //a window is displayed to save or load a level from file  
     }
 
     public EditingMode m_editingMode { get; set; }
 
-    public Tile m_startTile { get; set; }
-    public Tile m_finishTile { get; set; }
-
     private bool m_guiProcessedClick; //variable used to know if the Level Editor GUI has processed the click event
 
-    public void Start()
+    public void Init()
     {
-        m_activeMenu = m_mainMenu;
-    }
-
-    public void ShowMainMenu()
-    {
-        m_activeMenu.SetActive(false);
-        m_mainMenu.SetActive(true);
-        m_activeMenu = m_mainMenu;
-        m_editingMode = EditingMode.NONE;
+        BuildMainMenu();
+        BuildLevel(null);
     }
 
     /**
-    * Action called when clicking on 'edit tiles' button
+    * Create a level to be edited by the user.
+    * Passing null will load a default empty level
     **/
-    public void DoTilesSelection()
+    public void BuildLevel(Level level)
     {
-        Debug.Log("EditTiles");
-        m_guiProcessedClick = true;
-        m_editingMode = EditingMode.TILES_EDITING;
+        GameController.GetInstance().BuildBonusesHolder();
 
-        ShowTilesSelectionMenu();      
+        //Create the level that will be edited
+        if (level == null)
+        {
+            Floor floor = new Floor(50, 50);
+            m_editedLevel = new Level(floor);
+            GameController.GetInstance().RenderFloor(floor);
+        }
+        else
+        {
+            m_editedLevel = level;
+            GameController.GetInstance().RenderFloor(level.m_floor);
+        }        
     }
 
-    private void ShowTilesSelectionMenu()
+    private void DisplayLevel(Level level)
     {
-
-        m_tileEditingMenu.SetActive(true);
-        m_activeMenu.SetActive(false);
-        m_activeMenu = m_tileEditingMenu;
+        GameController.GetInstance().ClearLevel();
+        //GameController.GetInstance().StartLevel(level);
     }
 
-    public void ValidateTilesSelection()
+    public void BuildMainMenu()
     {
-        m_guiProcessedClick = true;
-        Debug.Log("ValidateTilesSelection");
-        ShowMainMenu();
+        GameObject menu = (GameObject)Instantiate(m_levelEditorMenuPfb);
+        menu.name = "MainMenu";
+        menu.transform.SetParent(this.transform, false);
+
+        menu.GetComponent<LevelEditorMenu>().Init(this);
     }
 
-    /**
-    * Action called when clicking on 'Checkpoints' button
-    **/
-    public void DoCheckpointsEditing()
-    {
-        Debug.Log("Checkpoints");
-        m_guiProcessedClick = true;
-        m_editingMode = EditingMode.CHECKPOINTS_EDITING;
-
-        ShowCheckpointsMenu();
-    }
-
-    private void ShowCheckpointsMenu()
-    {
-        m_checkpointsMenu.SetActive(true);
-        m_activeMenu.SetActive(false);
-        m_activeMenu = m_checkpointsMenu;
-    }
-
-    public void ValidateCheckpoints()
+    public void ShowSaveLoadLevelWindow()
     {
         m_guiProcessedClick = true;
-        Debug.Log("ValidateCheckpoints");
-        ShowMainMenu();
-    }
+        m_editingMode = EditingMode.SAVING_LOADING_LEVEL;
 
-    /**
-    * Action called when clicking on 'Bonuses' button
-    **/
-    public void DoBonusesEditing()
-    {
-        Debug.Log("Bonuses");
-        m_guiProcessedClick = true;
-        m_editingMode = EditingMode.BONUSES_EDITING;
-
-        ShowBonusesMenu();
-    }
-
-    private void ShowBonusesMenu()
-    {
-        m_bonusesMenu.SetActive(true);
-        m_activeMenu.SetActive(false);
-        m_activeMenu = m_bonusesMenu;
-    }
-
-    public void ValidateBonuses()
-    {
-        m_guiProcessedClick = true;
-        Debug.Log("ValidateBonuses");
-        ShowMainMenu();
-    }
-
-    /**
-    * Action called when clicking on 'Reset level' button
-    **/
-    public void ResetLevel()
-    {
-        Debug.Log("Reset");
-        m_guiProcessedClick = true;
-        ShowResetConfirmationMenu();
-       
-    }
-
-    private void ShowResetConfirmationMenu()
-    {
-        m_resetMenu.SetActive(true);
-        m_activeMenu.SetActive(false);
-        m_activeMenu = m_resetMenu;
-    }
-
-    public void ConfirmResetLevel()
-    {
-        m_guiProcessedClick = true;
-        GameController gameController = GameController.GetInstance();
-
-        //Delete current floor and build a new one
-        gameController.BuildFloor(null);
-
-        //Destroy bonuses
-        Destroy(gameController.m_bonuses);
-        gameController.BuildBonusesHolder();
-
-        //gameController.EnterLevelEditor();
-        ShowMainMenu();
-    }
-
-    public void CancelResetLevel()
-    {
-        ShowMainMenu();
-    }
-
-
-    /**
-    * Action called when clicking on 'Load level' button
-    **/
-    public void DoLoadLevel()
-    {
-        m_guiProcessedClick = true;
-        m_editingMode = EditingMode.LOADING_LEVEL;
-
-        GameObject loadLevelWindowObject = (GameObject)Instantiate(m_saveLoadLevelWindow);
-        loadLevelWindowObject.transform.SetParent(GameController.GetInstance().m_canvas.transform, false);
-
-        SaveLoadLevelWindow window = loadLevelWindowObject.GetComponent<SaveLoadLevelWindow>();
+        SaveLoadLevelWindow window = Instantiate(m_saveLoadLevelWindowPfb);
+        window.transform.SetParent(this.transform, false);
         window.Init(this);
     }
 
-    /**
-    * Action called when clicking on 'Save level' button
-    **/
-    public void DoSaveLoadLevel()
-    {
-        m_guiProcessedClick = true;
-        m_editingMode = EditingMode.SAVING_LEVEL;
-
-        GameObject saveLevelWindowObject = (GameObject)Instantiate(m_saveLoadLevelWindow);
-        saveLevelWindowObject.transform.SetParent(GameController.GetInstance().m_canvas.transform, false);
-
-        SaveLoadLevelWindow window = saveLevelWindowObject.GetComponent<SaveLoadLevelWindow>();
-        window.Init(this, null);
-    }
-
-    public void OnDismissSaveLevelWindow()
+    public void OnDismissSaveLoadLevelWindow()
     {
         m_editingMode = EditingMode.NONE;
     }
 
     public bool IsSaveLevelWindowActive()
     {
-        return m_editingMode == EditingMode.SAVING_LEVEL;
+        return m_editingMode == EditingMode.SAVING_LOADING_LEVEL;
+    }
+    
+    /**
+    * This function is called after the user decided to validate the current level and after the Validate() function has returned
+    **/
+    public void DisplayLevelValidationOutput(Level.ValidationData output)
+    {
+        ValidationWindow validationWindow = Instantiate(m_validationWindowPfb);
+        validationWindow.name = "ValidationWindow";
+        validationWindow.transform.SetParent(GameController.GetInstance().m_canvas.transform, false);
+        validationWindow.Populate(output);
     }
 
-    public CallFuncHandler GetCallFuncHandler()
+    public void ShowTestLevelButton()
     {
-        if (m_callFuncHandler == null)
-            m_callFuncHandler = GameObject.FindGameObjectWithTag("GameController").GetComponent<CallFuncHandler>();
+        m_testLevelBtn = Instantiate(m_testLevelBtnPfb);
+        m_testLevelBtn.transform.SetParent(this.transform, false);
 
-        return m_callFuncHandler;
+        m_testLevelBtn.onClick.AddListener(this.OnClickTestLevel);
+    }
+
+    public void DismissTestLevelButton()
+    {
+        Destroy(m_testLevelBtn.gameObject);
+    }
+
+    public void OnClickTestLevel()
+    {
+        //Save the currently edited floor
+        Floor clampedFloor = m_editedLevel.m_floor.Clamp();
+
+        GameController.GetInstance().RemoveFloor();
+        GameController.GetInstance().RenderFloor(clampedFloor);
+    }
+
+    public void ProcessClick()
+    {
+        m_guiProcessedClick = true;
     }
 
     public bool GUIProcessedClick()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /**
@@ -40,7 +41,7 @@ public class Floor
         {
             for (int j = 0; j != m_gridHeight; j++)
             {
-                Tile tile = new Tile(i, j, Tile.State.NORMAL, null);
+                Tile tile = new Tile(i, j, Tile.State.DISABLED, null);
 
                 m_tiles[GetTileIndexForColumnLine(i, j)] = tile;
             }
@@ -83,6 +84,18 @@ public class Floor
         return null;
     }
 
+    public List<Bonus> GetBonuses()
+    {
+        List<Bonus> bonuses = new List<Bonus>();
+        for (int i = 0; i != m_tiles.Length; i++)
+        {
+            if (m_tiles[i].AttachedBonus != null)
+                bonuses.Add(m_tiles[i].AttachedBonus);
+        }
+
+        return bonuses;
+    }
+    
     /**
     * Return the index of the tile next to this tile given a direction (left, top, right or bottom)
     * The tile should never be null because we will design our grid in a way the brick will never land onto a null tile but either on a normal 
@@ -129,7 +142,7 @@ public class Floor
     /**
     * When we are about to save a level, call this function to recompute a new floor that will fit more our needs than the default one
     **/
-    public Floor ClampFloor()
+    public Floor Clamp()
     {
         //first determine the minimum/maximum x and z coordinates of our selected tiles
         int minColumnIndex = int.MaxValue;
@@ -187,7 +200,7 @@ public class Floor
                     Tile replacedTile = m_tiles[GetTileIndexForColumnLine(i + minColumnIndex - 2, j + minLineIndex - 2)]; //the tile that is replaced by a new one
                     if (replacedTile.CurrentState == Tile.State.SELECTED)
                         tile = new Tile(i, j, Tile.State.NORMAL, replacedTile.AttachedBonus);
-                    else if (replacedTile.CurrentState == Tile.State.NORMAL)
+                    else if (replacedTile.CurrentState == Tile.State.DISABLED)
                         tile = new Tile(i, j, Tile.State.DISABLED, replacedTile.AttachedBonus);
                     else
                         tile = new Tile(i, j, replacedTile.CurrentState, replacedTile.AttachedBonus);
@@ -200,5 +213,19 @@ public class Floor
 
         Floor clampedFloor = new Floor(newFloorWidth, newFloorHeight, newTiles);
         return clampedFloor;
+    }
+
+    /**
+    * As a bonus has no reference to its parent tile, use this method to find the tile that has the parameter 'bonus' as a bonus
+    **/
+    public Tile FindTileForBonus(Bonus bonus)
+    {
+        for (int i = 0; i != m_tiles.Length; i++)
+        {
+            if (m_tiles[i].AttachedBonus == bonus)
+                return m_tiles[i];
+        }
+
+        return null;
     }
 }

@@ -28,10 +28,10 @@ public class SaveLoadLevelWindow : MonoBehaviour
         ID_CANCEL
     }
 
-    public void Init(LevelEditor parentLevelEditor, Level levelToSave = null)
+    public void Init(LevelEditor parentLevelEditor)
     {
         m_parentLevelEditor = parentLevelEditor;
-
+        
         int levelsCount = PopulateLevelsList();
         m_selectedItem = null;
 
@@ -45,7 +45,7 @@ public class SaveLoadLevelWindow : MonoBehaviour
     **/
     public int PopulateLevelsList()
     {
-        List<Level> allLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllLevelsFromDisk();
+        List<Level> allLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllEditedLevelsFromDisk();
 
         int listIndex = 0;
         for (int i = 0; i != allLevels.Count; i++)
@@ -94,22 +94,24 @@ public class SaveLoadLevelWindow : MonoBehaviour
         m_selectedItem.m_level = null;
     }
 
-    public void DoSave()
+    public void OnClickSave()
     {
         Debug.Log("DO SAVE");
         int levelNumber = m_selectedItem.m_index + 1;
 
         //Build a new floor and a new level that holds it
-        Floor clampedFloor = GameController.GetInstance().m_floor.m_floorData.ClampFloor();
-        Level levelToSave = new Level(levelNumber, clampedFloor, "Level_" + Level.GetNumberAsString(levelNumber));        
+        //Floor clampedFloor = GameController.GetInstance().m_floor.m_floorData.Clamp();
+        Level editedLevel = m_parentLevelEditor.m_editedLevel;
+        editedLevel.m_number = levelNumber;
+        editedLevel.m_title = "Level_" + Level.GetNumberAsString(levelNumber);
 
         //update the level item to display the new name
         if (m_selectedItem.m_level == null)
         {
-            m_selectedItem.m_level = levelToSave;
+            m_selectedItem.m_level = editedLevel;
             m_selectedItem.InvalidateContent();
             m_saveSuccessMessage.gameObject.SetActive(true);
-            levelToSave.SaveToFile();
+            editedLevel.SaveToFile();
         }
         else
         {
@@ -121,21 +123,18 @@ public class SaveLoadLevelWindow : MonoBehaviour
         }        
     }
 
-    public void DoLoad()
+    public void OnClickLoad()
     {
-        Debug.Log("DO LOAD");
-        Level levelToLoad = m_selectedItem.m_level;
-
         GameController.GetInstance().ClearLevel();
-        GameController.GetInstance().StartLevel(m_selectedItem.m_level);
+        m_parentLevelEditor.BuildLevel(m_selectedItem.m_level);
 
         //Dismiss the window
-        DoCancel();
+        OnClickCancel();
     }
 
-    public void DoCancel()
+    public void OnClickCancel()
     {
-        m_parentLevelEditor.OnDismissSaveLevelWindow();
+        m_parentLevelEditor.OnDismissSaveLoadLevelWindow();
         Destroy(this.gameObject);
     }    
 

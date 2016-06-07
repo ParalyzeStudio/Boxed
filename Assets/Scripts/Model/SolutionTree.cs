@@ -15,14 +15,20 @@ public class SolutionTree
 
     private List<SolutionNode> m_successNodes;
 
-    //the level on which the solution tree performs its simulation
-    public Level m_editedLevel { get; set; }
+    public Tile m_startTile; //the tile that serves as start point for or tree
+    public Tile m_targetTile; //the tile that serves as target for the search of solutions
+    
+    public bool m_stopWhenTreeIsSolved; //In case we just want to know if at least one solution exists, we can stop processing nodes as soon as we found one
+    public bool m_isSolved; //is this tree solved (i.e contains at least one successful path to target)
 
-
-    public SolutionTree(Level level, int height)
+    public SolutionTree(int height, Tile startTile, Tile targetTile, bool stopWhenTreeIsSolved = false)
     {
-        m_editedLevel = level;
-        m_maximumHeight = height;        
+        m_maximumHeight = height;
+        m_startTile = startTile;
+        m_targetTile = targetTile;
+        m_stopWhenTreeIsSolved = stopWhenTreeIsSolved;
+        m_successNodes = new List<SolutionNode>();
+        m_isSolved = false;
     }
 
     /**
@@ -31,14 +37,12 @@ public class SolutionTree
     **/
     public SolutionNode[][] SearchForSolutions()
     {
-        Tile levelStartTile = m_editedLevel.m_startTile;
-
         //Construct 4 nodes and 4 bricks (1 for each rolling direction) starting from level start tile
         SolutionNode[] childNodes = new SolutionNode[4];
-        childNodes[0] = new SolutionNode(this, Brick.RollDirection.LEFT, null, 0, new Brick(levelStartTile));
-        childNodes[1] = new SolutionNode(this, Brick.RollDirection.RIGHT, null, 0, new Brick(levelStartTile));
-        childNodes[2] = new SolutionNode(this, Brick.RollDirection.TOP, null, 0, new Brick(levelStartTile));
-        childNodes[3] = new SolutionNode(this, Brick.RollDirection.BOTTOM, null, 0, new Brick(levelStartTile));
+        childNodes[0] = new SolutionNode(this, Brick.RollDirection.LEFT, null, 0, new Brick(m_startTile));
+        childNodes[1] = new SolutionNode(this, Brick.RollDirection.RIGHT, null, 0, new Brick(m_startTile));
+        childNodes[2] = new SolutionNode(this, Brick.RollDirection.TOP, null, 0, new Brick(m_startTile));
+        childNodes[3] = new SolutionNode(this, Brick.RollDirection.BOTTOM, null, 0, new Brick(m_startTile));
 
         //Process every of the 4 nodes declared above
         for (int i = 0; i != childNodes.Length; i++)
@@ -52,11 +56,15 @@ public class SolutionTree
 
     public void AddSuccessNode(SolutionNode node)
     {
+        m_isSolved = true;
         m_successNodes.Add(node);
     }
 
     private SolutionNode[][] ExtractSuccessPaths()
     {
+        if (m_successNodes.Count == 0)
+            return null;
+
         SolutionNode[][] successPaths = new SolutionNode[m_successNodes.Count][];
 
         for (int i = 0; i != m_successNodes.Count; i++)
@@ -66,10 +74,11 @@ public class SolutionTree
 
             SolutionNode[] successPath = new SolutionNode[pathLength];
             
-            while (node.m_parentNode != null)
+            while (node != null)
             {
                 successPath[pathLength - 1] = node;
                 pathLength--;
+                node = node.m_parentNode;
             }
 
             successPaths[i] = successPath;
@@ -105,18 +114,24 @@ public class SolutionNode
 
     public void Process()
     {
+        if (m_parentTree.m_stopWhenTreeIsSolved && m_parentTree.m_isSolved)
+            return;
+
         //we reach the maximum height of the tree
         if (m_distanceFromRoot == m_parentTree.MaximumHeight)
             return;
 
         //try to make the brick roll
-        bool bValidRoll;
+        Brick.RollResult rollResult;
         Brick.BrickEdge rotationEdge;
-        m_brick.Roll(m_direction, out bValidRoll, out rotationEdge);
+        m_brick.Roll(m_direction, out rollResult, out rotationEdge);
 
-        if (bValidRoll)
+        if (rollResult == Brick.RollResult.VALID)
         {
-            if (m_brick.GetCoveredTilesCount() == 1 && m_brick.CoveredTiles[0] == m_parentTree.m_editedLevel.m_finishTile)
+            //set the state of the brick to IDLE so it can roll at once
+            m_brick.m_state = Brick.BrickState.IDLE;
+
+            if (m_brick.GetCoveredTilesCount() == 1 && m_brick.CoveredTiles[0] == m_parentTree.m_targetTile)
             {
                 m_parentTree.AddSuccessNode(this);
             }

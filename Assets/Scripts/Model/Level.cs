@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Collections.Generic;
 
 [Serializable]
 public class Level
@@ -14,24 +15,110 @@ public class Level
     public Tile m_startTile;
     public Tile m_finishTile;
 
-    public Level(int number, Floor floor, string title)
-    {
-        m_number = number;
-        m_floor = floor;
-        m_title = title;
+    //also cache the values for bonuses
+    public List<Bonus> m_bonuses;
 
-        m_startTile = floor.GetStartTile();
-        m_finishTile = floor.GetFinishTile();
+    public bool m_validated; //has the level been validated
+
+    public Level(Floor floor)
+    {
+        m_floor = floor;
+
+        m_validated = false;
+        m_bonuses = new List<Bonus>();
+    }
+
+    /**
+    * Use this class to store the output (success or failure) of the level validation process
+    **/
+    public class ValidationData
+    {
+        public bool m_success;
+
+        //in case of success
+        public SolutionNode[][] m_solutions;
+
+        //in case of failure
+        public bool m_startTileSet;
+        public bool m_finishTileSet;
+        public List<Bonus> m_unreachableBonuses;
+
+        public void AddUnreachableBonus(Bonus bonus)
+        {
+            if (m_unreachableBonuses == null)
+                m_unreachableBonuses = new List<Bonus>();
+
+            m_unreachableBonuses.Add(bonus);
+        }
+    }
+    
+    /**
+    * Call this method to validate a level that has been created inside the level editor
+    **/
+    public ValidationData Validate(int maxMovements)
+    {
+        ValidationData validationData = new ValidationData();
+
+        //First check if start tile and finish tiles have been set
+        if (m_startTile == null || m_finishTile == null)
+        {
+            validationData.m_success = false;
+            validationData.m_startTileSet = (m_startTile != null);
+            validationData.m_finishTileSet = (m_finishTile != null);
+
+            return validationData;
+        }
+        else
+        {
+            validationData.m_startTileSet = true;
+            validationData.m_finishTileSet = true;
+        }
+
+        //Now check if there is at least one valid path from start tile to finish tile
+        SolutionNode[][] solutions = Solve(maxMovements);
+        validationData.m_solutions = solutions;
+        if (solutions == null)
+        {
+            validationData.m_success = false;
+            return validationData;
+        }       
+
+        //Check if all bonuses are reachable
+        //for (int i = 0; i != m_bonuses.Count; i++)
+        //{
+        //    if (!IsBonusReachable(m_bonuses[i]))
+        //    {
+        //        validationData.m_success = false;
+        //        validationData.AddUnreachableBonus(m_bonuses[i]);
+        //        return validationData;
+        //    }
+        //}
+
+        validationData.m_success = true;
+        validationData.m_solutions = solutions;
+        m_validated = true;
+
+        return validationData;
     }
 
     /**
     * Programmatically solve this level by testing every possible movement of the brick
     * Define a number of maximum movements a brick is allowed to do for a given path
     **/
-    public void Solve(int maxMovements)
+    public SolutionNode[][] Solve(int maxMovements)
     {
-        SolutionTree solutionTree = new SolutionTree(this, maxMovements);
-        SolutionNode[][] solutions = solutionTree.SearchForSolutions();
+        SolutionTree solutionTree = new SolutionTree(maxMovements, m_startTile, m_finishTile);
+        return solutionTree.SearchForSolutions();
+    }
+
+    /**
+    * Tells if a bonus can be reached by the brick
+    **/
+    public bool IsBonusReachable(Bonus bonus)
+    {
+        Tile targetTile = m_floor.FindTileForBonus(bonus);
+        SolutionTree solutionTree = new SolutionTree(100, m_startTile, targetTile, true); //big enough number of movements
+        return solutionTree.SearchForSolutions() != null; //if we found at least one path we're good to go
     }
 
     /**
@@ -42,7 +129,7 @@ public class Level
         BinaryFormatter bf = new BinaryFormatter();
 
         FileStream fs = null;
-        string levelsFolderPath = Application.persistentDataPath + "/Levels";
+        string levelsFolderPath = Application.persistentDataPath + "/Levels/EditedLevels";
         try
         {
             fs = File.Open(levelsFolderPath + "/level_" + this.m_number + ".dat", FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
@@ -66,7 +153,7 @@ public class Level
      * **/
     public static Level LoadFromFile(int iLevelNumber)
     {
-        string filePath = Application.persistentDataPath + "Levels\\level_" + iLevelNumber + ".dat";
+        string filePath = Application.persistentDataPath + "Levels/EditedLevels/level_" + iLevelNumber + ".dat";
         return LoadFromFile(filePath);
     }
 

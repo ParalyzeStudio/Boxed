@@ -53,8 +53,12 @@ public class TileRenderer : MonoBehaviour
         m_bonusObject.transform.parent = bonusContainer.transform;
 
         GameObjectAnimator bonusAnimator = m_bonusObject.GetComponent<GameObjectAnimator>();
-        Vector3 parentFloorPosition = GameController.GetInstance().m_floor.transform.position;
         bonusAnimator.SetPosition(m_tile.GetWorldPosition() + new Vector3(0, 0.3f, 0));
+    }
+
+    public void DestroyBonusObject()
+    {
+        Destroy(m_bonusObject.gameObject);
     }
 
     public void Update()

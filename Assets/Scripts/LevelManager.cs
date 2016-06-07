@@ -4,12 +4,21 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
-    private List<Level> m_levels;
-    public List<Level> Levels
+    private List<Level> m_editedLevels;
+    public List<Level> EditedLevels
     {
         get
         {
-            return m_levels;
+            return m_editedLevels;
+        }
+    }
+
+    private List<Level> m_publishedLevels;
+    public List<Level> PublishedLevels
+    {
+        get
+        {
+            return m_publishedLevels;
         }
     }
 
@@ -20,10 +29,10 @@ public class LevelManager : MonoBehaviour
 
     public Level GetLevelForNumber(int number)
     {
-        if (number > m_levels.Count)
+        if (number > m_editedLevels.Count)
             return null;
 
-        return m_levels[number - 1];
+        return m_editedLevels[number - 1];
     }
 
     /**
@@ -31,18 +40,30 @@ public class LevelManager : MonoBehaviour
     **/
     public void CacheLevels()
     {
-        m_levels = GetAllLevelsFromDisk();
+        m_editedLevels = GetAllEditedLevelsFromDisk();
+        m_publishedLevels = GetAllPublishedLevelsFromDisk();
     }
 
     /**
     * Return all levels save on disk through a list of Level objects
     **/
-    public List<Level> GetAllLevelsFromDisk()
+    public List<Level> GetAllEditedLevelsFromDisk()
     {   
-        string levelsFolderPath = Application.persistentDataPath + "\\Levels";
-        if (!Directory.Exists(levelsFolderPath))
-            Directory.CreateDirectory(levelsFolderPath);
-        string[] levelsFilenames = Directory.GetFiles(levelsFolderPath);
+        string editedLevelsPath = Application.persistentDataPath + "/Levels/EditedLevels";
+        return GetAllLevelsFromFolder(editedLevelsPath);
+    }
+
+    public List<Level> GetAllPublishedLevelsFromDisk()
+    {
+        string publishedLevelsPath = Application.persistentDataPath + "/Levels/PublishedLevels";
+        return GetAllLevelsFromFolder(publishedLevelsPath);
+    }
+
+    public List<Level> GetAllLevelsFromFolder(string folderPath)
+    {
+        if (!Directory.Exists(folderPath))
+            Directory.CreateDirectory(folderPath);
+        string[] levelsFilenames = Directory.GetFiles(folderPath);
         List<Level> allLevels = new List<Level>(levelsFilenames.Length);
 
         for (int i = 0; i != levelsFilenames.Length; i++)

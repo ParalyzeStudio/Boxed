@@ -19,7 +19,7 @@ public class OverwriteFilePopup : MonoBehaviour
     public void OnClickYes()
     {
         m_parentWindow.ClearLevelOnSelectedItem();
-        m_parentWindow.DoSave();
+        m_parentWindow.OnClickSave();
         Destroy(this.gameObject);
     }
 

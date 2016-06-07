@@ -190,17 +190,26 @@ public class Brick
         BOTTOM
     }
 
+    public enum RollResult
+    {
+        NONE,
+        VALID, //the rolling operation is valid and brick is now on valid tiles
+        NO_TILE_TO_ROLL, //there is no tile to perform the rolling, brick won't move
+        FALL, //there are tiles to roll onto, but there are disabled tiles leading the brick to a fall off the floor
+    }
+
     /**
     * Make the brick roll on one of the 4 available directions (left, top, right, bottom) and return the axis of the rotation to tell the parent renderer
     * around which axis to perform the 90 degrees rotation
     **/
-    public void Roll(RollDirection rollDirection, out bool bValidRoll, out BrickEdge rotationEdge)
+    public void Roll(RollDirection rollDirection, out RollResult rollResult, out BrickEdge rotationEdge)
     {
-        bValidRoll = false;
-        rotationEdge = new BrickEdge(Vector3.zero, Vector3.zero);
-
         if (m_state == BrickState.ROLLING) //brick is already rolling do nothing
+        {
+            rollResult = RollResult.NONE;
+            rotationEdge = new BrickEdge(Vector3.zero, Vector3.zero);
             return;
+        }
 
         m_state = BrickState.ROLLING;
 
@@ -233,9 +242,11 @@ public class Brick
         BrickFace rollToFace = m_faces[rollToFaceIdx];
 
         Tile[] newCoveredTiles = new Tile[2];
-        if (!CanRoll(currentFace, rollToFace, rollDirection, out newCoveredTiles)) //there is no tile on which we can land, just interrupt the rolling action
+        rollResult = CanRoll(currentFace, rollToFace, rollDirection, out newCoveredTiles);
+        if (rollResult == RollResult.NO_TILE_TO_ROLL) //there is no tile on which we can land, just interrupt the rolling action
         {
             m_state = BrickState.IDLE;
+            rotationEdge = new BrickEdge(Vector3.zero, Vector3.zero);
             return;
         }
 
@@ -250,12 +261,15 @@ public class Brick
             if (adjacentFace.m_index == rollToFace.m_index)
             {
                 adjacentFaceIdx = i;
-                continue;
+                break;
             }
         }
-
-        bValidRoll = true;
+        
         rotationEdge = currentFace.GetAdjacentFaceSharedEdge(adjacentFaceIdx);
+        Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
+
+        Quaternion brickRotation = Quaternion.AngleAxis(90, rotationAxis);
+        m_rotation *= brickRotation;
 
         //set the new index for the face touching the floor
         m_downFaceIndex = rollToFace.m_index;
@@ -265,33 +279,39 @@ public class Brick
     * Determine if the rolling movement from currentFace to rollToFace of the brick is possible
     * Also set the new covered tiles if movement is declared possible
     **/
-    public bool CanRoll(BrickFace currentFace, BrickFace rollToFace, RollDirection rollDirection, out Tile[] newCoveredTiles)
+    public RollResult CanRoll(BrickFace currentFace, BrickFace rollToFace, RollDirection rollDirection, out Tile[] newCoveredTiles)
     {
         Floor floor = GameController.GetInstance().m_floor.m_floorData;
 
         newCoveredTiles = new Tile[2];
 
         //Determine if rolling movement is legit (i.e brick will not fall off the floor) and mark the new covered tiles
-        bool bValidRoll = true;
+        RollResult rollResult = RollResult.VALID;
         if (currentFace.GetAreaInTileUnits() == 1)
         {
             //find the next 2 tiles in the rolling direction
             Tile coveredTile = m_coveredTiles[0];
-            Tile nextTile1 = floor.GetNextTileForDirection(coveredTile, rollDirection);
+            Tile nextTile1 = floor.GetNextTileForDirection(coveredTile, rollDirection);            
 
             if (nextTile1 != null)
             {
+                if (nextTile1.CurrentState == Tile.State.DISABLED)
+                    rollResult = RollResult.FALL;
+
                 Tile nextTile2 = floor.GetNextTileForDirection(nextTile1, rollDirection);
                 if (nextTile2 != null)
                 {
+                    if (nextTile2.CurrentState == Tile.State.DISABLED)
+                        rollResult = RollResult.FALL;
+
                     newCoveredTiles[0] = nextTile1;
                     newCoveredTiles[1] = nextTile2;
                 }
                 else
-                    bValidRoll = false;
+                    rollResult = RollResult.NO_TILE_TO_ROLL;
             }
             else
-                bValidRoll = false;
+                rollResult = RollResult.NO_TILE_TO_ROLL;
         }
         else
         {
@@ -308,20 +328,26 @@ public class Brick
                         nextTile = floor.GetNextTileForDirection(coveredTile2, rollDirection);
                         if (nextTile != null)
                         {
+                            if (nextTile.CurrentState == Tile.State.DISABLED)
+                                rollResult = RollResult.FALL;
+
                             newCoveredTiles[0] = nextTile;
                             newCoveredTiles[1] = null;
                         }
                         else
-                            bValidRoll = false;
+                            rollResult = RollResult.NO_TILE_TO_ROLL;
                     }
                     else
                     {
+                        if (nextTile.CurrentState == Tile.State.DISABLED)
+                            rollResult = RollResult.FALL;
+
                         newCoveredTiles[0] = nextTile;
                         newCoveredTiles[1] = null;
                     }
                 }
                 else
-                    bValidRoll = false;
+                    rollResult = RollResult.NO_TILE_TO_ROLL;
             }
             else
             {
@@ -329,15 +355,18 @@ public class Brick
                 Tile nextTile2 = floor.GetNextTileForDirection(m_coveredTiles[1], rollDirection);
                 if (nextTile1 != null && nextTile2 != null)
                 {
+                    if (nextTile1.CurrentState == Tile.State.DISABLED || nextTile2.CurrentState == Tile.State.DISABLED)
+                        rollResult = RollResult.FALL;
+
                     newCoveredTiles[0] = nextTile1;
                     newCoveredTiles[1] = nextTile2;
                 }
                 else
-                    bValidRoll = false;
+                    rollResult = RollResult.NO_TILE_TO_ROLL;
             }
         }
 
-        return bValidRoll;
+        return rollResult;
     }
 
     /**
@@ -356,9 +385,9 @@ public class Brick
         m_state = Brick.BrickState.IDLE;
 
         //Change the state of new covered tiles
-        if (m_coveredTiles[0] != null && m_coveredTiles[0].CurrentState == Tile.State.NORMAL)
+        if (m_coveredTiles[0] != null && m_coveredTiles[0].CurrentState == Tile.State.DISABLED)
             m_coveredTiles[0].CurrentState = Tile.State.SELECTED;
-        if (m_coveredTiles[1] != null && m_coveredTiles[1].CurrentState == Tile.State.NORMAL)
+        if (m_coveredTiles[1] != null && m_coveredTiles[1].CurrentState == Tile.State.DISABLED)
             m_coveredTiles[1].CurrentState = Tile.State.SELECTED;
     }
 }

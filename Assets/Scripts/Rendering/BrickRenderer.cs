@@ -93,18 +93,15 @@ public class BrickRenderer : MonoBehaviour
     **/
     public void Roll(Brick.RollDirection rollDirection)
     {
-        bool bValidRoll;
+        Brick.RollResult rollResult;
         Brick.BrickEdge rotationEdge;
-        m_brick.Roll(rollDirection, out bValidRoll, out rotationEdge);
+        m_brick.Roll(rollDirection, out rollResult, out rotationEdge);
 
-        //Get the rotation axis from the rotation edge
-        Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
-
-        Quaternion brickRotation = Quaternion.AngleAxis(90, rotationAxis);
-        m_brick.m_rotation *= brickRotation;
-
-        if (bValidRoll)
+        if (rollResult == Brick.RollResult.VALID || rollResult == Brick.RollResult.FALL)
         {
+            //Get the rotation axis from the rotation edge
+            Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
+
             //update the pivot point position to the middle of the edge serving as rotation axis
             BrickAnimator brickAnimator = GetComponent<BrickAnimator>();
             brickAnimator.UpdatePivotPoint(GetPivotPointFromLocalCoordinates(rotationEdge.GetMiddle()));
