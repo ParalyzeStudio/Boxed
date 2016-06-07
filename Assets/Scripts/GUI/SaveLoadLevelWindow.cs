@@ -127,6 +127,7 @@ public class SaveLoadLevelWindow : MonoBehaviour
     {
         GameController.GetInstance().ClearLevel();
         m_parentLevelEditor.BuildLevel(m_selectedItem.m_level);
+        m_parentLevelEditor.ShowTestMenu();
 
         //Dismiss the window
         OnClickCancel();

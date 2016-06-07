@@ -85,9 +85,8 @@ public class LevelEditorMenu : MonoBehaviour
         //remove the validate button and make the Test level button active
         if (output.m_success)
         {
-            m_validateBtn.transform.parent.gameObject.SetActive(false);
-            m_publishBtn.transform.parent.gameObject.SetActive(true);
-            m_parentEditor.ShowTestLevelButton();            
+            ToggleValidatePublishButtons(false);
+            m_parentEditor.ShowTestMenu();            
         }
     }
 
@@ -98,6 +97,7 @@ public class LevelEditorMenu : MonoBehaviour
 
     public void OnClickValidateSubMenu()
     {
+        m_parentEditor.m_editingMode = LevelEditor.EditingMode.NONE;
         ShowMenu(MenuID.ID_MAIN);
 
         if (m_parentEditor.m_editedLevel.m_validated)
@@ -105,10 +105,9 @@ public class LevelEditorMenu : MonoBehaviour
             //unvalidate the level because changes were made
             m_parentEditor.m_editedLevel.m_validated = false;
             //dismiss test level button in case it was active
-            m_parentEditor.DismissTestLevelButton();
+            m_parentEditor.DismissTestMenu();
             //show the validate button
-            m_validateBtn.transform.parent.gameObject.SetActive(true);
-            m_publishBtn.transform.parent.gameObject.SetActive(false);
+            ToggleValidatePublishButtons(true);
         }
     }
 
@@ -126,6 +125,20 @@ public class LevelEditorMenu : MonoBehaviour
     public void OnClickCancelResetSubMenu()
     {
         ShowMenu(MenuID.ID_MAIN);
+    }
+
+    public void ToggleValidatePublishButtons(bool bShowValidateBtn)
+    {
+        if (bShowValidateBtn)
+        {
+            m_validateBtn.transform.parent.gameObject.SetActive(true);
+            m_publishBtn.transform.parent.gameObject.SetActive(false);
+        }
+        else
+        {
+            m_validateBtn.transform.parent.gameObject.SetActive(false);
+            m_publishBtn.transform.parent.gameObject.SetActive(true);
+        }
     }
 
     public void Update()

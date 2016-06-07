@@ -6,8 +6,11 @@ public class LevelEditor : MonoBehaviour
     public GameObject m_levelEditorMenuPfb;
     public SaveLoadLevelWindow m_saveLoadLevelWindowPfb;
     public ValidationWindow m_validationWindowPfb;
-    public Button m_testLevelBtnPfb;
-    private Button m_testLevelBtn;
+    public TestMenu m_testMenuPfb;
+    public SolutionPanel m_solutionPanelPfb;
+
+    private LevelEditorMenu m_mainMenu;
+    private TestMenu m_testMenu;    
 
     public Level m_editedLevel { get; set; }
     private Level m_testLevel; //the level that is being test after clicking on the Test Level button
@@ -60,6 +63,11 @@ public class LevelEditor : MonoBehaviour
         {
             m_editedLevel = level;
             GameController.GetInstance().RenderFloor(level.m_floor);
+
+            if (level.m_validated)
+                m_mainMenu.ToggleValidatePublishButtons(false);
+            else
+                m_mainMenu.ToggleValidatePublishButtons(true);
         }        
     }
 
@@ -75,7 +83,8 @@ public class LevelEditor : MonoBehaviour
         menu.name = "MainMenu";
         menu.transform.SetParent(this.transform, false);
 
-        menu.GetComponent<LevelEditorMenu>().Init(this);
+        m_mainMenu = menu.GetComponent<LevelEditorMenu>();
+        m_mainMenu.Init(this);
     }
 
     public void ShowSaveLoadLevelWindow()
@@ -109,17 +118,24 @@ public class LevelEditor : MonoBehaviour
         validationWindow.Populate(output);
     }
 
-    public void ShowTestLevelButton()
+    /**
+    * Menu that is displayed at the bottom of the screen when testing a level inside the level editor
+    **/
+    public void ShowTestMenu()
     {
-        m_testLevelBtn = Instantiate(m_testLevelBtnPfb);
-        m_testLevelBtn.transform.SetParent(this.transform, false);
-
-        m_testLevelBtn.onClick.AddListener(this.OnClickTestLevel);
+        m_testMenu = Instantiate(m_testMenuPfb);
+        m_testMenu.gameObject.name = "TestMenu";
+        m_testMenu.gameObject.transform.SetParent(this.transform, false);
+        m_testMenu.Init(this);
     }
 
-    public void DismissTestLevelButton()
+    public void DismissTestMenu()
     {
-        Destroy(m_testLevelBtn.gameObject);
+        if (m_testMenu != null)
+        {
+            Destroy(m_testMenu.gameObject);
+            m_testMenu = null;
+        }
     }
 
     public void OnClickTestLevel()
@@ -128,7 +144,43 @@ public class LevelEditor : MonoBehaviour
         Floor clampedFloor = m_editedLevel.m_floor.Clamp();
 
         GameController.GetInstance().RemoveFloor();
+        GameController.GetInstance().RemoveBonuses();
+        GameController.GetInstance().BuildBonusesHolder();
         GameController.GetInstance().RenderFloor(clampedFloor);
+    }
+
+    public void DisplaySolutions(bool displayShortestSolutionOnly = true)
+    {
+        Brick.RollDirection[][] solutions = m_editedLevel.m_solutions;
+
+        //Create an instance of a panel to display the arrow images
+        SolutionPanel solutionPanel = Instantiate(m_solutionPanelPfb);
+        solutionPanel.gameObject.name = "SolutionPanel";
+        solutionPanel.transform.SetParent(this.transform, false);
+
+        if (!displayShortestSolutionOnly)
+        {
+            for (int i = 0; i != solutions.GetLength(0); i++)
+            {
+                solutionPanel.AddSolution(solutions[i]);
+            }
+        }
+        else
+        {
+            //for the moment just display the shortest one
+            int shortestSolutionIndex = 0;
+            int shortestSolutionLength = solutions[0].Length;
+            for (int i = 1; i != solutions.GetLength(0); i++)
+            {
+                if (solutions[i].Length < shortestSolutionLength)
+                {
+                    shortestSolutionIndex = i;
+                    shortestSolutionLength = solutions[i].Length;
+                }
+            }
+
+            solutionPanel.AddSolution(solutions[shortestSolutionIndex]);
+        }
     }
 
     public void ProcessClick()

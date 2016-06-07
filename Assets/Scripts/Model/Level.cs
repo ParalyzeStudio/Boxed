@@ -19,6 +19,7 @@ public class Level
     public List<Bonus> m_bonuses;
 
     public bool m_validated; //has the level been validated
+    public Brick.RollDirection[][] m_solutions;
 
     public Level(Floor floor)
     {
@@ -95,8 +96,9 @@ public class Level
         //}
 
         validationData.m_success = true;
-        validationData.m_solutions = solutions;
         m_validated = true;
+
+        CopySolutionsToLevel(validationData.m_solutions);
 
         return validationData;
     }
@@ -109,6 +111,25 @@ public class Level
     {
         SolutionTree solutionTree = new SolutionTree(maxMovements, m_startTile, m_finishTile);
         return solutionTree.SearchForSolutions();
+    }
+
+    /**
+    * Transform the nodes solutions into sequence of rolling movements and copy them to this level
+    **/
+    public void CopySolutionsToLevel(SolutionNode[][] solutions)
+    {
+        m_solutions = new Brick.RollDirection[solutions.GetLength(0)][];
+
+        for (int i = 0; i != solutions.GetLength(0); i++)
+        {
+            Brick.RollDirection[] solution = new Brick.RollDirection[solutions[i].Length];
+            for (int j = 0; j != solution.Length; j++)
+            {
+                solution[j] = solutions[i][j].m_direction;
+            }
+
+            m_solutions[i] = solution;
+        }
     }
 
     /**

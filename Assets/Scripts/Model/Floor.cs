@@ -153,7 +153,7 @@ public class Floor
         bool bEmptyFloor = true;
         for (int i = 0; i != m_tiles.Length; i++)
         {
-            if (m_tiles[i].CurrentState == Tile.State.SELECTED)
+            if (m_tiles[i].CurrentState == Tile.State.SELECTED || m_tiles[i].CurrentState == Tile.State.START || m_tiles[i].CurrentState == Tile.State.FINISH)
             {
                 bEmptyFloor = false;
                 int columnIndex = m_tiles[i].m_columnIndex;
