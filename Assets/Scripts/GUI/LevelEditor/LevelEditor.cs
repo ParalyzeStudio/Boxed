@@ -3,27 +3,17 @@ using UnityEngine.UI;
 
 public class LevelEditor : MonoBehaviour
 {
-    public GameObject m_levelEditorMenuPfb;
+    public LevelEditorMenuSwitcher m_levelEditorMenuSwitcherPfb;
     public SaveLoadLevelWindow m_saveLoadLevelWindowPfb;
     public ValidationWindow m_validationWindowPfb;
     public TestMenu m_testMenuPfb;
     public SolutionPanel m_solutionPanelPfb;
 
-    private LevelEditorMenu m_mainMenu;
-    private TestMenu m_testMenu;    
+    public LevelEditorMenuSwitcher m_menuSwitcher { get; set; }
+    private TestMenu m_testMenu;
+    private SolutionPanel m_solutionPanel;  
 
     public Level m_editedLevel { get; set; }
-    private Level m_testLevel; //the level that is being test after clicking on the Test Level button
-
-    private static LevelEditor s_instance;
-
-    public static LevelEditor GetInstance()
-    {
-        if (s_instance == null)
-            s_instance = GameObject.FindGameObjectWithTag("LevelEditor").GetComponent<LevelEditor>();
-
-        return s_instance;
-    }
 
     public enum EditingMode
     {
@@ -65,26 +55,18 @@ public class LevelEditor : MonoBehaviour
             GameController.GetInstance().RenderFloor(level.m_floor);
 
             if (level.m_validated)
-                m_mainMenu.ToggleValidatePublishButtons(false);
+                m_menuSwitcher.GetMainMenu().ToggleValidatePublishButtons(false);
             else
-                m_mainMenu.ToggleValidatePublishButtons(true);
+                m_menuSwitcher.GetMainMenu().ToggleValidatePublishButtons(true);
         }        
-    }
-
-    private void DisplayLevel(Level level)
-    {
-        GameController.GetInstance().ClearLevel();
-        //GameController.GetInstance().StartLevel(level);
     }
 
     public void BuildMainMenu()
     {
-        GameObject menu = (GameObject)Instantiate(m_levelEditorMenuPfb);
-        menu.name = "MainMenu";
-        menu.transform.SetParent(this.transform, false);
-
-        m_mainMenu = menu.GetComponent<LevelEditorMenu>();
-        m_mainMenu.Init(this);
+        m_menuSwitcher = Instantiate(m_levelEditorMenuSwitcherPfb);
+        m_menuSwitcher.name = "MainMenu";
+        m_menuSwitcher.transform.SetParent(this.transform, false);
+        m_menuSwitcher.Init(this);
     }
 
     public void ShowSaveLoadLevelWindow()
@@ -114,7 +96,7 @@ public class LevelEditor : MonoBehaviour
     {
         ValidationWindow validationWindow = Instantiate(m_validationWindowPfb);
         validationWindow.name = "ValidationWindow";
-        validationWindow.transform.SetParent(GameController.GetInstance().m_canvas.transform, false);
+        validationWindow.transform.SetParent(GameController.GetInstance().GetGUIManager().m_canvas.transform, false);
         validationWindow.Populate(output);
     }
 
@@ -138,15 +120,23 @@ public class LevelEditor : MonoBehaviour
         }
     }
 
-    public void OnClickTestLevel()
+    public void OnClickTestLevel(bool isEditingLevel)
     {
-        //Save the currently edited floor
-        Floor clampedFloor = m_editedLevel.m_floor.Clamp();
+        GameController.GetInstance().ClearLevel();
 
-        GameController.GetInstance().RemoveFloor();
-        GameController.GetInstance().RemoveBonuses();
-        GameController.GetInstance().BuildBonusesHolder();
-        GameController.GetInstance().RenderFloor(clampedFloor);
+        if (isEditingLevel)
+        {
+            Floor clampedFloor = m_editedLevel.m_floor.Clamp();
+            Level testLevel = new Level(clampedFloor);
+            GameController.GetInstance().StartLevel(testLevel);
+        }
+        else
+        {
+            //GameController.GetInstance().StartLevel(m_editedLevel);
+            GameController.GetInstance().ClearLevel();
+            BuildLevel(m_editedLevel);
+            DismissSolutions();
+        }
     }
 
     public void DisplaySolutions(bool displayShortestSolutionOnly = true)
@@ -154,15 +144,15 @@ public class LevelEditor : MonoBehaviour
         Brick.RollDirection[][] solutions = m_editedLevel.m_solutions;
 
         //Create an instance of a panel to display the arrow images
-        SolutionPanel solutionPanel = Instantiate(m_solutionPanelPfb);
-        solutionPanel.gameObject.name = "SolutionPanel";
-        solutionPanel.transform.SetParent(this.transform, false);
+        m_solutionPanel = Instantiate(m_solutionPanelPfb);
+        m_solutionPanel.gameObject.name = "SolutionPanel";
+        m_solutionPanel.transform.SetParent(this.transform, false);
 
         if (!displayShortestSolutionOnly)
         {
             for (int i = 0; i != solutions.GetLength(0); i++)
             {
-                solutionPanel.AddSolution(solutions[i]);
+                m_solutionPanel.AddSolution(solutions[i]);
             }
         }
         else
@@ -179,7 +169,16 @@ public class LevelEditor : MonoBehaviour
                 }
             }
 
-            solutionPanel.AddSolution(solutions[shortestSolutionIndex]);
+            m_solutionPanel.AddSolution(solutions[shortestSolutionIndex]);
+        }
+    }
+
+    public void DismissSolutions()
+    {
+        if (m_solutionPanel != null)
+        {
+            Destroy(m_solutionPanel.gameObject);
+            m_solutionPanel = null;
         }
     }
 

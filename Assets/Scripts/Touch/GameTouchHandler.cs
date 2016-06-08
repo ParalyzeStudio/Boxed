@@ -2,6 +2,8 @@
 
 public class GameTouchHandler : TouchHandler
 {
+    private Tile m_lastRaycastTile; //the last tile that has been raycast
+
     protected override bool IsPointerLocationContainedInObject(Vector2 pointerLocation)
     {
         return true;
@@ -9,7 +11,12 @@ public class GameTouchHandler : TouchHandler
     
     protected override void OnPointerDown(Vector2 pointerLocation)
     {
-        base.OnPointerDown(pointerLocation);
+        if (GameController.GetInstance().m_levelEditorMode)
+        {
+            LevelEditor levelEditor = GameController.GetInstance().GetGUIManager().m_levelEditor;
+            if (levelEditor.m_editingMode == LevelEditor.EditingMode.TILES_EDITING)
+                EditTiles();
+        }
     }
 
     protected override void OnPointerUp()
@@ -17,11 +24,23 @@ public class GameTouchHandler : TouchHandler
         base.OnPointerUp();
     }
 
+    protected override bool OnPointerMove(Vector2 pointerLocation, Vector2 delta)
+    {
+        if (GameController.GetInstance().m_levelEditorMode)
+        {
+            LevelEditor levelEditor = GameController.GetInstance().GetGUIManager().m_levelEditor;
+            if (levelEditor.m_editingMode == LevelEditor.EditingMode.TILES_EDITING)
+                EditTiles();
+        }
+
+        return true;
+    }
+
     protected override void OnClick(Vector2 clickLocation)
     {
         if (GameController.GetInstance().m_levelEditorMode)
         {
-            LevelEditor levelEditor = LevelEditor.GetInstance();
+            LevelEditor levelEditor = GameController.GetInstance().GetGUIManager().m_levelEditor;
             if (levelEditor.GUIProcessedClick() || levelEditor.IsSaveLevelWindowActive())
                 return;
 
@@ -29,14 +48,7 @@ public class GameTouchHandler : TouchHandler
             Tile raycastTile = RayCastFloor();
             if (raycastTile == null)
                 return;
-            if (levelEditor.m_editingMode == LevelEditor.EditingMode.TILES_EDITING)
-            {
-                if (raycastTile.CurrentState == Tile.State.SELECTED)
-                    raycastTile.CurrentState = Tile.State.DISABLED;
-                else
-                    raycastTile.CurrentState = Tile.State.SELECTED;
-            }
-            else if (levelEditor.m_editingMode == LevelEditor.EditingMode.CHECKPOINTS_EDITING)
+             if (levelEditor.m_editingMode == LevelEditor.EditingMode.CHECKPOINTS_EDITING)
             {
                
                 if (raycastTile.CurrentState == Tile.State.SELECTED)
@@ -96,15 +108,40 @@ public class GameTouchHandler : TouchHandler
         }
     }
 
+    /**
+    * Apply the action of editing tiles to the currently raycast tile
+    **/
+    private bool EditTiles()
+    {
+        Tile raycastTile = RayCastFloor();
+        if (raycastTile == null || raycastTile == m_lastRaycastTile)
+            return false;
+        m_lastRaycastTile = raycastTile;
+
+        LevelEditorMenuSwitcher menuSwitcher = GameController.GetInstance().GetGUIManager().m_levelEditor.m_menuSwitcher;
+        EditTilesSubMenu.TileSelectionMode tileSelectionMode = ((EditTilesSubMenu)menuSwitcher.GetMenuForID(LevelEditorMenuSwitcher.MenuID.ID_EDIT_TILES)).m_tileSelectionMode;
+
+        if (tileSelectionMode == EditTilesSubMenu.TileSelectionMode.SELECT)
+        {
+            if (raycastTile.CurrentState != Tile.State.SELECTED)
+                raycastTile.CurrentState = Tile.State.SELECTED;
+        }
+        else if (tileSelectionMode == EditTilesSubMenu.TileSelectionMode.DESELECT)
+        {
+            if (raycastTile.CurrentState == Tile.State.SELECTED)
+                raycastTile.CurrentState = Tile.State.DISABLED;
+        }
+
+        return true;
+    }
+
     private Tile RayCastFloor()
     {
-        //Build the plane containing tiles
-        Plane tilesPlane = new Plane(Vector3.up, GameController.GetInstance().m_floor.transform.position);
-
         //Build a ray starting from camera near clip plane mouse world space position
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         float rayDistance;
-        if (tilesPlane.Raycast(ray, out rayDistance))
+        Plane floorPlane = new Plane(Vector3.up, GameController.GetInstance().m_floor.transform.position);
+        if (floorPlane.Raycast(ray, out rayDistance))
         {
             Vector3 rayIntersectionPoint = ray.GetPoint(rayDistance);
 

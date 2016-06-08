@@ -32,7 +32,7 @@ public class SaveLoadLevelWindow : MonoBehaviour
     {
         m_parentLevelEditor = parentLevelEditor;
         
-        int levelsCount = PopulateLevelsList();
+        PopulateLevelsList();
         m_selectedItem = null;
 
         DisableButton(ButtonID.ID_SAVE_LEVEL);
@@ -96,7 +96,6 @@ public class SaveLoadLevelWindow : MonoBehaviour
 
     public void OnClickSave()
     {
-        Debug.Log("DO SAVE");
         int levelNumber = m_selectedItem.m_index + 1;
 
         //Build a new floor and a new level that holds it
@@ -116,10 +115,10 @@ public class SaveLoadLevelWindow : MonoBehaviour
         else
         {
             //Show popup to confirm choice of overwriting current selected level
-            OverwriteFilePopup overwriteFilePopup = (OverwriteFilePopup)Instantiate(m_overwriteFilePopupPfb);
+            OverwriteFilePopup overwriteFilePopup = Instantiate(m_overwriteFilePopupPfb);
             overwriteFilePopup.Init(this);
 
-            overwriteFilePopup.transform.SetParent(GameController.GetInstance().m_canvas.transform, false);
+            overwriteFilePopup.transform.SetParent(m_parentLevelEditor.transform, false);
         }        
     }
 
@@ -127,7 +126,8 @@ public class SaveLoadLevelWindow : MonoBehaviour
     {
         GameController.GetInstance().ClearLevel();
         m_parentLevelEditor.BuildLevel(m_selectedItem.m_level);
-        m_parentLevelEditor.ShowTestMenu();
+        if (m_selectedItem.m_level.m_validated)
+            m_parentLevelEditor.ShowTestMenu();
 
         //Dismiss the window
         OnClickCancel();

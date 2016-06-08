@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class TouchManager : MonoBehaviour
 {
-    public const float MOVE_EPSILON = 0.5f;
+    public const float MOVE_EPSILON = 0.01f;
 
     public bool m_touchDeactivated { get; set; }
 
@@ -106,7 +106,14 @@ public class TouchManager : MonoBehaviour
 
         if (eventType != PointerEventType.NONE)
         {
-            this.GetComponent<GameTouchHandler>().ProcessPointerEvent(pointerLocation, eventType);
+            //If GUI does not process the current mouse position, pass the pointer event to the GameTouchHandler
+            if (!GameController.GetInstance().GetGUIManager().ProcessPointerEvent(Input.mousePosition))
+            {
+                Debug.Log("processed by game");
+                this.GetComponent<GameTouchHandler>().ProcessPointerEvent(pointerLocation, eventType);
+            }
+            else
+                Debug.Log("processed by GUI");
         }
     }
 }

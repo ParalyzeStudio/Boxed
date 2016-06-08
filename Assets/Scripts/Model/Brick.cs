@@ -385,9 +385,9 @@ public class Brick
         m_state = Brick.BrickState.IDLE;
 
         //Change the state of new covered tiles
-        if (m_coveredTiles[0] != null && m_coveredTiles[0].CurrentState == Tile.State.DISABLED)
-            m_coveredTiles[0].CurrentState = Tile.State.SELECTED;
-        if (m_coveredTiles[1] != null && m_coveredTiles[1].CurrentState == Tile.State.DISABLED)
-            m_coveredTiles[1].CurrentState = Tile.State.SELECTED;
+        //if (m_coveredTiles[0] != null && m_coveredTiles[0].CurrentState == Tile.State.DISABLED)
+        //    m_coveredTiles[0].CurrentState = Tile.State.SELECTED;
+        //if (m_coveredTiles[1] != null && m_coveredTiles[1].CurrentState == Tile.State.DISABLED)
+        //    m_coveredTiles[1].CurrentState = Tile.State.SELECTED;
     }
 }

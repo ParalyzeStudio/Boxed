@@ -2,9 +2,6 @@
 
 public class GameController : MonoBehaviour
 {
-    public GameObject m_levelEditorPfb;
-    public GameObject m_canvas;
-
     public GameObject m_brickPfb;
     public GameObject m_floorPfb;
 
@@ -39,13 +36,8 @@ public class GameController : MonoBehaviour
     }
 
     public void EnterLevelEditor()
-    {        
-        //build the level editor object
-        GameObject levelEditorObject = (GameObject)Instantiate(m_levelEditorPfb);
-        levelEditorObject.name = "LevelEditor";
-        levelEditorObject.transform.SetParent(m_canvas.transform, false);
-
-        levelEditorObject.GetComponent<LevelEditor>().Init();
+    {
+        this.GetComponent<GUIManager>().DisplayLevelEditor();
     }
 
     public void ClearLevel()
@@ -84,13 +76,8 @@ public class GameController : MonoBehaviour
 
     public void StartLevel(Level level)
     {
-        //clear old displayed level if any
-        ClearLevel();
-
         BuildBonusesHolder();
-
-        Floor clampedFloor = level.m_floor.Clamp();
-        RenderFloor(clampedFloor);
+        RenderFloor(level.m_floor);
         BuildBrick(level);
     }
 
@@ -122,5 +109,10 @@ public class GameController : MonoBehaviour
     public void BuildBonusesHolder()
     {
         m_bonuses = new GameObject("Bonuses");
+    }
+
+    public GUIManager GetGUIManager()
+    {
+        return this.GetComponent<GUIManager>();
     }
 }

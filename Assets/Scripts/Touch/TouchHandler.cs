@@ -21,11 +21,6 @@ public class TouchHandler : MonoBehaviour
         m_selected = false;
     }
 
-    public virtual void Start()
-    {
-
-    }
-
     /**
      * Process the pointer event and dispatch it to the relevant callback
      * **/
