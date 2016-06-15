@@ -94,4 +94,8 @@ public class Tile
         return (point.x >= tileMinX && point.x <= tileMaxX && point.z >= tileMinZ && point.z <= tileMaxZ);
     }
 
+    public bool HasSameFloorPosition(Tile other)
+    {
+        return (this.m_columnIndex == other.m_columnIndex) && (this.m_lineIndex == other.m_lineIndex);
+    }
 }

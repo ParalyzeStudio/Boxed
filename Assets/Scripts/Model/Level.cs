@@ -11,22 +11,16 @@ public class Level
     public Floor m_floor;
     public string m_title;
 
-    //cache the values of start tiles and finish tiles here to avoid traversing the floor to find them
-    public Tile m_startTile;
-    public Tile m_finishTile;
-
-    //also cache the values for bonuses
-    public List<Bonus> m_bonuses;
-
     public bool m_validated; //has the level been validated
-    public Brick.RollDirection[][] m_solutions;
+    public Brick.RollDirection[] m_solution;
+
+    public bool m_published; //has the level been published
 
     public Level(Floor floor)
     {
         m_floor = floor;
 
         m_validated = false;
-        m_bonuses = new List<Bonus>();
     }
 
     /**
@@ -36,23 +30,15 @@ public class Level
     {
         public bool m_success;
 
-        //in case of success
-        public SolutionNode[][] m_solutions;
+        //in case of success store the shortest solution
+        public SolutionNode[] m_solution;
 
         //in case of failure
         public bool m_startTileSet;
         public bool m_finishTileSet;
-        public List<Bonus> m_unreachableBonuses;
-
-        public void AddUnreachableBonus(Bonus bonus)
-        {
-            if (m_unreachableBonuses == null)
-                m_unreachableBonuses = new List<Bonus>();
-
-            m_unreachableBonuses.Add(bonus);
-        }
+        public bool m_bonusesAreReachable;
     }
-    
+
     /**
     * Call this method to validate a level that has been created inside the level editor
     **/
@@ -60,12 +46,15 @@ public class Level
     {
         ValidationData validationData = new ValidationData();
 
+        Tile startTile = m_floor.GetStartTile();
+        Tile finishTile = m_floor.GetFinishTile();
+
         //First check if start tile and finish tiles have been set
-        if (m_startTile == null || m_finishTile == null)
+        if (startTile == null || finishTile == null)
         {
             validationData.m_success = false;
-            validationData.m_startTileSet = (m_startTile != null);
-            validationData.m_finishTileSet = (m_finishTile != null);
+            validationData.m_startTileSet = (startTile != null);
+            validationData.m_finishTileSet = (finishTile != null);
 
             return validationData;
         }
@@ -77,28 +66,29 @@ public class Level
 
         //Now check if there is at least one valid path from start tile to finish tile
         SolutionNode[][] solutions = Solve(maxMovements);
-        validationData.m_solutions = solutions;
-        if (solutions == null)
+        if (solutions.GetLength(0) == 0) //no solution
         {
             validationData.m_success = false;
+            validationData.m_solution = null;
             return validationData;
-        }       
-
-        //Check if all bonuses are reachable
-        //for (int i = 0; i != m_bonuses.Count; i++)
-        //{
-        //    if (!IsBonusReachable(m_bonuses[i]))
-        //    {
-        //        validationData.m_success = false;
-        //        validationData.AddUnreachableBonus(m_bonuses[i]);
-        //        return validationData;
-        //    }
-        //}
+        }
+        else if (solutions.GetLength(0) == 1) //some bonuses were not on the solution path
+        {
+            validationData.m_success = false;
+            validationData.m_bonusesAreReachable = false;
+            validationData.m_solution = solutions[0];
+        }
+        else
+        {
+            validationData.m_success = true;
+            validationData.m_bonusesAreReachable = true;
+            validationData.m_solution = solutions[1];
+        }
 
         validationData.m_success = true;
         m_validated = true;
 
-        CopySolutionsToLevel(validationData.m_solutions);
+        CopySolutionToLevel(validationData.m_solution);
 
         return validationData;
     }
@@ -109,56 +99,78 @@ public class Level
     **/
     public SolutionNode[][] Solve(int maxMovements)
     {
-        SolutionTree solutionTree = new SolutionTree(maxMovements, m_startTile, m_finishTile);
-        return solutionTree.SearchForSolutions();
+        SolutionTree solutionTree = new SolutionTree(this);
+        return solutionTree.SearchForSolutions(SolutionTree.SHORTEST_SOLUTION | SolutionTree.SHORTEST_SOLUTION_WITH_BONUSES);
     }
+
+    /**
+    * Tells if one or more of the bonuses on the floor are not reachable and return them
+    **/
+    //public List<Bonus> FindUnreachableBonuses()
+    //{
+    //    List<Bonus> unreachableBonuses = new List<Bonus>();
+
+    //    for (int i = 0; i != m_bonuses.Count; i++)
+    //    {
+    //        Bonus bonus = m_bonuses[i];
+
+    //        SolutionTree bonusTree = new SolutionTree(50, m_startTile, m_floor.FindTileForBonus(bonus), false, true);
+    //        SolutionNode[][] solution = bonusTree.SearchForSolutions();
+
+    //        if (solution == null) //one bonus is not reachable
+    //            unreachableBonuses.Add(bonus);
+    //    }
+
+    //    return unreachableBonuses;
+    //}
 
     /**
     * Transform the nodes solutions into sequence of rolling movements and copy them to this level
     **/
-    public void CopySolutionsToLevel(SolutionNode[][] solutions)
+    public void CopySolutionToLevel(SolutionNode[] solution)
     {
-        m_solutions = new Brick.RollDirection[solutions.GetLength(0)][];
+        m_solution = new Brick.RollDirection[solution.Length];
 
-        for (int i = 0; i != solutions.GetLength(0); i++)
+        for (int i = 0; i != solution.Length; i++)
         {
-            Brick.RollDirection[] solution = new Brick.RollDirection[solutions[i].Length];
-            for (int j = 0; j != solution.Length; j++)
-            {
-                solution[j] = solutions[i][j].m_direction;
-            }
-
-            m_solutions[i] = solution;
+            m_solution[i] = solution[i].m_direction;
         }
     }
 
-    /**
-    * Tells if a bonus can be reached by the brick
-    **/
-    public bool IsBonusReachable(Bonus bonus)
+    public bool Save()
+    {        
+        m_floor = m_floor.Clamp(); //clamp floor before saving
+        m_floor.ClearCachedValues(); //remove cached values
+
+        string editedLevelsFolderPath = Application.persistentDataPath + "/Levels/EditedLevels";
+        return SaveToFile(editedLevelsFolderPath);
+    }
+
+    public bool Publish()
     {
-        Tile targetTile = m_floor.FindTileForBonus(bonus);
-        SolutionTree solutionTree = new SolutionTree(100, m_startTile, targetTile, true); //big enough number of movements
-        return solutionTree.SearchForSolutions() != null; //if we found at least one path we're good to go
+        m_floor = m_floor.Clamp(); //clamp floor before saving
+        m_floor.ClearCachedValues(); //remove cached values
+
+        string publishedLevelsFolderPath = Application.persistentDataPath + "/Levels/PublishedLevels";
+        return SaveToFile(publishedLevelsFolderPath);
     }
 
     /**
      * Save level data to the associated file
      * **/
-    public bool SaveToFile()
+    public bool SaveToFile(string path)
     {
         BinaryFormatter bf = new BinaryFormatter();
 
         FileStream fs = null;
-        string levelsFolderPath = Application.persistentDataPath + "/Levels/EditedLevels";
         try
         {
-            fs = File.Open(levelsFolderPath + "/level_" + this.m_number + ".dat", FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
-            Debug.Log("level saved to path:" + levelsFolderPath + "/level_" + this.m_number + ".dat");
+            fs = File.Open(path + "/" + GetFilename() + ".dat", FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+            Debug.Log("level saved to path:" + path + "/" + GetFilename() + ".dat");
         }
         catch (Exception)
         {
-            Debug.Log("FAILED saving level to path:" + levelsFolderPath + "/level_" + this.m_number + ".dat");
+            Debug.Log("FAILED saving level to path:" + path + "/" + GetFilename() + ".dat");
             fs.Close();
             return false; //failed to open or create the file
         }
@@ -170,21 +182,12 @@ public class Level
     }
 
     /**
-     * Load level with number 'iLevelNumber' from file 
-     * **/
-    public static Level LoadFromFile(int iLevelNumber)
-    {
-        string filePath = Application.persistentDataPath + "Levels/EditedLevels/level_" + iLevelNumber + ".dat";
-        return LoadFromFile(filePath);
-    }
-
-    /**
      * Load level saved at location 'path'
      * **/
     public static Level LoadFromFile(string path)
     {
         Level levelData = null;
-        
+
         if (File.Exists(path))
         {
             BinaryFormatter bf = new BinaryFormatter();
@@ -221,5 +224,13 @@ public class Level
             strNumber = number.ToString();
 
         return strNumber;
+    }
+
+    public string GetFilename()
+    {
+        if (m_title == null)
+            return "Level_" + GetNumberAsString(this.m_number);
+        else
+            return m_title.Replace(" ", "_");
     }
 }

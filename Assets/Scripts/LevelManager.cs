@@ -27,12 +27,15 @@ public class LevelManager : MonoBehaviour
         CacheLevels();
     }
 
-    public Level GetLevelForNumber(int number)
+    public Level GetEditedLevelForNumber(int number)
     {
-        if (number > m_editedLevels.Count)
-            return null;
+        for (int i = 0; i != m_editedLevels.Count; i++)
+        {
+            if (m_editedLevels[i].m_number == number)
+                return m_editedLevels[i];
+        }
 
-        return m_editedLevels[number - 1];
+        return null;
     }
 
     /**

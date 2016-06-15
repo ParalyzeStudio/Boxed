@@ -9,13 +9,19 @@ public class GameController : MonoBehaviour
     public FloorRenderer m_floor { get; set; }
     public GameObject m_bonuses { get; set; } //use this object to hold bonus objects
 
-    public bool m_levelEditorMode;
+    public enum GameMode
+    {
+        MAIN_MENU,
+        GAME,
+        LEVEL_EDITOR
+    }
+    public GameMode m_gameMode;
 
     private static GameController s_instance;
 
     public void Start()
     {
-        if (m_levelEditorMode)
+        if (m_gameMode == GameMode.LEVEL_EDITOR)
         {
             EnterLevelEditor();
         }

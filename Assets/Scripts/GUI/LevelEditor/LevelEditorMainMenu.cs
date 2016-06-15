@@ -31,7 +31,7 @@ public class LevelEditorMainMenu : LevelEditorMenu
 
     public void OnClickValidateLevel()
     {
-        Level.ValidationData output = m_parentSwitcher.m_parentEditor.m_editedLevel.Validate(10);
+        Level.ValidationData output = m_parentSwitcher.m_parentEditor.m_editedLevel.Validate(50);
         m_parentSwitcher.m_parentEditor.DisplayLevelValidationOutput(output);
 
         //remove the validate button and make the Test level button active
@@ -40,6 +40,11 @@ public class LevelEditorMainMenu : LevelEditorMenu
             ToggleValidatePublishButtons(false);
             m_parentSwitcher.m_parentEditor.ShowTestMenu();
         }
+    }
+
+    public void OnClickPublishLevel()
+    {
+        m_parentSwitcher.m_parentEditor.ShowPublishWindow();
     }
 
     public void OnClickSaveLoad()

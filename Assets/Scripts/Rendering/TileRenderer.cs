@@ -61,6 +61,14 @@ public class TileRenderer : MonoBehaviour
         Destroy(m_bonusObject.gameObject);
     }
 
+    /**
+    * Called when brick covers this tile and a bonus is attached to it
+    **/
+    public void OnCaptureBonus()
+    {
+        DestroyBonusObject();
+    }
+
     public void Update()
     {
         if (m_tile.m_tileMaterialDirty)

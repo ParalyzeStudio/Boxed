@@ -110,7 +110,7 @@ public class SaveLoadLevelWindow : MonoBehaviour
             m_selectedItem.m_level = editedLevel;
             m_selectedItem.InvalidateContent();
             m_saveSuccessMessage.gameObject.SetActive(true);
-            editedLevel.SaveToFile();
+            editedLevel.Save();
         }
         else
         {

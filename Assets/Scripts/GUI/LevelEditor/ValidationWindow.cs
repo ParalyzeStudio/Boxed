@@ -28,10 +28,10 @@ public class ValidationWindow : MonoBehaviour
                 errorMsgs.Add(CreateErrorMessage("Start tile has not been set"));
             if (!data.m_finishTileSet)
                 errorMsgs.Add(CreateErrorMessage("Finish tile has not been set"));
-            if (data.m_unreachableBonuses != null)
-                errorMsgs.Add(CreateErrorMessage("Some bonuses are not reachable"));
-            if (data.m_solutions == null)
+            if (data.m_solution == null)
                 errorMsgs.Add(CreateErrorMessage("Could not find a path between start and finish tile"));
+            if (data.m_bonusesAreReachable == false)
+                errorMsgs.Add(CreateErrorMessage("Some bonuses are not reachable"));
 
             //add separation lines
             for (int i = 0; i != errorMsgs.Count; i++)

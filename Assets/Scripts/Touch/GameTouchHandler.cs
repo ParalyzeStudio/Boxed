@@ -8,15 +8,17 @@ public class GameTouchHandler : TouchHandler
     {
         return true;
     }
-    
+
     protected override void OnPointerDown(Vector2 pointerLocation)
     {
-        if (GameController.GetInstance().m_levelEditorMode)
+        if (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR)
         {
             LevelEditor levelEditor = GameController.GetInstance().GetGUIManager().m_levelEditor;
             if (levelEditor.m_editingMode == LevelEditor.EditingMode.TILES_EDITING)
                 EditTiles();
         }
+
+        base.OnPointerDown(pointerLocation);
     }
 
     protected override void OnPointerUp()
@@ -26,7 +28,7 @@ public class GameTouchHandler : TouchHandler
 
     protected override bool OnPointerMove(Vector2 pointerLocation, Vector2 delta)
     {
-        if (GameController.GetInstance().m_levelEditorMode)
+        if (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR)
         {
             LevelEditor levelEditor = GameController.GetInstance().GetGUIManager().m_levelEditor;
             if (levelEditor.m_editingMode == LevelEditor.EditingMode.TILES_EDITING)
@@ -38,50 +40,50 @@ public class GameTouchHandler : TouchHandler
 
     protected override void OnClick(Vector2 clickLocation)
     {
-        if (GameController.GetInstance().m_levelEditorMode)
+        if (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR)
         {
             LevelEditor levelEditor = GameController.GetInstance().GetGUIManager().m_levelEditor;
-            if (levelEditor.GUIProcessedClick() || levelEditor.IsSaveLevelWindowActive())
-                return;
 
             //Raycast the tiles to select them
             Tile raycastTile = RayCastFloor();
             if (raycastTile == null)
                 return;
-             if (levelEditor.m_editingMode == LevelEditor.EditingMode.CHECKPOINTS_EDITING)
+            if (levelEditor.m_editingMode == LevelEditor.EditingMode.CHECKPOINTS_EDITING)
             {
-               
+                Tile levelStartTile = levelEditor.m_editedLevel.m_floor.GetStartTile();
+                Tile levelFinishTile = levelEditor.m_editedLevel.m_floor.GetFinishTile();
+
                 if (raycastTile.CurrentState == Tile.State.SELECTED)
-                {
-                    if (levelEditor.m_editedLevel.m_startTile == null) //there is no other tile that has been marked as start tile
+                {   
+                    if (levelStartTile == null) //there is no other tile that has been marked as start tile
                     {
                         raycastTile.CurrentState = Tile.State.START;
-                        levelEditor.m_editedLevel.m_startTile = raycastTile;
+                        levelEditor.m_editedLevel.m_floor.SetStartTile(raycastTile);
                     }
-                    else if (levelEditor.m_editedLevel.m_finishTile == null) //there is no other tile that has been marked as finish tile
+                    else if (levelFinishTile == null) //there is no other tile that has been marked as finish tile
                     {
                         raycastTile.CurrentState = Tile.State.FINISH;
-                        levelEditor.m_editedLevel.m_finishTile = raycastTile;
+                        levelEditor.m_editedLevel.m_floor.SetFinishTile(raycastTile);
                     }
                 }
                 else if (raycastTile.CurrentState == Tile.State.START)
                 {
-                    if (levelEditor.m_editedLevel.m_finishTile == null)
+                    if (levelFinishTile == null)
                     {
                         raycastTile.CurrentState = Tile.State.FINISH;
-                        levelEditor.m_editedLevel.m_finishTile = raycastTile;
-                        levelEditor.m_editedLevel.m_startTile = null;
+                        levelEditor.m_editedLevel.m_floor.SetFinishTile(raycastTile);
+                        levelEditor.m_editedLevel.m_floor.SetStartTile(null);
                     }
                     else
                     {
                         raycastTile.CurrentState = Tile.State.SELECTED;
-                        levelEditor.m_editedLevel.m_startTile = null;
+                        levelEditor.m_editedLevel.m_floor.SetStartTile(null);
                     }
                 }
                 else if (raycastTile.CurrentState == Tile.State.FINISH)
                 {
                     raycastTile.CurrentState = Tile.State.SELECTED;
-                    levelEditor.m_editedLevel.m_finishTile = null;
+                    levelEditor.m_editedLevel.m_floor.SetFinishTile(null);
                 }
             }
             else if (levelEditor.m_editingMode == LevelEditor.EditingMode.BONUSES_EDITING)
@@ -92,7 +94,6 @@ public class GameTouchHandler : TouchHandler
                     {
                         FloorRenderer floorRenderer = GameController.GetInstance().m_floor;
                         floorRenderer.GetRendererForTile(raycastTile).DestroyBonusObject();
-                        levelEditor.m_editedLevel.m_bonuses.Remove(raycastTile.AttachedBonus);
                         raycastTile.AttachedBonus = null;
                     }
                     else
@@ -101,7 +102,6 @@ public class GameTouchHandler : TouchHandler
                         FloorRenderer floorRenderer = GameController.GetInstance().m_floor;
                         floorRenderer.GetRendererForTile(raycastTile).BuildBonusObject();
                         raycastTile.AttachedBonus = bonus;
-                        levelEditor.m_editedLevel.m_bonuses.Add(bonus);
                     }
                 }
             }
@@ -129,7 +129,17 @@ public class GameTouchHandler : TouchHandler
         else if (tileSelectionMode == EditTilesSubMenu.TileSelectionMode.DESELECT)
         {
             if (raycastTile.CurrentState == Tile.State.SELECTED)
+            {
                 raycastTile.CurrentState = Tile.State.DISABLED;
+
+                //also destroy any attached bonus to this tile
+                if (raycastTile.AttachedBonus != null)
+                {
+                    TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(raycastTile);
+                    tileRenderer.DestroyBonusObject();
+                    raycastTile.AttachedBonus = null;
+                }
+            }
         }
 
         return true;

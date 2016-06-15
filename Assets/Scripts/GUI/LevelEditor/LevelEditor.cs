@@ -3,9 +3,12 @@ using UnityEngine.UI;
 
 public class LevelEditor : MonoBehaviour
 {
+    public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 50;
+
     public LevelEditorMenuSwitcher m_levelEditorMenuSwitcherPfb;
     public SaveLoadLevelWindow m_saveLoadLevelWindowPfb;
     public ValidationWindow m_validationWindowPfb;
+    public PublishWindow m_publishWindowPfb;
     public TestMenu m_testMenuPfb;
     public SolutionPanel m_solutionPanelPfb;
 
@@ -20,13 +23,10 @@ public class LevelEditor : MonoBehaviour
         NONE = 0,
         TILES_EDITING,
         CHECKPOINTS_EDITING,
-        BONUSES_EDITING,
-        SAVING_LOADING_LEVEL, //a window is displayed to save or load a level from file  
+        BONUSES_EDITING
     }
 
     public EditingMode m_editingMode { get; set; }
-
-    private bool m_guiProcessedClick; //variable used to know if the Level Editor GUI has processed the click event
 
     public void Init()
     {
@@ -45,19 +45,22 @@ public class LevelEditor : MonoBehaviour
         //Create the level that will be edited
         if (level == null)
         {
-            Floor floor = new Floor(50, 50);
+            Floor floor = new Floor(FLOOR_DEFAULT_SIZE_FOR_EDITING, FLOOR_DEFAULT_SIZE_FOR_EDITING);
             m_editedLevel = new Level(floor);
             GameController.GetInstance().RenderFloor(floor);
         }
         else
         {
-            m_editedLevel = level;
-            GameController.GetInstance().RenderFloor(level.m_floor);
+            Floor unclampedFloor = level.m_floor.Unclamp(FLOOR_DEFAULT_SIZE_FOR_EDITING);
+            level.m_floor = unclampedFloor;
+            GameController.GetInstance().RenderFloor(unclampedFloor);
 
             if (level.m_validated)
                 m_menuSwitcher.GetMainMenu().ToggleValidatePublishButtons(false);
             else
                 m_menuSwitcher.GetMainMenu().ToggleValidatePublishButtons(true);
+
+            m_editedLevel = level;
         }        
     }
 
@@ -71,10 +74,14 @@ public class LevelEditor : MonoBehaviour
 
     public void ShowSaveLoadLevelWindow()
     {
-        m_guiProcessedClick = true;
-        m_editingMode = EditingMode.SAVING_LOADING_LEVEL;
-
         SaveLoadLevelWindow window = Instantiate(m_saveLoadLevelWindowPfb);
+        window.transform.SetParent(this.transform, false);
+        window.Init(this);
+    }
+
+    public void ShowPublishWindow()
+    {
+        PublishWindow window = Instantiate(m_publishWindowPfb);
         window.transform.SetParent(this.transform, false);
         window.Init(this);
     }
@@ -82,11 +89,6 @@ public class LevelEditor : MonoBehaviour
     public void OnDismissSaveLoadLevelWindow()
     {
         m_editingMode = EditingMode.NONE;
-    }
-
-    public bool IsSaveLevelWindowActive()
-    {
-        return m_editingMode == EditingMode.SAVING_LOADING_LEVEL;
     }
     
     /**
@@ -105,6 +107,9 @@ public class LevelEditor : MonoBehaviour
     **/
     public void ShowTestMenu()
     {
+        if (m_testMenu != null)
+            return;
+
         m_testMenu = Instantiate(m_testMenuPfb);
         m_testMenu.gameObject.name = "TestMenu";
         m_testMenu.gameObject.transform.SetParent(this.transform, false);
@@ -139,38 +144,16 @@ public class LevelEditor : MonoBehaviour
         }
     }
 
-    public void DisplaySolutions(bool displayShortestSolutionOnly = true)
+    public void DisplaySolutions()
     {
-        Brick.RollDirection[][] solutions = m_editedLevel.m_solutions;
+        Brick.RollDirection[] solution = m_editedLevel.m_solution;
 
         //Create an instance of a panel to display the arrow images
         m_solutionPanel = Instantiate(m_solutionPanelPfb);
         m_solutionPanel.gameObject.name = "SolutionPanel";
         m_solutionPanel.transform.SetParent(this.transform, false);
 
-        if (!displayShortestSolutionOnly)
-        {
-            for (int i = 0; i != solutions.GetLength(0); i++)
-            {
-                m_solutionPanel.AddSolution(solutions[i]);
-            }
-        }
-        else
-        {
-            //for the moment just display the shortest one
-            int shortestSolutionIndex = 0;
-            int shortestSolutionLength = solutions[0].Length;
-            for (int i = 1; i != solutions.GetLength(0); i++)
-            {
-                if (solutions[i].Length < shortestSolutionLength)
-                {
-                    shortestSolutionIndex = i;
-                    shortestSolutionLength = solutions[i].Length;
-                }
-            }
-
-            m_solutionPanel.AddSolution(solutions[shortestSolutionIndex]);
-        }
+        m_solutionPanel.AddSolution(solution);
     }
 
     public void DismissSolutions()
@@ -180,21 +163,5 @@ public class LevelEditor : MonoBehaviour
             Destroy(m_solutionPanel.gameObject);
             m_solutionPanel = null;
         }
-    }
-
-    public void ProcessClick()
-    {
-        m_guiProcessedClick = true;
-    }
-
-    public bool GUIProcessedClick()
-    {
-        if (m_guiProcessedClick)
-        {
-            m_guiProcessedClick = false;
-            return true;
-        }
-
-        return false;
     }
 }

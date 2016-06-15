@@ -53,7 +53,7 @@ public class TestMenu : MonoBehaviour
         else
         {
             m_solutionsDisplayed = true;
-            m_parentEditor.DisplaySolutions(false);
+            m_parentEditor.DisplaySolutions();
         }
     }
 }

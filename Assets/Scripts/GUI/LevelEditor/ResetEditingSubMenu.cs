@@ -12,6 +12,8 @@ public class ResetEditingSubMenu : LevelEditorMenu
         m_parentSwitcher.m_parentEditor.BuildLevel(null);
 
         m_parentSwitcher.ShowMenu(LevelEditorMenuSwitcher.MenuID.ID_MAIN);
+        m_parentSwitcher.GetMainMenu().ToggleValidatePublishButtons(true);
+        m_parentSwitcher.m_parentEditor.DismissTestMenu();
     }
 
     public override void OnClickCancelSubMenu()
