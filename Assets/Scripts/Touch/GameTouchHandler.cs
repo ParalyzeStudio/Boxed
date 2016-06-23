@@ -53,7 +53,7 @@ public class GameTouchHandler : TouchHandler
                 Tile levelStartTile = levelEditor.m_editedLevel.m_floor.GetStartTile();
                 Tile levelFinishTile = levelEditor.m_editedLevel.m_floor.GetFinishTile();
 
-                if (raycastTile.CurrentState == Tile.State.SELECTED)
+                if (raycastTile.CurrentState == Tile.State.NORMAL)
                 {   
                     if (levelStartTile == null) //there is no other tile that has been marked as start tile
                     {
@@ -76,19 +76,19 @@ public class GameTouchHandler : TouchHandler
                     }
                     else
                     {
-                        raycastTile.CurrentState = Tile.State.SELECTED;
+                        raycastTile.CurrentState = Tile.State.NORMAL;
                         levelEditor.m_editedLevel.m_floor.SetStartTile(null);
                     }
                 }
                 else if (raycastTile.CurrentState == Tile.State.FINISH)
                 {
-                    raycastTile.CurrentState = Tile.State.SELECTED;
+                    raycastTile.CurrentState = Tile.State.NORMAL;
                     levelEditor.m_editedLevel.m_floor.SetFinishTile(null);
                 }
             }
             else if (levelEditor.m_editingMode == LevelEditor.EditingMode.BONUSES_EDITING)
             {
-                if (raycastTile.CurrentState == Tile.State.SELECTED)
+                if (raycastTile.CurrentState == Tile.State.NORMAL)
                 {
                     if (raycastTile.AttachedBonus != null)
                     {
@@ -123,12 +123,12 @@ public class GameTouchHandler : TouchHandler
 
         if (tileSelectionMode == EditTilesSubMenu.TileSelectionMode.SELECT)
         {
-            if (raycastTile.CurrentState != Tile.State.SELECTED)
-                raycastTile.CurrentState = Tile.State.SELECTED;
+            if (raycastTile.CurrentState == Tile.State.DISABLED)
+                raycastTile.CurrentState = Tile.State.NORMAL;
         }
         else if (tileSelectionMode == EditTilesSubMenu.TileSelectionMode.DESELECT)
         {
-            if (raycastTile.CurrentState == Tile.State.SELECTED)
+            if (raycastTile.CurrentState == Tile.State.NORMAL)
             {
                 raycastTile.CurrentState = Tile.State.DISABLED;
 

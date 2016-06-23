@@ -65,8 +65,15 @@ public class Level
         }
 
         //Now check if there is at least one valid path from start tile to finish tile
+        System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+        sw.Start();
+
         SolutionNode[][] solutions = Solve(maxMovements);
-        if (solutions.GetLength(0) == 0) //no solution
+
+        sw.Stop();
+        Debug.Log("Level solved in " + sw.ElapsedMilliseconds + " ms");
+
+        if (solutions == null || solutions.GetLength(0) == 0) //no solution
         {
             validationData.m_success = false;
             validationData.m_solution = null;
@@ -74,6 +81,7 @@ public class Level
         }
         else if (solutions.GetLength(0) == 1) //some bonuses were not on the solution path
         {
+            Debug.Log("bonuses not reachable");
             validationData.m_success = false;
             validationData.m_bonusesAreReachable = false;
             validationData.m_solution = solutions[0];

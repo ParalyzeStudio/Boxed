@@ -21,9 +21,20 @@ public class GameController : MonoBehaviour
 
     public void Start()
     {
+        //init the camera
+        GameObject.FindGameObjectWithTag("MainCamera").GetComponent<IsometricCameraController>().Init();
+
+        //init the GUI manager
+        GetComponent<GUIManager>().Init();       
+
         if (m_gameMode == GameMode.LEVEL_EDITOR)
         {
             EnterLevelEditor();
+        }
+        else if (m_gameMode == GameMode.MAIN_MENU)
+        {   
+            //Show whole gui (title + buttons)
+            this.GetComponent<GUIManager>().DisplayMainMenu();
         }
         else
         {
@@ -94,6 +105,7 @@ public class GameController : MonoBehaviour
             Destroy(m_floor.gameObject);
             m_floor = null;
         }
+
         //Render the floor
         GameObject floorObject = (GameObject)Instantiate(m_floorPfb);
         m_floor = floorObject.GetComponent<FloorRenderer>();

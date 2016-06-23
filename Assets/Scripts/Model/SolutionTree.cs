@@ -72,7 +72,10 @@ public class SolutionTree
             childNodes[i].Process();
         }
 
+        Debug.Log("processed nodes count:" + GetProcessedNodesCount());
+
         //now search for paths that are marked as successful and return them
+        Debug.Log("bFilters:" + bFilters);
         return ExtractSuccessPaths(bFilters);
     }
 
@@ -151,6 +154,9 @@ public class SolutionTree
                         containsAllBonuses = true;
                         shortestPathWithBonuses = shortestPath;
                     }
+
+                    if (paths.Count == 0)
+                        break;
                 }
 
                 if (shortestPathWithBonuses != null)
@@ -196,7 +202,7 @@ public class SolutionTree
             {
                 if (!bonusTilesCoveredState[p] && node.CoversTile(m_bonusTiles[p]))
                 {
-                    bonusTilesCoveredState[i] = true;
+                    bonusTilesCoveredState[p] = true;
                     bonusTilesCoveredCount++;
                 }
             }

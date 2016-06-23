@@ -6,7 +6,7 @@ public class IsometricCameraController : MonoBehaviour
     float camMoveSpeed = 30f;
     float zoomSpeed = 2.0f;
 
-    void Start()
+    public void Init()
     {
         transform.position = Vector3.zero;
         //Look at the center to get an angle
@@ -18,7 +18,7 @@ public class IsometricCameraController : MonoBehaviour
         transform.position = -50 * cameraDirection;
     }
 
-    void LateUpdate()
+    public void LateUpdate()
     {
         //Move camera with keys
         //Move left/right

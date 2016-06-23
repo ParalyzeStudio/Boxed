@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class GeometryUtils
+public class Geometry
 {
     /**
     * Determine the intersection between a line and plane knowing this intersection is unique:
@@ -42,4 +42,22 @@ public class GeometryUtils
     //                               y0 + beta * t0,
     //                               z0 + gamma * t0);
     //}
+
+
+    public struct Edge
+    {
+        public Vector3 m_pointA;
+        public Vector3 m_pointB;
+
+        public Edge(Vector3 pointA, Vector3 pointB)
+        {
+            m_pointA = pointA;
+            m_pointB = pointB;
+        }
+
+        public Vector3 GetMiddle()
+        {
+            return 0.5f * (m_pointA + m_pointB);
+        }
+    }
 }

@@ -12,7 +12,7 @@ public class Tile
     {
         DISABLED,
         NORMAL,
-        SELECTED,
+        //SELECTED,
         START, //tile used to show the start tile on the floor (where the brick starts)
         FINISH //tile used to show the finish tile on the floor (where the brick has to end)
     }
@@ -28,11 +28,11 @@ public class Tile
         set
         {
             m_currentState = value;
-            m_tileMaterialDirty = true;
+            m_tileStateDirty = true;
         }
     }
 
-    public bool m_tileMaterialDirty { get; set; }
+    public bool m_tileStateDirty { get; set; }
 
     //the (column,line) coordinates of the tile inside the rectangular grid floor
     public int m_lineIndex { get; set; }

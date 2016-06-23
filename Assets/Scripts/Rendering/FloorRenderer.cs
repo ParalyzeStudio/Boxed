@@ -3,11 +3,30 @@
 public class FloorRenderer : MonoBehaviour
 {
     public Floor m_floorData { get; set; }
-    public GameObject m_tilePfb; //a cuboid tile
+    public FloorSupportRenderer m_floorSupportPfb;
+    public TileRenderer m_tilePfb; //a cuboid tile
+
+    public GameObject m_tilesHolder;
 
     private GameController m_gameController;
 
-    public TileRenderer[] m_tileRenderers;
+    private TileRenderer[] m_tileRenderers;
+
+    public struct TileColors
+    {
+        public Color m_leftFaceColor;
+        public Color m_rightFaceColor;
+        public Color m_topFaceColor;
+        public Color m_contourColor;
+
+        public TileColors(Color leftFaceColor, Color rightFaceColor, Color topFaceColor, Color contourColor)
+        {
+            m_leftFaceColor = leftFaceColor;
+            m_rightFaceColor = rightFaceColor;
+            m_topFaceColor = topFaceColor;
+            m_contourColor = contourColor;
+        }
+    }
 
     public void Render(Floor floor)
     {
@@ -21,20 +40,26 @@ public class FloorRenderer : MonoBehaviour
         for (int i = 0; i != floor.Tiles.Length; i++)
         {
             Tile tile = floor.Tiles[i];
-            //float x = tile.m_columnIndex - floor.m_gridWidth / 2;
-            //float z = tile.m_lineIndex - floor.m_gridHeight / 2;
 
-            GameObject tileObject = (GameObject)Instantiate(m_tilePfb);
-            tileObject.transform.parent = this.transform;
-
-            TileRenderer tileRenderer = tileObject.GetComponent<TileRenderer>();
+            //Tile renderer
+            TileRenderer tileRenderer = Instantiate(m_tilePfb);
+            tileRenderer.transform.parent = m_tilesHolder.transform;
             tileRenderer.Init(tile);
 
-            //tileObject.transform.localPosition = new Vector3(x * tile.m_size, 0, z * tile.m_size);
-            tileObject.transform.localPosition = tile.GetLocalPosition();
+            tileRenderer.UpdateTileColors();
+
+            //set correct positions for tile and its support
+            tileRenderer.transform.localPosition = tile.GetLocalPosition();
 
             m_tileRenderers[i] = tileRenderer;
         }
+
+        //render the floor support
+        FloorSupportRenderer supportRenderer = Instantiate(m_floorSupportPfb);
+        supportRenderer.name = "Support";
+        supportRenderer.transform.parent = this.transform;
+        supportRenderer.transform.localPosition = new Vector3(0, -0.5f * TileRenderer.TILE_HEIGHT, 0);
+        supportRenderer.Render(floor);
     }
 
     public TileRenderer GetRendererForTile(Tile tile)
