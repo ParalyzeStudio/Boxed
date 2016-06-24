@@ -311,93 +311,105 @@ public class Floor
     /**
     * Return floor edges that are visible from camera point of view and create a contour from them
     **/
-    public void FindVisibleContours(out List<Vector3> frontLeftContour, out List<Vector3> frontRightContour)
+    public void FindVisibleContours(out List<Geometry.Edge> frontLeftContour, out List<Geometry.Edge> frontRightContour)
     {
         //traverse the floor and find the first tile with state NORMAL on each line
-        frontLeftContour = new List<Vector3>();
-        int tileColumnIndex = -1;
-        Vector3 edgeEndpoint = Vector3.zero;
-        for (int i = m_gridHeight - 1; i >= 0; i--) //from top to bottom
+        frontLeftContour = new List<Geometry.Edge>();
+        for (int i = 0; i != m_gridHeight; i++)
         {
-            Tile tile = FindFirstTileOnLine(i);
+            List<Tile> tiles = FindTilesWithVisibleLeftFaceOnLine(i);
 
-            Vector3 tileEdgePoint1 = tile.GetLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, 0.5f * tile.m_size);
-            Vector3 tileEdgePoint2 = tile.GetLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size);
-
-            if (tile.m_columnIndex == tileColumnIndex) //same line as previous tile, just make the segment longer
-                edgeEndpoint = tileEdgePoint2;
-            else
+            for (int j = 0; j != tiles.Count; j++)
             {
-                if (i < m_gridHeight - 1)
-                    frontLeftContour.Add(edgeEndpoint); //close the previous segment
-                frontLeftContour.Add(tileEdgePoint1);
-                edgeEndpoint = tileEdgePoint2;
-                tileColumnIndex = tile.m_columnIndex;
-            }
+                Tile tile = tiles[j];
 
-            if (i == 0)
-                frontLeftContour.Add(edgeEndpoint);
+                if (tile == null)
+                    continue;
+
+                Vector3 tileEdgePoint1 = tile.GetLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, 0.5f * tile.m_size);
+                Vector3 tileEdgePoint2 = tile.GetLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size);
+
+                frontLeftContour.Add(new Geometry.Edge(tileEdgePoint1, tileEdgePoint2));
+            }
         }
 
         
         //do the same for each column
-        frontRightContour = new List<Vector3>();
-        int tileLineIndex = -1;
-        edgeEndpoint = Vector3.zero;
+        frontRightContour = new List<Geometry.Edge>();
         for (int i = 0; i != m_gridWidth; i++)
         {
-            Tile tile = FindFirstTileOnColumn(i);
+            List<Tile> tiles = FindTilesWithVisibleRightFaceOnColumn(i);
 
-            Vector3 tileEdgePoint1 = tile.GetLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size);
-            Vector3 tileEdgePoint2 = tile.GetLocalPosition() + new Vector3(0.5f * tile.m_size, 0, -0.5f * tile.m_size);
-
-            if (tile.m_lineIndex == tileLineIndex) //same line as previous tile, just make the segment longer
-                edgeEndpoint = tileEdgePoint2;
-            else
+            for (int j = 0; j != tiles.Count; j++)
             {
-                if (i > 0)
-                    frontRightContour.Add(edgeEndpoint); //close the previous segment
-                frontRightContour.Add(tileEdgePoint1);
-                edgeEndpoint = tileEdgePoint2;
-                tileLineIndex = tile.m_lineIndex;
-            }
+                Tile tile = tiles[j];
 
-            if (i == m_gridWidth - 1)
-                frontRightContour.Add(edgeEndpoint);
+                if (tile == null)
+                    continue;
+
+                Vector3 tileEdgePoint1 = tile.GetLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size);
+                Vector3 tileEdgePoint2 = tile.GetLocalPosition() + new Vector3(0.5f * tile.m_size, 0, -0.5f * tile.m_size);
+
+                frontRightContour.Add(new Geometry.Edge(tileEdgePoint1, tileEdgePoint2));
+            }
         }
     }
 
-    private Tile FindFirstTileOnLine(int lineIndex)
+    private List<Tile> FindTilesWithVisibleLeftFaceOnLine(int lineIndex)
     {
+        List<Tile> tiles = new List<Tile>();
+
         int i = 0; 
         while (i < m_gridWidth)
         {
             int tileIndex = i * m_gridHeight + lineIndex;
             Tile tile = m_tiles[tileIndex];
-            
-            //if (tile.CurrentState == Tile.State.NORMAL)
-                return tile;
+
+            if (tile.CurrentState != Tile.State.DISABLED)
+            {
+                if (i == 0)
+                    tiles.Add(tile);
+                else
+                {
+                    int previousTileIndex = (i - 1) * m_gridHeight + lineIndex;
+                    Tile previousTile = m_tiles[previousTileIndex];
+                    if (previousTile.CurrentState == Tile.State.DISABLED)
+                        tiles.Add(tile);
+                }
+            }
 
             i++;
         }
 
-        return null;
+        return tiles;
     }
 
-    private Tile FindFirstTileOnColumn(int columnIndex)
+    private List<Tile> FindTilesWithVisibleRightFaceOnColumn(int columnIndex)
     {
+        List<Tile> tiles = new List<Tile>();
+
         int i = 0;
         while (i < m_gridHeight)
         {
             int tileIndex = columnIndex * m_gridHeight + i;
             Tile tile = m_tiles[tileIndex];
-            
-            //if (tile.CurrentState == Tile.State.NORMAL)
-            return tile;
+
+            if (tile.CurrentState != Tile.State.DISABLED)
+            {
+                if (i == 0)
+                    tiles.Add(tile);
+                else
+                {
+                    int previousTileIndex = columnIndex * m_gridHeight + (i - 1);
+                    Tile previousTile = m_tiles[previousTileIndex];
+                    if (previousTile.CurrentState == Tile.State.DISABLED)
+                        tiles.Add(tile);
+                }
+            }
 
             i++;
         }
 
-        return null;
+        return tiles;
     }
 }

@@ -28,7 +28,7 @@ public class FloorRenderer : MonoBehaviour
         }
     }
 
-    public void Render(Floor floor)
+    public void Render(Floor floor, bool bStripDisabledTiles = false)
     {
         m_floorData = floor;
 
@@ -40,6 +40,9 @@ public class FloorRenderer : MonoBehaviour
         for (int i = 0; i != floor.Tiles.Length; i++)
         {
             Tile tile = floor.Tiles[i];
+
+            if (tile.CurrentState == Tile.State.DISABLED)
+                continue;
 
             //Tile renderer
             TileRenderer tileRenderer = Instantiate(m_tilePfb);

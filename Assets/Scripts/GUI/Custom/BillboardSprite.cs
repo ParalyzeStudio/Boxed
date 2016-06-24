@@ -11,7 +11,7 @@ public class BillboardSprite : Quad
         m_camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
     }
 
-    public void Update()
+    public virtual void LateUpdate()
     {
         if (m_camera != null)
             this.transform.rotation = m_camera.transform.rotation;

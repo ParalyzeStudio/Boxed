@@ -38,9 +38,9 @@ public class GameController : MonoBehaviour
         }
         else
         {
-            //LevelManager levelManager = this.GetComponent<LevelManager>();
-            //levelManager.CacheLevels();
-            //StartLevel(levelManager.GetLevelForNumber(4));
+            LevelManager levelManager = this.GetComponent<LevelManager>();
+            levelManager.CacheLevels();
+            StartLevel(levelManager.GetPublishedLevelForNumber(1));
         }
     }
 

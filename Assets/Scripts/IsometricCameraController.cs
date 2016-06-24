@@ -4,7 +4,7 @@ using System.Collections;
 public class IsometricCameraController : MonoBehaviour
 {
     float camMoveSpeed = 30f;
-    float zoomSpeed = 2.0f;
+    //float zoomSpeed = 2.0f;
 
     public void Init()
     {
@@ -42,30 +42,30 @@ public class IsometricCameraController : MonoBehaviour
         }
 
         //Zoom
-        float cameraMaxSize = 30;
-        float cameraMinSize = 5;
-        Camera camera = this.GetComponent<Camera>();
-        float cameraCurrentSize = camera.orthographicSize;
-        if (Input.GetAxis("Mouse ScrollWheel") > 0f || Input.GetKeyDown(KeyCode.I))
-        {
-            if (cameraCurrentSize > cameraMinSize)
-            {
-                cameraCurrentSize -= zoomSpeed;
-                cameraCurrentSize = Mathf.Clamp(cameraCurrentSize, cameraMinSize, cameraMaxSize);
-                camera.orthographicSize = cameraCurrentSize;
-            }
-        }
-        else if (Input.GetAxis("Mouse ScrollWheel") < 0f || Input.GetKeyDown(KeyCode.O))
-        {
-            if (cameraCurrentSize < cameraMaxSize)
-            {
-                cameraCurrentSize += zoomSpeed;
-                cameraCurrentSize = Mathf.Clamp(cameraCurrentSize, cameraMinSize, cameraMaxSize);
-                camera.orthographicSize = cameraCurrentSize;
-            }
-        }
+        //float cameraMaxSize = 30;
+        //float cameraMinSize = 5;
+        //Camera camera = this.GetComponent<Camera>();
+        //float cameraCurrentSize = camera.orthographicSize;
+        //if (Input.GetAxis("Mouse ScrollWheel") > 0f || Input.GetKeyDown(KeyCode.I))
+        //{
+        //    if (cameraCurrentSize > cameraMinSize)
+        //    {
+        //        cameraCurrentSize -= zoomSpeed;
+        //        cameraCurrentSize = Mathf.Clamp(cameraCurrentSize, cameraMinSize, cameraMaxSize);
+        //        camera.orthographicSize = cameraCurrentSize;
+        //    }
+        //}
+        //else if (Input.GetAxis("Mouse ScrollWheel") < 0f || Input.GetKeyDown(KeyCode.O))
+        //{
+        //    if (cameraCurrentSize < cameraMaxSize)
+        //    {
+        //        cameraCurrentSize += zoomSpeed;
+        //        cameraCurrentSize = Mathf.Clamp(cameraCurrentSize, cameraMinSize, cameraMaxSize);
+        //        camera.orthographicSize = cameraCurrentSize;
+        //    }
+        //}
 
         //make the camera movement speed relative to the level of zoom
-        camMoveSpeed = cameraCurrentSize;
+        //camMoveSpeed = cameraCurrentSize;
     }
 }

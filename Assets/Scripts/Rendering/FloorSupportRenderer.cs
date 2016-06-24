@@ -26,22 +26,12 @@ public class FloorSupportRenderer : MonoBehaviour
 
     public void Build()
     {
-        List<Vector3> frontLeftContour, frontRightContour;
+        List<Geometry.Edge> frontLeftContour, frontRightContour;
         m_floor.FindVisibleContours(out frontLeftContour, out frontRightContour);
-        int p = 0;
-        while (p < frontLeftContour.Count)
-        {
-            Debug.Log("contour Vertex:" + frontLeftContour[p]);
-            p++;
-        }
-        p = 0;
-        while (p < frontRightContour.Count)
-        {
-            Debug.Log("contour Vertex:" + frontRightContour[p]);
-            p++;
-        }
-        BuildFaces(frontLeftContour);
-        BuildFaces(frontRightContour);
+
+        Color faceColor = GetSupportColor(255);
+        BuildFaces(frontLeftContour, faceColor);
+        BuildFaces(frontRightContour, ColorUtils.LightenColor(faceColor, 0.1f));
 
         //Build actual mesh
         Mesh supportMesh = new Mesh();
@@ -53,12 +43,12 @@ public class FloorSupportRenderer : MonoBehaviour
         GetComponent<MeshFilter>().sharedMesh = supportMesh;
     }
 
-    private void BuildFaces(List<Vector3> contour)
+    private void BuildFaces(List<Geometry.Edge> contour, Color color)
     {
         int i = 0;
-        while (i < contour.Count - 1)
+        while (i < contour.Count)
         {
-            BuildFaceAtIndex(i, new Geometry.Edge(contour[i], contour[i + 1]));
+            BuildFaceAtIndex(i, contour[i], color);
             i++;
         }       
     }
@@ -66,7 +56,7 @@ public class FloorSupportRenderer : MonoBehaviour
     /**
     * Build a face whose top edge is given by parameter 'topEdge' and add it at index 'index'
     **/
-    private void BuildFaceAtIndex(int index, Geometry.Edge topEdge)
+    private void BuildFaceAtIndex(int index, Geometry.Edge topEdge, Color color)
     {
         int triangleFirstIndex = m_vertices.Count;
 
@@ -77,14 +67,12 @@ public class FloorSupportRenderer : MonoBehaviour
 
         int[] indices = new int[6] { triangleFirstIndex, triangleFirstIndex + 1 , triangleFirstIndex + 2, triangleFirstIndex + 3, triangleFirstIndex + 2, triangleFirstIndex + 1 };
         m_triangles.AddRange(indices);
-
-        Color supportTopColor = GetSupportColor(255);
-        Color supportBottomColor = GetSupportColor(0);
+        
         Color[] faceColors = new Color[4];
-        faceColors[0] = supportTopColor;
-        faceColors[1] = supportTopColor;
-        faceColors[2] = supportBottomColor;
-        faceColors[3] = supportBottomColor;
+        faceColors[0] = color;
+        faceColors[1] = color;
+        faceColors[2] = color;
+        faceColors[3] = color;
         m_colors.AddRange(faceColors);
     }
 

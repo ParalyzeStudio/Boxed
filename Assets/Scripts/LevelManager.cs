@@ -38,6 +38,17 @@ public class LevelManager : MonoBehaviour
         return null;
     }
 
+    public Level GetPublishedLevelForNumber(int number)
+    {
+        for (int i = 0; i != m_publishedLevels.Count; i++)
+        {
+            if (m_publishedLevels[i].m_number == number)
+                return m_publishedLevels[i];
+        }
+
+        return null;
+    }
+
     /**
     * Typically when app is launched we cache all levels obtained from disk in a list
     **/

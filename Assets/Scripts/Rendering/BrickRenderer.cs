@@ -73,7 +73,7 @@ public class BrickRenderer : MonoBehaviour
         if (tile2 == null)
         {
             brickAnimator.transform.rotation = Quaternion.Euler(0, 0, 0); //null rotation
-            brickAnimator.SetPosition(tile1WorldPosition + new Vector3(0, 1, 0)); //place the brick 1 unit above tile
+            brickAnimator.SetPosition(tile1WorldPosition + new Vector3(0, 1 + 0.5f * TileRenderer.TILE_HEIGHT, 0));
         }
         else
         {
@@ -84,7 +84,7 @@ public class BrickRenderer : MonoBehaviour
             brickAnimator.SetRotationAxis(rotationAxis);
             brickAnimator.ApplyRotationAngle(90);
 
-            brickAnimator.SetPosition(0.5f * (tile1WorldPosition + tile2WorldPosition) + new Vector3(0, 0.5f, 0));
+            brickAnimator.SetPosition(0.5f * (tile1WorldPosition + tile2WorldPosition) + new Vector3(0, 0.5f + 0.5f * TileRenderer.TILE_HEIGHT, 0));
         }
     }
 
