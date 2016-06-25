@@ -31,12 +31,12 @@ public class SaveLoadLevelWindow : MonoBehaviour
     public void Init(LevelEditor parentLevelEditor)
     {
         m_parentLevelEditor = parentLevelEditor;
-        
-        PopulateLevelsList();
-        m_selectedItem = null;
 
         DisableButton(ButtonID.ID_SAVE_LEVEL);
         DisableButton(ButtonID.ID_LOAD_LEVEL);
+
+        PopulateLevelsList();
+        m_selectedItem = null;
     }
 
     /**
@@ -83,7 +83,7 @@ public class SaveLoadLevelWindow : MonoBehaviour
 
         levelItem.GetComponent<Button>().onClick.AddListener(delegate { OnItemClick(levelItem); });
 
-        levelItem.transform.SetParent(m_levelsListTf);
+        levelItem.transform.SetParent(m_levelsListTf, false);
     }
 
     /**

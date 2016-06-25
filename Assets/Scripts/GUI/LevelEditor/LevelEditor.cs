@@ -67,7 +67,7 @@ public class LevelEditor : MonoBehaviour
     public void BuildMainMenu()
     {
         m_menuSwitcher = Instantiate(m_levelEditorMenuSwitcherPfb);
-        m_menuSwitcher.name = "MainMenu";
+        m_menuSwitcher.name = "MenuSwitcher";
         m_menuSwitcher.transform.SetParent(this.transform, false);
         m_menuSwitcher.Init(this);
     }
