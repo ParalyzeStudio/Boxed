@@ -5,30 +5,30 @@
 **/
 public class BrickController : MonoBehaviour
 {
-    private BrickRenderer m_brick;
+    private BrickRenderer m_brickRenderer;
 
     public void Start()
     {
-        m_brick = this.GetComponent<BrickRenderer>();
+        m_brickRenderer = this.GetComponent<BrickRenderer>();
     }
 
     void Update()
     {
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            m_brick.Roll(Brick.RollDirection.LEFT);
+            m_brickRenderer.Roll(Brick.RollDirection.LEFT);
         }
         else if (Input.GetKey(KeyCode.UpArrow))
         {
-            m_brick.Roll(Brick.RollDirection.TOP);
+            m_brickRenderer.Roll(Brick.RollDirection.TOP);
         }
         else if (Input.GetKey(KeyCode.RightArrow))
-        {            
-            m_brick.Roll(Brick.RollDirection.RIGHT);
+        {
+            m_brickRenderer.Roll(Brick.RollDirection.RIGHT);
         }
         else if(Input.GetKey(KeyCode.DownArrow))
         {
-            m_brick.Roll(Brick.RollDirection.BOTTOM);
+            m_brickRenderer.Roll(Brick.RollDirection.BOTTOM);
         }
     }
 }

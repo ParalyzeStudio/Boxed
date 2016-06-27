@@ -16,6 +16,7 @@ public class GUIManager : MonoBehaviour
 
     //gradient background
     public GradientBackground m_gradientBackgroundPfb;
+    public GradientBackground m_background { get; set; }
 
     public void Init()
     {
@@ -28,10 +29,10 @@ public class GUIManager : MonoBehaviour
     public void ShowBackgroundForTheme(ColorTheme theme)
     {
         //show gradient background
-        GradientBackground gradientBackground = Instantiate(m_gradientBackgroundPfb);
+        m_background = Instantiate(m_gradientBackgroundPfb);
         Color startColor = theme.m_backgroundGradientTopColor;
         Color endColor = theme.m_backgroundGradientBottomColor;
-        gradientBackground.Init(startColor, endColor);
+        m_background.Init(startColor, endColor);
     }
 
     /**

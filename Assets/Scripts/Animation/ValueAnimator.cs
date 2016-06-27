@@ -10,7 +10,7 @@ public class ValueAnimator : MonoBehaviour
         LINEAR = 1,
         SINUSOIDAL,
         HERMITE1,
-        HERMITE2,
+        HERMITE2
     }
 
     //Variables to handle fading

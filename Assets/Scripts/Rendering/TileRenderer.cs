@@ -27,7 +27,7 @@ public class TileRenderer : MonoBehaviour
     {
         m_tile = tile;
 
-        BuildFaces(0.02f);
+        BuildFaces(0.05f);
 
         m_colorsArrayDirty = false;
         m_verticesArrayDirty = false;

@@ -5,7 +5,7 @@ Properties {
 }
 
 SubShader {
-	Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
+	Tags{ "Queue" = "Geometry" }
 	
 	ZWrite On
 	Blend SrcAlpha OneMinusSrcAlpha 

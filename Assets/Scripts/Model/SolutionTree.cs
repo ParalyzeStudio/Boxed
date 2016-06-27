@@ -254,7 +254,7 @@ public class SolutionNode
 
         //try to make the brick roll
         Brick.RollResult rollResult;
-        Brick.BrickEdge rotationEdge;
+        Geometry.Edge rotationEdge;
         m_brick.Roll(m_direction, out rollResult, out rotationEdge);
 
         m_parentTree.IncrementProcessedNodesCount();

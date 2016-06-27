@@ -3,6 +3,7 @@
 public class BillboardSprite : Quad
 {
     protected Camera m_camera;
+    protected Vector2 m_size;
 
     public override void Init(Material material, bool bTexturedQuad = true)
     {

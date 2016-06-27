@@ -30,7 +30,7 @@ public class FloorSupportRenderer : MonoBehaviour
         m_floor.FindVisibleContours(out frontLeftContour, out frontRightContour);
 
         Color faceColor = GetSupportColor(255);
-        BuildFaces(frontLeftContour, faceColor);
+        BuildFaces(frontLeftContour, faceColor);      
         BuildFaces(frontRightContour, ColorUtils.LightenColor(faceColor, 0.1f));
 
         //Build actual mesh
@@ -48,7 +48,7 @@ public class FloorSupportRenderer : MonoBehaviour
         int i = 0;
         while (i < contour.Count)
         {
-            BuildFaceAtIndex(i, contour[i], color);
+            BuildFace(contour[i], color);
             i++;
         }       
     }
@@ -56,23 +56,30 @@ public class FloorSupportRenderer : MonoBehaviour
     /**
     * Build a face whose top edge is given by parameter 'topEdge' and add it at index 'index'
     **/
-    private void BuildFaceAtIndex(int index, Geometry.Edge topEdge, Color color)
+    private void BuildFace(Geometry.Edge topEdge, Color color)
     {
         int triangleFirstIndex = m_vertices.Count;
 
         m_vertices.Add(topEdge.m_pointA); //top-left
         m_vertices.Add(topEdge.m_pointB); //top-right
-        m_vertices.Add(topEdge.m_pointA - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0)); //bottom-left
-        m_vertices.Add(topEdge.m_pointB - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0)); //bottom-right        
+        Vector3 bottomEdgePointA = topEdge.m_pointA - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0);
+        Vector3 bottomEdgePointB = topEdge.m_pointB - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0);
+        m_vertices.Add(bottomEdgePointA); //bottom-left
+        m_vertices.Add(bottomEdgePointB); //bottom-right        
 
         int[] indices = new int[6] { triangleFirstIndex, triangleFirstIndex + 1 , triangleFirstIndex + 2, triangleFirstIndex + 3, triangleFirstIndex + 2, triangleFirstIndex + 1 };
         m_triangles.AddRange(indices);
-        
+
+        Camera mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        GradientBackground background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
+        Color vertex3Color = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(bottomEdgePointA + this.transform.position));
+        Color vertex4Color = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(bottomEdgePointB + this.transform.position));
+
         Color[] faceColors = new Color[4];
         faceColors[0] = color;
         faceColors[1] = color;
-        faceColors[2] = color;
-        faceColors[3] = color;
+        faceColors[2] = vertex3Color;
+        faceColors[3] = vertex4Color;
         m_colors.AddRange(faceColors);
     }
 

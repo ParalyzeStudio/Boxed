@@ -1,9 +1,9 @@
 ﻿Shader "Custom/Unlit/Transparent/PositionColor" {
 
 SubShader {
-	Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
+	Tags{ "Queue" = "Geometry" }
 	
-	ZWrite Off
+	ZWrite On
 	Blend SrcAlpha OneMinusSrcAlpha 
 	
 	Pass {  

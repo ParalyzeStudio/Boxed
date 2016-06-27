@@ -29,23 +29,6 @@ public class Brick
         }
     }
 
-    public struct BrickEdge
-    {
-        public Vector3 m_pointA;
-        public Vector3 m_pointB;
-
-        public BrickEdge(Vector3 pointA, Vector3 pointB)
-        {
-            m_pointA = pointA;
-            m_pointB = pointB;
-        }
-
-        public Vector3 GetMiddle()
-        {
-            return 0.5f * (m_pointA + m_pointB);
-        }
-    }
-
     /**
     * A face of the brick d-c
     *                     | |
@@ -96,9 +79,9 @@ public class Brick
         /**
         * Return the edge shared by both this brick face and the adjacent face defined by its index
         **/
-        public BrickEdge GetAdjacentFaceSharedEdge(int adjacentFaceIdx)
+        public Geometry.Edge GetAdjacentFaceSharedEdge(int adjacentFaceIdx)
         {
-            return new BrickEdge(m_parentBrick.m_vertices[m_indices[adjacentFaceIdx]],
+            return new Geometry.Edge(m_parentBrick.m_vertices[m_indices[adjacentFaceIdx]],
                                  m_parentBrick.m_vertices[m_indices[(adjacentFaceIdx == 3) ? 0 : adjacentFaceIdx + 1]]);
         }
 
@@ -119,7 +102,8 @@ public class Brick
     public enum BrickState
     {
         IDLE = 1,
-        ROLLING
+        ROLLING,
+        FALLING
     }
 
     public BrickState m_state { get; set; }
@@ -202,27 +186,19 @@ public class Brick
     * Make the brick roll on one of the 4 available directions (left, top, right, bottom) and return the axis of the rotation to tell the parent renderer
     * around which axis to perform the 90 degrees rotation
     **/
-    public void Roll(RollDirection rollDirection, out RollResult rollResult, out BrickEdge rotationEdge)
+    public void Roll(RollDirection rollDirection, out RollResult rollResult, out Geometry.Edge rotationEdge)
     {
-        if (m_state == BrickState.ROLLING) //brick is already rolling do nothing
+        if (m_state == BrickState.ROLLING || m_state == BrickState.FALLING) //brick is already rolling do nothing
         {
             rollResult = RollResult.NONE;
-            rotationEdge = new BrickEdge(Vector3.zero, Vector3.zero);
+            rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
             return;
         }
-
+        
         m_state = BrickState.ROLLING;
 
         //Associate one vector to every direction
-        Vector3 direction;
-        if (rollDirection == RollDirection.LEFT)
-            direction = new Vector3(-1, 0, 0);
-        else if (rollDirection == RollDirection.TOP)
-            direction = new Vector3(0, 0, 1);
-        else if (rollDirection == RollDirection.RIGHT)
-            direction = new Vector3(1, 0, 0);
-        else
-            direction = new Vector3(0, 0, -1);
+        Vector3 direction = GetVector3DirectionForRollingDirection(rollDirection);
 
         //Find the face that has the same normal vector as the roll direction
         float maxDotProduct = float.MinValue;
@@ -246,9 +222,11 @@ public class Brick
         if (rollResult == RollResult.NO_TILE_TO_ROLL) //there is no tile on which we can land, just interrupt the rolling action
         {
             m_state = BrickState.IDLE;
-            rotationEdge = new BrickEdge(Vector3.zero, Vector3.zero);
+            rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
             return;
         }
+        else if (rollResult == RollResult.FALL)
+            m_state = BrickState.FALLING;
 
         //replace the old covered tiles by new ones
         m_coveredTiles = newCoveredTiles;
@@ -264,7 +242,7 @@ public class Brick
                 break;
             }
         }
-        
+
         rotationEdge = currentFace.GetAdjacentFaceSharedEdge(adjacentFaceIdx);
         Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
 
@@ -273,6 +251,18 @@ public class Brick
 
         //set the new index for the face touching the floor
         m_downFaceIndex = rollToFace.m_index;
+    }
+
+    public Vector3 GetVector3DirectionForRollingDirection(Brick.RollDirection rollDirection)
+    {
+        if (rollDirection == RollDirection.LEFT)
+            return new Vector3(-1, 0, 0);
+        else if (rollDirection == RollDirection.TOP)
+            return new Vector3(0, 0, 1);
+        else if (rollDirection == RollDirection.RIGHT)
+            return new Vector3(1, 0, 0);
+        else
+            return new Vector3(0, 0, -1);
     }
 
     /**
@@ -295,9 +285,6 @@ public class Brick
 
             if (nextTile1 != null)
             {
-                if (nextTile1.CurrentState == Tile.State.DISABLED)
-                    rollResult = RollResult.FALL;
-
                 Tile nextTile2 = floor.GetNextTileForDirection(nextTile1, rollDirection);
                 if (nextTile2 != null)
                 {
@@ -355,7 +342,7 @@ public class Brick
                 Tile nextTile2 = floor.GetNextTileForDirection(m_coveredTiles[1], rollDirection);
                 if (nextTile1 != null && nextTile2 != null)
                 {
-                    if (nextTile1.CurrentState == Tile.State.DISABLED || nextTile2.CurrentState == Tile.State.DISABLED)
+                    if (nextTile1.CurrentState == Tile.State.DISABLED && nextTile2.CurrentState == Tile.State.DISABLED)
                         rollResult = RollResult.FALL;
 
                     newCoveredTiles[0] = nextTile1;
@@ -374,14 +361,14 @@ public class Brick
     **/
     public int GetCoveredTilesCount()
     {
-        if (m_coveredTiles[1] == null)
-            return 1;
-
-        return 2;
+        return (m_coveredTiles[1] == null) ? 1 : 2;
     }
 
     public void OnFinishRolling()
     {
+        if (m_state == BrickState.FALLING)
+            return;
+
         m_state = Brick.BrickState.IDLE;
 
         //Capture bonuses

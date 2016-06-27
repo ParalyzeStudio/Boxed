@@ -4,6 +4,9 @@ public class BrickRenderer : MonoBehaviour
 {
     private Brick m_brick;
 
+    private Geometry.Edge m_fallRotationEdge;
+    private Vector3 m_fallDirection;
+
     /**
     * Build a rectangular cuboid that will serve as our main object in the scene.
     * To handle lighting correctly, our cuboid will need 24 vertices (instead of 8) so light is interpolated correctly so one face has one single color.
@@ -94,7 +97,7 @@ public class BrickRenderer : MonoBehaviour
     public void Roll(Brick.RollDirection rollDirection)
     {
         Brick.RollResult rollResult;
-        Brick.BrickEdge rotationEdge;
+        Geometry.Edge rotationEdge;
         m_brick.Roll(rollDirection, out rollResult, out rotationEdge);
 
         if (rollResult == Brick.RollResult.VALID || rollResult == Brick.RollResult.FALL)
@@ -107,7 +110,59 @@ public class BrickRenderer : MonoBehaviour
             brickAnimator.UpdatePivotPoint(GetPivotPointFromLocalCoordinates(rotationEdge.GetMiddle()));
             brickAnimator.SetRotationAxis(rotationAxis);
             brickAnimator.RotateBy(90, 0.3f);
-        }                  
+
+            if (rollResult == Brick.RollResult.FALL)
+            {
+                Tile[] coveredTiles = m_brick.CoveredTiles;
+                if (coveredTiles[0].CurrentState == Tile.State.DISABLED && coveredTiles[1].CurrentState == Tile.State.DISABLED) //brick fell on two disabled tiles
+                {
+                    m_fallRotationEdge = rotationEdge;
+
+                    Fall();
+                }
+                else //brick fell onto one normal tile and one disabled tile
+                {
+                    //create the fall rotation edge by translating the brick rotation edge
+                    m_fallDirection = m_brick.GetVector3DirectionForRollingDirection(rollDirection);
+                    Vector3 rotationEdgeTranslation = Quaternion.Inverse(m_brick.m_rotation) * m_fallDirection; //translate the rotation edge locally
+                    m_fallRotationEdge = new Geometry.Edge(rotationEdge.m_pointA + rotationEdgeTranslation, rotationEdge.m_pointB + rotationEdgeTranslation);
+
+                    //make it fall
+                    CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
+                    callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(Fall), 0.3f);
+                }
+            }
+        }
+    }
+
+    private void Fall()
+    {
+        Vector3 fallRotationAxis = m_fallRotationEdge.m_pointB - m_fallRotationEdge.m_pointA;
+
+        float angularSpeed = 90 / 0.3f;
+
+        BrickAnimator brickAnimator = GetComponent<BrickAnimator>();
+        brickAnimator.UpdatePivotPoint(GetPivotPointFromLocalCoordinates(m_fallRotationEdge.GetMiddle()));
+        brickAnimator.SetRotationAxis(fallRotationAxis);
+        float rotationAngle = 45; //rotates the brick until the gravity makes it fall
+        float rotationDuration = rotationAngle / angularSpeed;
+        brickAnimator.RotateBy(rotationAngle, rotationDuration);
+
+        //activate the gravity once the rotation has been performed
+        CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
+        callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(ActivateRigidBody), rotationDuration);
+    }
+
+    /**
+    * Active the gravity on this brick Rigidbody so it behaves like a normal falling object
+    * Also set to the Rigidbody an initial angularVelocity
+    **/
+    private void ActivateRigidBody()
+    {
+        Rigidbody brickBody = this.GetComponent<Rigidbody>();
+        brickBody.useGravity = true;
+        Vector3 fallRotationAxis = m_fallRotationEdge.m_pointB - m_fallRotationEdge.m_pointA;
+        brickBody.angularVelocity = fallRotationAxis;
     }
 
     /**
