@@ -36,6 +36,12 @@ public class EditTilesSubMenu : LevelEditorMenu
         EnableButton(m_deselectTileButton);
     }
 
+    public override void OnClickValidateSubMenu()
+    {
+        GameController.GetInstance().m_floor.m_floorData.AssignBlockedTiles();
+        base.OnClickValidateSubMenu();
+    }
+
     private void EnableButton(Button button)
     {
         button.GetComponent<Image>().color = Color.white;

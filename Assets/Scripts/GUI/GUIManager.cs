@@ -9,7 +9,10 @@ public class GUIManager : MonoBehaviour
     public LevelEditor m_levelEditor { get; set; }
 
     //main menu
-    public MainMenu m_GUIMainMenuPfb;
+    public MainMenuGUI m_mainMenuGUIPfb;
+
+    //levels
+    public LevelsGUI m_levelsGUIPfb;
 
     //themes
     public ColorThemes m_themes;
@@ -70,8 +73,16 @@ public class GUIManager : MonoBehaviour
 
     public void DisplayMainMenu()
     {
-        MainMenu mainMenu = Instantiate(m_GUIMainMenuPfb);
+        MainMenuGUI mainMenu = Instantiate(m_mainMenuGUIPfb);
         mainMenu.transform.SetParent(m_canvas.transform, false);
+    }
+
+    public void DisplayLevels()
+    {
+        LevelsGUI levels = Instantiate(m_levelsGUIPfb);
+        levels.transform.SetParent(m_canvas.transform, false);
+
+        levels.Init();
     }
 }
 

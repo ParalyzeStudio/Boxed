@@ -6,22 +6,14 @@ public class GameObjectAnimator : ValueAnimator
     protected Vector3 m_pivotPoint; //the pivot point of this game object, if the pivot point position (which is m_poisiotn) 
                                     //is at the transform.localposition of the object then the pivot point is Vector3.zero
     private Vector3 m_objectSize; //the size of the object that will serve to position correctly our object in conjunction with the pivot point
+    //private Vector3 m_objectBBoxMinPoint;
+    //private Vector3 m_objectBBoxMaxPoint;
+    //private bool m_objectBoundsCalculated;
 
     public override void Awake()
     {
         m_pivotPoint = Vector3.zero;
         m_objectSize = Vector3.zero;
-
-        ////set the correct value for pivot point
-        ////First find the bounding box of the object and its center
-        //Bounds bbox = GetGameObjectBoundingBox();
-        //Vector3 objectCenter = bbox.center;
-        //Vector3 objectCenterToObjectPosition = this.transform.position - objectCenter;
-
-        ////scale this value by the game object size
-        //m_pivotPoint = new Vector3(objectCenterToObjectPosition.x / bbox.size.x,
-        //                           objectCenterToObjectPosition.y / bbox.size.y,
-        //                           objectCenterToObjectPosition.z / bbox.size.z);        
     }
 
     public virtual Vector3 GetGameObjectSize()
@@ -29,8 +21,13 @@ public class GameObjectAnimator : ValueAnimator
         if (m_objectSize != Vector3.zero) //we already calculate the object size
             return m_objectSize;
 
-        m_objectSize = GetGameObjectBoundingBox().size;
-        return m_objectSize;
+        //we need to calculate the size of the bounding box of the object once, when its rotation is null
+        Quaternion tmpRotation = this.transform.rotation;
+        this.transform.rotation = Quaternion.Euler(0, 0, 0);
+        Vector3 bboxSize = GetGameObjectBoundingBox().size;
+        this.transform.rotation = tmpRotation;
+
+        return bboxSize;
     }
 
     public virtual Bounds GetGameObjectBoundingBox()
@@ -61,14 +58,7 @@ public class GameObjectAnimator : ValueAnimator
     public void UpdatePivotPoint(Vector3 pivotPoint)
     {
         m_pivotPoint = pivotPoint;
-
-        //the local vector joining the object local position and the pivot point local position
-        Vector3 objectLocalPositionToPivotPointPosition = pivotPoint;
-        objectLocalPositionToPivotPointPosition.Scale(GetGameObjectSize());
-        //we need to apply object transformation to this vector
-        objectLocalPositionToPivotPointPosition = this.transform.rotation * objectLocalPositionToPivotPointPosition;
-        //we finally obtain the pivot point local position
-        m_position = this.transform.localPosition + objectLocalPositionToPivotPointPosition;
+        m_position = FindPivotPositionFromObjectLocalPosition();
     }
 
     /**
@@ -85,14 +75,12 @@ public class GameObjectAnimator : ValueAnimator
         objectLocalPositionToPivotPointPosition.Scale(invObjectSize);
         //apply game object inverse transformation
         m_pivotPoint = Quaternion.Inverse(this.transform.rotation) * objectLocalPositionToPivotPointPosition;
-        Debug.Log("m_pivotPoint:" + m_pivotPoint);
     }
 
     public override void SetPosition(Vector3 position)
     {
-        Vector3 pivotPointPositionToObjectPosition = this.transform.localPosition - m_position;
-        this.transform.localPosition = position + pivotPointPositionToObjectPosition;
         base.SetPosition(position);
+        this.transform.localPosition = FindObjectLocalPositionFromPivotPosition();
     }
 
     public override void SetScale(Vector3 scale)
@@ -111,7 +99,7 @@ public class GameObjectAnimator : ValueAnimator
         //recalculate the new position of the object
         this.transform.localPosition = m_position - pivotPointPositionToObjectPosition;
 
-        //recalculate the object size
+        //scale the object size
         m_objectSize.Scale(deltaScale);
 
         //replace old scale value by new one
@@ -123,13 +111,31 @@ public class GameObjectAnimator : ValueAnimator
         //rotate the object itself
         Quaternion rotation = Quaternion.AngleAxis(angle, m_rotationAxis);
         this.gameObject.transform.rotation *= rotation;
-
-        Vector3 objectPositionToPivotPointPosition = m_pivotPoint;
-        objectPositionToPivotPointPosition.Scale(m_objectSize);
-        objectPositionToPivotPointPosition = this.gameObject.transform.rotation * objectPositionToPivotPointPosition; //rotate this vector
-
-        this.gameObject.transform.localPosition = m_position - objectPositionToPivotPointPosition;
+        this.gameObject.transform.localPosition = FindObjectLocalPositionFromPivotPosition();
 
         base.ApplyRotationAngle(angle);
+    }
+
+    private Vector3 FindObjectLocalPositionFromPivotPosition()
+    {
+        Vector3 objectPositionToPivotPointPosition = m_pivotPoint;
+        //scale it
+        objectPositionToPivotPointPosition.Scale(GetGameObjectSize());
+        //apply object transformation to this vector
+        objectPositionToPivotPointPosition = this.gameObject.transform.rotation * objectPositionToPivotPointPosition;
+
+        return m_position - objectPositionToPivotPointPosition;
+    }
+
+    private Vector3 FindPivotPositionFromObjectLocalPosition()
+    {
+        //the local vector joining the object local position and the pivot point local position
+        Vector3 objectLocalPositionToPivotPointPosition = m_pivotPoint;
+        //scale the object
+        objectLocalPositionToPivotPointPosition.Scale(GetGameObjectSize());
+        //we need to apply object transformation to this vector
+        objectLocalPositionToPivotPointPosition = this.transform.rotation * objectLocalPositionToPivotPointPosition;
+        //we finally obtain the pivot point local position
+        return this.transform.localPosition + objectLocalPositionToPivotPointPosition;
     }
 }

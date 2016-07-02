@@ -5,16 +5,19 @@ public class BrickRenderer : MonoBehaviour
     private Brick m_brick;
 
     private Geometry.Edge m_fallRotationEdge;
+    private bool m_transformRotationEdgeToLocal;
     private Vector3 m_fallDirection;
+
+    private const float DEFAULT_ANGULAR_SPEED = 90 / 0.3f;
 
     /**
     * Build a rectangular cuboid that will serve as our main object in the scene.
     * To handle lighting correctly, our cuboid will need 24 vertices (instead of 8) so light is interpolated correctly so one face has one single color.
     * Pass the tile or tiles (max 2) the brick should be upon
     **/
-    public void BuildOnTile(Tile tile)
+    public void BuildOnTiles(Tile[] tiles)
     {
-        m_brick = new Brick(tile);
+        m_brick = new Brick(tiles);
 
         //build mesh vertices
         Vector3[] vertices = new Vector3[24];
@@ -59,35 +62,29 @@ public class BrickRenderer : MonoBehaviour
         brickMeshFilter.sharedMesh = brickMesh;
 
         //place the brick upon the tile parameter
-        PlaceOnTiles(tile, null);
+        PlaceOnTiles(tiles);
     }
 
     /**
     * Adjust the position and the rotation of the brick so it covers the tiles passed as parameters
     * tile2 can be null if there is only one covered tile
     **/
-    public void PlaceOnTiles(Tile tile1, Tile tile2)
+    public void PlaceOnTiles(Tile[] tiles)
     {
+        m_brick.PlaceOnTiles(tiles);
+
         GameObjectAnimator brickAnimator = this.GetComponent<GameObjectAnimator>();
-        brickAnimator.UpdatePivotPoint(new Vector3(0.5f, 0.5f, 0.5f)); //place the pivot point at the center of the brick
+        brickAnimator.UpdatePivotPoint(new Vector3(0.5f, 0.5f, 0.5f)); //place the pivot point at the center of the brick     
 
-        Vector3 tile1WorldPosition = tile1.GetWorldPosition();        
-
-        if (tile2 == null)
+        if (tiles[1] == null)
         {
-            brickAnimator.transform.rotation = Quaternion.Euler(0, 0, 0); //null rotation
-            brickAnimator.SetPosition(tile1WorldPosition + new Vector3(0, 1 + 0.5f * TileRenderer.TILE_HEIGHT, 0));
+            brickAnimator.transform.rotation = Quaternion.Euler(0, 0, 0); //null rotation  
+            brickAnimator.SetPosition(tiles[0].GetWorldPosition() + new Vector3(0, 1 + 0.5f * TileRenderer.TILE_HEIGHT, 0));
         }
         else
         {
-            Vector3 tile2WorldPosition = tile2.GetWorldPosition();
-            Vector3 diff = tile2WorldPosition - tile1WorldPosition;
-            Vector3 rotationAxis = Vector3.Cross(diff, Vector3.up);
-
-            brickAnimator.SetRotationAxis(rotationAxis);
-            brickAnimator.ApplyRotationAngle(90);
-
-            brickAnimator.SetPosition(0.5f * (tile1WorldPosition + tile2WorldPosition) + new Vector3(0, 0.5f + 0.5f * TileRenderer.TILE_HEIGHT, 0));
+            brickAnimator.transform.rotation = m_brick.m_rotation;
+            brickAnimator.SetPosition(0.5f * (tiles[0].GetWorldPosition() + tiles[1].GetWorldPosition()) + new Vector3(0, 0.5f + 0.5f * TileRenderer.TILE_HEIGHT, 0));
         }
     }
 
@@ -105,64 +102,119 @@ public class BrickRenderer : MonoBehaviour
             //Get the rotation axis from the rotation edge
             Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
 
-            //update the pivot point position to the middle of the edge serving as rotation axis
-            BrickAnimator brickAnimator = GetComponent<BrickAnimator>();
-            brickAnimator.UpdatePivotPoint(GetPivotPointFromLocalCoordinates(rotationEdge.GetMiddle()));
-            brickAnimator.SetRotationAxis(rotationAxis);
-            brickAnimator.RotateBy(90, 0.3f);
-
-            if (rollResult == Brick.RollResult.FALL)
+            if (rollResult == Brick.RollResult.VALID)
             {
+                //perform the normal rotation of the brick
+                BrickAnimator brickAnimator = GetComponent<BrickAnimator>();
+                brickAnimator.UpdatePivotPoint(GetPivotPointFromLocalCoordinates(rotationEdge.GetMiddle()));
+                brickAnimator.SetRotationAxis(rotationAxis);
+                float rotationDuration = 90 / DEFAULT_ANGULAR_SPEED;
+                brickAnimator.RotateBy(90, rotationDuration);
+            }
+            else if (rollResult == Brick.RollResult.FALL)
+            {
+                CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
+
                 Tile[] coveredTiles = m_brick.CoveredTiles;
-                if (coveredTiles[0].CurrentState == Tile.State.DISABLED && coveredTiles[1].CurrentState == Tile.State.DISABLED) //brick fell on two disabled tiles
+                float normalRotationAngle = 0;
+                bool bPrefall = false;
+
+                if (coveredTiles[1] != null) //2 tiles are covered
                 {
+                    if (coveredTiles[0].CurrentState == Tile.State.DISABLED && coveredTiles[1].CurrentState == Tile.State.DISABLED) //brick fell on two disabled tiles
+                    {
+                        m_fallRotationEdge = rotationEdge;
+                        m_fallDirection = m_brick.GetVector3DirectionForRollingDirection(rollDirection);
+                        m_transformRotationEdgeToLocal = false;
+                        normalRotationAngle = 90;
+                        bPrefall = false;
+                    }
+                    else if (coveredTiles[0].CurrentState == Tile.State.NORMAL) //first tile is normal and second one is disabled
+                    {
+                        normalRotationAngle = 90;
+                        m_fallDirection = coveredTiles[1].GetWorldPosition() - coveredTiles[0].GetWorldPosition();
+                        m_fallRotationEdge = Floor.GetCommonEdgeForConsecutiveTiles(coveredTiles[0], coveredTiles[1]);
+                        m_transformRotationEdgeToLocal = true;
+                        bPrefall = true;
+                    }
+                    else /*if (coveredTiles[1].CurrentState == Tile.State.NORMAL)*/ //second tile is normal and first one is disabled
+                    {
+                        normalRotationAngle = 90;
+                        m_fallDirection = coveredTiles[0].GetWorldPosition() - coveredTiles[1].GetWorldPosition();
+                        m_fallRotationEdge = Floor.GetCommonEdgeForConsecutiveTiles(coveredTiles[1], coveredTiles[0]);
+                        m_transformRotationEdgeToLocal = true;
+                        bPrefall = true;
+                    }
+                }
+                else
+                {
+                    normalRotationAngle = 135;
                     m_fallRotationEdge = rotationEdge;
-
-                    Fall();
-                }
-                else //brick fell onto one normal tile and one disabled tile
-                {
-                    //create the fall rotation edge by translating the brick rotation edge
                     m_fallDirection = m_brick.GetVector3DirectionForRollingDirection(rollDirection);
-                    Vector3 rotationEdgeTranslation = Quaternion.Inverse(m_brick.m_rotation) * m_fallDirection; //translate the rotation edge locally
-                    m_fallRotationEdge = new Geometry.Edge(rotationEdge.m_pointA + rotationEdgeTranslation, rotationEdge.m_pointB + rotationEdgeTranslation);
-
-                    //make it fall
-                    CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
-                    callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(Fall), 0.3f);
+                    m_transformRotationEdgeToLocal = false;
+                    bPrefall = false;
                 }
+
+                //perform the normal rotation of the brick
+                BrickAnimator brickAnimator = GetComponent<BrickAnimator>();
+                brickAnimator.UpdatePivotPoint(GetPivotPointFromLocalCoordinates(rotationEdge.GetMiddle()));
+                brickAnimator.SetRotationAxis(rotationAxis);
+                float rotationDuration = normalRotationAngle / DEFAULT_ANGULAR_SPEED;
+                brickAnimator.RotateBy(normalRotationAngle, rotationDuration);
+
+                //perform the prefall action if needed
+                if (bPrefall)
+                {
+                    //rotate the brick to get to the point where it is going to fall
+                    callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(PreFall), rotationDuration);
+                }
+
+                //finally make it fall
+                callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(Fall), rotationDuration + (bPrefall ? 45 / DEFAULT_ANGULAR_SPEED : 0));
             }
         }
+    }
+
+    /**
+    * In case the normal rotation of the brick is not enough to make the brick fall, rotate it again by 45 degrees around the floor edge so it reaches the point it will start falling
+    **/
+    private void PreFall()
+    {
+        Vector3 rotationAxis = m_fallRotationEdge.m_pointB - m_fallRotationEdge.m_pointA;
+
+        if (m_transformRotationEdgeToLocal)
+        {
+            //transform this edge into brick local coordinates
+            m_fallRotationEdge.Translate(-this.transform.localPosition);
+            m_fallRotationEdge.ApplyRotation(Quaternion.Inverse(m_brick.m_rotation));
+        }
+
+        //rotates the brick until the gravity makes it fall
+        BrickAnimator brickAnimator = this.GetComponent<BrickAnimator>();
+        brickAnimator.UpdatePivotPoint(GetPivotPointFromLocalCoordinates(m_fallRotationEdge.GetMiddle()));
+        brickAnimator.SetRotationAxis(rotationAxis);
+        float rotationAngle = 45;
+        float rotationDuration = rotationAngle / DEFAULT_ANGULAR_SPEED;
+        brickAnimator.RotateBy(rotationAngle, rotationDuration);
     }
 
     private void Fall()
     {
         Vector3 fallRotationAxis = m_fallRotationEdge.m_pointB - m_fallRotationEdge.m_pointA;
 
-        float angularSpeed = 90 / 0.3f;
+        BrickAnimator brickAnimator = this.GetComponent<BrickAnimator>();
+        brickAnimator.UpdatePivotPoint(new Vector3(0.5f, 0.5f, 0.5f));
 
-        BrickAnimator brickAnimator = GetComponent<BrickAnimator>();
-        brickAnimator.UpdatePivotPoint(GetPivotPointFromLocalCoordinates(m_fallRotationEdge.GetMiddle()));
+        //make the brick fall
+        float fallHeight = 10.0f;
+        float fallSpeed = 1.5f  * 0.5f * Mathf.Deg2Rad * DEFAULT_ANGULAR_SPEED;
+        float fallDuration = fallHeight / fallSpeed;
+
+        Vector3 brickToPosition = brickAnimator.GetPosition() + new Vector3(0, -fallHeight, 0) + 4.0f * m_fallDirection;
+        brickAnimator.TranslateTo(brickToPosition, fallDuration, 0, ValueAnimator.InterpolationType.LINEAR, true);
+
         brickAnimator.SetRotationAxis(fallRotationAxis);
-        float rotationAngle = 45; //rotates the brick until the gravity makes it fall
-        float rotationDuration = rotationAngle / angularSpeed;
-        brickAnimator.RotateBy(rotationAngle, rotationDuration);
-
-        //activate the gravity once the rotation has been performed
-        CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
-        callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(ActivateRigidBody), rotationDuration);
-    }
-
-    /**
-    * Active the gravity on this brick Rigidbody so it behaves like a normal falling object
-    * Also set to the Rigidbody an initial angularVelocity
-    **/
-    private void ActivateRigidBody()
-    {
-        Rigidbody brickBody = this.GetComponent<Rigidbody>();
-        brickBody.useGravity = true;
-        Vector3 fallRotationAxis = m_fallRotationEdge.m_pointB - m_fallRotationEdge.m_pointA;
-        brickBody.angularVelocity = fallRotationAxis;
+        brickAnimator.RotateBy(540, fallDuration);
     }
 
     /**
@@ -179,5 +231,21 @@ public class BrickRenderer : MonoBehaviour
     public void OnFinishRolling()
     {
         m_brick.OnFinishRolling();
+    }
+
+    /**
+    * Tells if the brick is upon the finish tile and only it
+    **/
+    public bool IsOnFinishTile()
+    {
+        return (m_brick.GetCoveredTilesCount() == 1) && (m_brick.CoveredTiles[0].CurrentState == Tile.State.FINISH);
+    }
+
+    /**
+    * Tells if the brick is currently falling
+    **/ 
+    public bool IsFalling()
+    {
+        return m_brick.m_state == Brick.BrickState.FALLING;
     }
 }

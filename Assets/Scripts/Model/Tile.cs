@@ -12,9 +12,9 @@ public class Tile
     {
         DISABLED,
         NORMAL,
-        //SELECTED,
         START, //tile used to show the start tile on the floor (where the brick starts)
-        FINISH //tile used to show the finish tile on the floor (where the brick has to end)
+        FINISH, //tile used to show the finish tile on the floor (where the brick has to end)
+        BLOCKED, //we cannot land on this tile, the rotation movement of the brick is blocked
     }
 
     private State m_currentState;
@@ -68,7 +68,7 @@ public class Tile
     **/
     public Vector3 GetLocalPosition()
     {
-        return new Vector3(m_columnIndex * m_size, 0, m_lineIndex * m_size);
+        return new Vector3(m_columnIndex * m_size, CurrentState == State.BLOCKED ? 0.5f : 0, m_lineIndex * m_size);
     }
 
     /**

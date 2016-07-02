@@ -18,8 +18,6 @@ public class ColorThemes
     public void Init()
     {
         //define the colors of tiles that are common to every theme
-       
-
         m_themes = new ColorTheme[1];
 
         //Theme 1
@@ -44,6 +42,12 @@ public class ColorThemes
         theme1.m_selectedTileColors.m_tileRightFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(197, 195, 111, 255));
         theme1.m_selectedTileColors.m_tileTopFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(227, 255, 98, 255));
         theme1.m_selectedTileColors.m_tileContourColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(240, 128, 180, 255));
+
+        theme1.m_blockedTileColors = new TileColors();
+        theme1.m_blockedTileColors.m_tileLeftFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(20, 20, 20, 255));
+        theme1.m_blockedTileColors.m_tileRightFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(120, 120, 120, 255));
+        theme1.m_blockedTileColors.m_tileTopFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(60, 60, 60, 255));
+        theme1.m_blockedTileColors.m_tileContourColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(240, 128, 180, 255));
 
         theme1.m_disabledTileColors = new TileColors();
         theme1.m_disabledTileColors.m_tileLeftFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(28, 28, 28, 255));
@@ -78,6 +82,7 @@ public class ColorTheme
     public TileColors m_startTileColors; //colors used to render the start tile
     public TileColors m_finishTileColors; //colors used to render the finish tile
     public TileColors m_selectedTileColors; //colors used to render the tiles selected by the user inside level editor
+    public TileColors m_blockedTileColors; //colors used to render the tiles selected by the user inside level editor
     public TileColors m_disabledTileColors; //colors used to render the disabled tiles
     public TileColors m_defaultTileColors;
     public Color m_floorSupportColor;
@@ -88,6 +93,8 @@ public class ColorTheme
             return m_defaultTileColors;
         else if (state == Tile.State.DISABLED)
             return m_disabledTileColors;
+        else if (state == Tile.State.BLOCKED)
+            return m_blockedTileColors;
         //else if (state == Tile.State.SELECTED)
         //    return m_selectedTileColors;
         else if (state == Tile.State.START)

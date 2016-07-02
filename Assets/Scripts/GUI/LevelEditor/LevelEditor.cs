@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class LevelEditor : MonoBehaviour
 {
-    public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 20;
+    public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 35;
 
     public LevelEditorMenuSwitcher m_levelEditorMenuSwitcherPfb;
     public SaveLoadLevelWindow m_saveLoadLevelWindowPfb;

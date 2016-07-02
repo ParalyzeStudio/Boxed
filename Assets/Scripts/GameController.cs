@@ -12,6 +12,7 @@ public class GameController : MonoBehaviour
     public enum GameMode
     {
         MAIN_MENU,
+        LEVELS,
         GAME,
         LEVEL_EDITOR
     }
@@ -21,26 +22,35 @@ public class GameController : MonoBehaviour
 
     public void Start()
     {
+        //cache levels
+        LevelManager levelManager = this.GetComponent<LevelManager>();
+        levelManager.CacheLevels();
+
         //init the camera
         GameObject.FindGameObjectWithTag("MainCamera").GetComponent<IsometricCameraController>().Init();
 
         //init the GUI manager
-        GetComponent<GUIManager>().Init();       
+        GUIManager guiManager = GetComponent<GUIManager>();
+        guiManager.Init();       
 
         if (m_gameMode == GameMode.LEVEL_EDITOR)
         {
             EnterLevelEditor();
         }
         else if (m_gameMode == GameMode.MAIN_MENU)
-        {   
+        {
             //Show whole gui (title + buttons)
-            this.GetComponent<GUIManager>().DisplayMainMenu();
+            guiManager.DisplayMainMenu();
+        }
+        else if (m_gameMode == GameMode.LEVELS)
+        {
+            guiManager.DisplayLevels();
         }
         else
-        {
-            LevelManager levelManager = this.GetComponent<LevelManager>();
-            levelManager.CacheLevels();
+        {           
             StartLevel(levelManager.GetPublishedLevelForNumber(1));
+
+            m_gameStarted = true;
         }
     }
 
@@ -119,7 +129,10 @@ public class GameController : MonoBehaviour
             GameObject brickObject = (GameObject)Instantiate(m_brickPfb);
             m_brick = brickObject.GetComponent<BrickRenderer>();
 
-            m_brick.BuildOnTile((level == null) ? m_floor.m_floorData.GetCenterTile() : level.m_floor.GetStartTile());
+            Tile[] coveredTiles = new Tile[2];
+            coveredTiles[0] = (level == null) ? m_floor.m_floorData.GetCenterTile() : level.m_floor.GetStartTile();
+            coveredTiles[1] = m_floor.m_floorData.GetNextTileForDirection(coveredTiles[0], Brick.RollDirection.RIGHT);
+            m_brick.BuildOnTiles(coveredTiles);
             //m_brick.BuildOnTile(m_floor.m_floorData.Tiles[1]);
         }
     }
@@ -132,5 +145,48 @@ public class GameController : MonoBehaviour
     public GUIManager GetGUIManager()
     {
         return this.GetComponent<GUIManager>();
+    }
+
+    public enum GameStatus
+    {
+        IDLE, //the game has not started yet, controls are disabled
+        RUNNING, //game is running normally
+        VICTORY, //game has ended on a victory
+        DEFEAT //game has ended on a defeat
+    }
+
+    private bool m_gameStarted;
+
+    //cache the values of defeat or victory so we do not have to check the game status again if one of this case already happened
+    private bool m_defeat;
+    private bool m_victory;
+
+    private GameStatus GetGameStatus()
+    {
+        if (!m_gameStarted)
+            return GameStatus.IDLE;
+
+        if (m_victory || m_brick.IsOnFinishTile())
+        {
+            m_victory = true;
+            return GameStatus.VICTORY;
+        }
+
+        if (m_defeat || m_brick.IsFalling())
+        {
+            m_defeat = true;
+            return GameStatus.DEFEAT;
+        }
+
+        return GameStatus.RUNNING;
+    }
+
+    public void Update()
+    {
+        //GameStatus gameStatus = GetGameStatus();
+        //if (gameStatus == GameStatus.VICTORY)
+        //    Debug.Log("victory");
+        //else if (gameStatus == GameStatus.DEFEAT)
+        //    Debug.Log("defeat");
     }
 }

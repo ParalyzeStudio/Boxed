@@ -111,17 +111,17 @@ public class Floor
         m_finishTile = tile;
     }
 
-    public List<Bonus> GetBonuses()
-    {
-        List<Bonus> bonuses = new List<Bonus>();
-        for (int i = 0; i != m_tiles.Length; i++)
-        {
-            if (m_tiles[i].AttachedBonus != null)
-                bonuses.Add(m_tiles[i].AttachedBonus);
-        }
+    //public List<Bonus> GetBonuses()
+    //{
+    //    List<Bonus> bonuses = new List<Bonus>();
+    //    for (int i = 0; i != m_tiles.Length; i++)
+    //    {
+    //        if (m_tiles[i].AttachedBonus != null)
+    //            bonuses.Add(m_tiles[i].AttachedBonus);
+    //    }
 
-        return bonuses;
-    }
+    //    return bonuses;
+    //}
 
     public List<Tile> GetBonusTiles()
     {
@@ -180,6 +180,21 @@ public class Floor
         }
         else
             return null;
+    }
+
+    /**
+    * Return the edge shared by two consecutive tiles
+    **/
+    static public Geometry.Edge GetCommonEdgeForConsecutiveTiles(Tile tile1, Tile tile2)
+    {
+        Vector3 edgeMiddle = 0.5f * (tile2.GetWorldPosition() + tile1.GetWorldPosition()) + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+        Vector3 edgeDirection = tile2.GetWorldPosition() - tile1.GetWorldPosition();
+        edgeDirection = Quaternion.AngleAxis(90, Vector3.up) * edgeDirection;
+
+        Vector3 edgePointA = edgeMiddle - 0.5f * edgeDirection;
+        Vector3 edgePointB = edgeMiddle + 0.5f * edgeDirection;
+
+        return new Geometry.Edge(edgePointA, edgePointB);
     }
 
     /**
@@ -296,6 +311,37 @@ public class Floor
         }
 
         return null;
+    }
+
+    /**
+    * Traverse the floor tiles and find those who are blocked i.e disabled and surrounded by 2 normal tiles either horizontally or vertically
+    **/
+    public void AssignBlockedTiles()
+    {
+        for (int i = 0; i != m_tiles.Length; i++)
+        {
+            Tile tile = m_tiles[i];
+            if (tile.CurrentState != Tile.State.DISABLED)
+                continue;
+            if (tile.m_columnIndex > 0 && tile.m_columnIndex < this.m_gridWidth - 1 && tile.m_lineIndex > 0 && tile.m_lineIndex < this.m_gridHeight - 1)
+            {
+                int linePreviousTileIndex = (tile.m_columnIndex - 1) * m_gridHeight + tile.m_lineIndex;
+                int lineNextTileIndex = (tile.m_columnIndex + 1) * m_gridHeight + tile.m_lineIndex;
+                Tile linePreviousTile = m_tiles[linePreviousTileIndex];
+                Tile lineNextTile = m_tiles[lineNextTileIndex];
+
+                if (linePreviousTile.CurrentState == Tile.State.NORMAL && lineNextTile.CurrentState == Tile.State.NORMAL)
+                    tile.CurrentState = Tile.State.BLOCKED;
+                else
+                {
+                    Tile columnPreviousTile = m_tiles[i - 1];
+                    Tile columnNextTile = m_tiles[i + 1];
+
+                    if (columnPreviousTile.CurrentState == Tile.State.NORMAL && columnNextTile.CurrentState == Tile.State.NORMAL)
+                        tile.CurrentState = Tile.State.BLOCKED;
+                }
+            }
+        }
     }
 
     /**

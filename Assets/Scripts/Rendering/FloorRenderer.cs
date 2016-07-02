@@ -41,7 +41,8 @@ public class FloorRenderer : MonoBehaviour
         {
             Tile tile = floor.Tiles[i];
 
-            if (tile.CurrentState == Tile.State.DISABLED)
+            //remove disabled tiles only in game mode
+            if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME && tile.CurrentState == Tile.State.DISABLED)
                 continue;
 
             //Tile renderer
@@ -57,12 +58,15 @@ public class FloorRenderer : MonoBehaviour
             m_tileRenderers[i] = tileRenderer;
         }
 
-        //render the floor support
-        FloorSupportRenderer supportRenderer = Instantiate(m_floorSupportPfb);
-        supportRenderer.name = "Support";
-        supportRenderer.transform.parent = this.transform;
-        supportRenderer.transform.localPosition = new Vector3(0, -0.5f * TileRenderer.TILE_HEIGHT, 0);
-        supportRenderer.Render(floor);
+        //render the floor support (only in game mode)
+        if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
+        {
+            FloorSupportRenderer supportRenderer = Instantiate(m_floorSupportPfb);
+            supportRenderer.name = "Support";
+            supportRenderer.transform.parent = this.transform;
+            supportRenderer.transform.localPosition = new Vector3(0, -0.5f * TileRenderer.TILE_HEIGHT, 0);
+            supportRenderer.Render(floor);
+        }
     }
 
     public TileRenderer GetRendererForTile(Tile tile)

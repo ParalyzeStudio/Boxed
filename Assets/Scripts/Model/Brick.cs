@@ -82,7 +82,7 @@ public class Brick
         public Geometry.Edge GetAdjacentFaceSharedEdge(int adjacentFaceIdx)
         {
             return new Geometry.Edge(m_parentBrick.m_vertices[m_indices[adjacentFaceIdx]],
-                                 m_parentBrick.m_vertices[m_indices[(adjacentFaceIdx == 3) ? 0 : adjacentFaceIdx + 1]]);
+                                     m_parentBrick.m_vertices[m_indices[(adjacentFaceIdx == 3) ? 0 : adjacentFaceIdx + 1]]);
         }
 
         /**
@@ -113,9 +113,9 @@ public class Brick
     /**
     * Build a rectangular cuboid that will serve as our main object in the scene.
     * To handle lighting correctly, our cuboid will need 24 vertices (instead of 8) so light is interpolated correctly so one face has one single color.
-    * Pass the tile the brick should be upon
+    * Pass the tile or tiles the brick should be upon
     **/
-    public Brick(Tile tile = null)
+    public Brick(Tile[] tiles)
     {
         m_vertices = new Vector3[8];
         m_vertices[0] = new Vector3(0, 0, 0);
@@ -140,16 +140,7 @@ public class Brick
         }              
 
         //at start the first face is touching the ground with face 0 and is idle
-        m_downFaceIndex = 0;
         m_state = BrickState.IDLE;
-
-        //tiles covered by the brick (only 1 at start)
-        m_coveredTiles = new Tile[2];
-        m_coveredTiles[0] = tile;
-        m_coveredTiles[1] = null;
-
-        //set rotation to identity at start
-        m_rotation = Quaternion.identity;
     }
 
     /**
@@ -163,6 +154,28 @@ public class Brick
         m_downFaceIndex = other.m_downFaceIndex;
         m_state = other.m_state;
         m_rotation = other.m_rotation;
+    }
+
+    public void PlaceOnTiles(Tile[] tiles)
+    {
+        //tiles covered by the brick (only 1 at start)
+        m_coveredTiles = tiles;
+
+        //set initial rotation of the brick and the index of the face touching the ground depending on the number of covered tiles
+        if (tiles[1] == null) //only one tile covered
+        {
+            m_rotation = Quaternion.identity;
+            m_downFaceIndex = 0;
+        }
+        else //two tiles covered
+        {
+            m_downFaceIndex = 3;
+            //compute the rotation edge from face 0 to face 3
+            Geometry.Edge rotationEdge = m_faces[0].GetAdjacentFaceSharedEdge(m_downFaceIndex);
+            Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
+
+            m_rotation = Quaternion.AngleAxis(-90, rotationAxis);
+        }
     }
 
     public enum RollDirection
@@ -285,11 +298,16 @@ public class Brick
 
             if (nextTile1 != null)
             {
+                if (nextTile1.CurrentState == Tile.State.BLOCKED)
+                    return RollResult.NONE;
+
                 Tile nextTile2 = floor.GetNextTileForDirection(nextTile1, rollDirection);
                 if (nextTile2 != null)
                 {
                     if (nextTile2.CurrentState == Tile.State.DISABLED)
                         rollResult = RollResult.FALL;
+                    else if (nextTile2.CurrentState == Tile.State.BLOCKED)
+                        return RollResult.NONE;                        
 
                     newCoveredTiles[0] = nextTile1;
                     newCoveredTiles[1] = nextTile2;
@@ -315,7 +333,9 @@ public class Brick
                         nextTile = floor.GetNextTileForDirection(coveredTile2, rollDirection);
                         if (nextTile != null)
                         {
-                            if (nextTile.CurrentState == Tile.State.DISABLED)
+                            if (nextTile.CurrentState == Tile.State.BLOCKED)
+                                return RollResult.NONE;
+                            else if (nextTile.CurrentState == Tile.State.DISABLED)
                                 rollResult = RollResult.FALL;
 
                             newCoveredTiles[0] = nextTile;
@@ -326,7 +346,9 @@ public class Brick
                     }
                     else
                     {
-                        if (nextTile.CurrentState == Tile.State.DISABLED)
+                        if (nextTile.CurrentState == Tile.State.BLOCKED)
+                            return RollResult.NONE;
+                        else if (nextTile.CurrentState == Tile.State.DISABLED)
                             rollResult = RollResult.FALL;
 
                         newCoveredTiles[0] = nextTile;
@@ -342,7 +364,9 @@ public class Brick
                 Tile nextTile2 = floor.GetNextTileForDirection(m_coveredTiles[1], rollDirection);
                 if (nextTile1 != null && nextTile2 != null)
                 {
-                    if (nextTile1.CurrentState == Tile.State.DISABLED && nextTile2.CurrentState == Tile.State.DISABLED)
+                    if (nextTile1.CurrentState == Tile.State.BLOCKED || nextTile2.CurrentState == Tile.State.BLOCKED)
+                        return RollResult.NONE;
+                    else if (nextTile1.CurrentState == Tile.State.DISABLED || nextTile2.CurrentState == Tile.State.DISABLED)
                         rollResult = RollResult.FALL;
 
                     newCoveredTiles[0] = nextTile1;

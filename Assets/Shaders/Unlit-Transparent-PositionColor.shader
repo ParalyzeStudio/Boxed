@@ -3,7 +3,7 @@
 SubShader {
 	Tags{ "Queue" = "Geometry" }
 	
-	ZWrite On
+	ZWrite Off
 	Blend SrcAlpha OneMinusSrcAlpha 
 	
 	Pass {  

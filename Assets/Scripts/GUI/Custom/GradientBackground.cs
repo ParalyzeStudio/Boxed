@@ -20,10 +20,6 @@ public class GradientBackground : BillboardSprite
 
         SetColors(new Color[4] { startColor, startColor, endColor, endColor});
 
-        
-        Vector3 screenPoint = new Vector3(0.5f * Screen.width, 0.5f * Screen.height, 0);
-        Vector3 viewportPoint = Camera.main.ScreenToViewportPoint(screenPoint);
-
         QuadAnimator backgroundAnimator = this.GetComponent<QuadAnimator>();
         backgroundAnimator.SetScale(new Vector3(m_size.x, m_size.y, 1));
     }

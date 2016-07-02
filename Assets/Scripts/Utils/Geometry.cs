@@ -59,5 +59,17 @@ public class Geometry
         {
             return 0.5f * (m_pointA + m_pointB);
         }
+
+        public void ApplyRotation(Quaternion rotation)
+        {
+            m_pointA = rotation * m_pointA;
+            m_pointB = rotation * m_pointB;
+        }
+
+        public void Translate(Vector3 dPos)
+        {
+            m_pointA += dPos;
+            m_pointB += dPos;
+        }
     }
 }

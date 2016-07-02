@@ -4,18 +4,11 @@ using UnityEngine;
 public class SolutionTree
 {
     //maximum height (or depth) of the tree, i.e the maximum number of nodes allowed along a path
-    private int m_maximumHeight;
-    public int MaximumHeight
-    {
-        get
-        {
-            return m_maximumHeight;
-        }
-    }
+    public int m_maximumHeight { get; set; }
 
     private List<SolutionNode> m_successNodes;
 
-    public Tile m_startTile; //the tile that serves as start point for or tree
+    public Tile[] m_startTiles; //the tile that serves as start point for or tree
     public Tile m_targetTile; //the tile that serves as target for the search of solutions
 
     public List<Tile> m_bonusTiles;
@@ -26,12 +19,11 @@ public class SolutionTree
 
     private long m_processedNodesCount;
     
-    public SolutionTree(int height, Tile startTile, Tile targetTile, bool oneCoveredTileOnly = true, bool stopWhenTreeIsSolved = false)
+    public SolutionTree(int height, Tile[] startTiles, Tile targetTile, bool oneCoveredTileOnly = true)
     {
         m_maximumHeight = height;
-        m_startTile = startTile;
+        m_startTiles = startTiles;
         m_targetTile = targetTile;
-        m_stopWhenTreeIsSolved = stopWhenTreeIsSolved;
         m_oneCoveredTileOnly = oneCoveredTileOnly;
         m_successNodes = new List<SolutionNode>();
         m_isSolved = false;
@@ -40,31 +32,32 @@ public class SolutionTree
     }
 
     public SolutionTree(Level levelToSolve) : this(50, 
-                                                   levelToSolve.m_floor.GetStartTile(),
+                                                   null,
                                                    levelToSolve.m_floor.GetFinishTile(),
-                                                   true,
-                                                   false)
+                                                   true)
     {
+        m_startTiles = new Tile[2];
+        m_startTiles[0] = levelToSolve.m_floor.GetStartTile();
+        m_startTiles[1] = null;
         m_bonusTiles = levelToSolve.m_floor.GetBonusTiles();
     }
 
     //filters to know which types of solutions we want
     public const int SHORTEST_SOLUTION = 1; //the solution that requires the less movements
-    public const int SHORTEST_SOLUTION_WITH_BONUSES = 2; //the solution that requires the less movements and passing through all bonuses
-    public const int ALL_SOLUTIONS = 4;
+    public const int ALL_SOLUTIONS = 2;
 
     /**
     * Traverse the floor for all directions possible at each step making the tree grow until each path has reached the maximum height of the tree or
     * found a success path
     **/
-    public SolutionNode[][] SearchForSolutions(int bFilters = SHORTEST_SOLUTION_WITH_BONUSES)
+    public SolutionNode[][] SearchForSolutions(int bFilters = SHORTEST_SOLUTION)
     {
         //Construct 4 nodes and 4 bricks (1 for each rolling direction) starting from level start tile
         SolutionNode[] childNodes = new SolutionNode[4];
-        childNodes[0] = new SolutionNode(this, Brick.RollDirection.LEFT, null, 0, new Brick(m_startTile));
-        childNodes[1] = new SolutionNode(this, Brick.RollDirection.RIGHT, null, 0, new Brick(m_startTile));
-        childNodes[2] = new SolutionNode(this, Brick.RollDirection.TOP, null, 0, new Brick(m_startTile));
-        childNodes[3] = new SolutionNode(this, Brick.RollDirection.BOTTOM, null, 0, new Brick(m_startTile));
+        childNodes[0] = new SolutionNode(this, Brick.RollDirection.LEFT, null, 0, new Brick(m_startTiles));
+        childNodes[1] = new SolutionNode(this, Brick.RollDirection.RIGHT, null, 0, new Brick(m_startTiles));
+        childNodes[2] = new SolutionNode(this, Brick.RollDirection.TOP, null, 0, new Brick(m_startTiles));
+        childNodes[3] = new SolutionNode(this, Brick.RollDirection.BOTTOM, null, 0, new Brick(m_startTiles));
 
         //Process every of the 4 nodes declared above
         for (int i = 0; i != childNodes.Length; i++)
@@ -98,92 +91,47 @@ public class SolutionTree
     private SolutionNode[][] ExtractSuccessPaths(int bFilters = SHORTEST_SOLUTION)
     {
         if (m_successNodes.Count == 0)
-            return null;
-
-        SolutionNode[][] allSuccessPaths = new SolutionNode[m_successNodes.Count][];
-        List<SolutionNode[]> successPaths = new List<SolutionNode[]>();
-
-        for (int i = 0; i != m_successNodes.Count; i++)
-        {
-            SolutionNode node = m_successNodes[i];
-            int pathLength = node.m_distanceFromRoot + 1;
-
-            SolutionNode[] successPath = new SolutionNode[pathLength];
-            
-            while (node != null)
-            {
-                successPath[pathLength - 1] = node;
-                pathLength--;
-                node = node.m_parentNode;
-            }
-
-            allSuccessPaths[i] = successPath;
-        }
+            return null;        
 
         if ((bFilters & ALL_SOLUTIONS) > 0)
-            return allSuccessPaths;
-        else
         {
-            if ((bFilters & SHORTEST_SOLUTION) > 0)
+            SolutionNode[][] allSuccessPaths = new SolutionNode[m_successNodes.Count][];
+            for (int i = 0; i != m_successNodes.Count; i++)
             {
-                int shortestSolutionIndex = 0;
-                int shortestSolutionLength = allSuccessPaths[0].Length;
-                for (int i = 1; i != allSuccessPaths.GetLength(0); i++)
-                {
-                    if (allSuccessPaths[i].Length < shortestSolutionLength)
-                    {
-                        shortestSolutionIndex = i;
-                        shortestSolutionLength = allSuccessPaths[i].Length;
-                    }
-                }
-
-                successPaths.Add(allSuccessPaths[shortestSolutionIndex]);
+                SolutionNode node = m_successNodes[i];
+                allSuccessPaths[i] = ExtractPathFromNode(node);
             }
 
-            if ((bFilters & SHORTEST_SOLUTION_WITH_BONUSES) > 0)
-            {
-                //traverse all solutions, find the shortest one and verify if it goes through all bonuses
-                bool containsAllBonuses = false;
-                List<SolutionNode[]> paths = new List<SolutionNode[]>(allSuccessPaths);
-                SolutionNode[] shortestPathWithBonuses = null;
-                while (!containsAllBonuses)
-                {
-                    SolutionNode[] shortestPath = FindShortestPathAndRemove(paths);
-                    if (PathContainsAllBonuses(shortestPath))
-                    {
-                        containsAllBonuses = true;
-                        shortestPathWithBonuses = shortestPath;
-                    }
-
-                    if (paths.Count == 0)
-                        break;
-                }
-
-                if (shortestPathWithBonuses != null)
-                    successPaths.Add(shortestPathWithBonuses);
-            }
-
-            return successPaths.ToArray();
+            return allSuccessPaths;
         }
+        else if ((bFilters & SHORTEST_SOLUTION) > 0)
+        {
+            SolutionNode[][] successPath = new SolutionNode[1][];
+            successPath[0] = ExtractPathFromNode(m_successNodes[m_successNodes.Count - 1]);
+
+            return successPath;
+        }
+
+        return null;
     }
 
-    public SolutionNode[] FindShortestPathAndRemove(List<SolutionNode[]> paths)
+    /**
+    * Return the full path with 'node' parameter a leaf node
+    **/
+    private SolutionNode[] ExtractPathFromNode(SolutionNode node)
     {
-        int shortestPathIndex = 0;
-        int shortestPathLength = paths[0].Length;
+        int pathLength = node.m_distanceFromRoot + 1;
 
-        for (int i = 1; i != paths.Count; i++)
+        SolutionNode[] path = new SolutionNode[pathLength];
+
+        while (node != null)
         {
-            if (paths[i].Length < shortestPathLength)
-            {
-                shortestPathIndex = i;
-                shortestPathLength = paths[i].Length;
-            }
+            path[pathLength - 1] = node;
+            pathLength--;
+            node = node.m_parentNode;
         }
 
-        SolutionNode[] shortestPath = paths[shortestPathIndex];
-        paths.Remove(shortestPath);
-        return shortestPath;
+        return path;
     }
 
     /**
@@ -246,7 +194,7 @@ public class SolutionNode
             return;
 
         //we reach the maximum height of the tree
-        if (m_distanceFromRoot == m_parentTree.MaximumHeight)
+        if (m_distanceFromRoot >= m_parentTree.m_maximumHeight)
             return;
 
         if (IsCycling())
@@ -282,6 +230,7 @@ public class SolutionNode
             if (targetTileHasBeenReached)
             {                
                 m_parentTree.AddSuccessNode(this);
+                m_parentTree.m_maximumHeight = this.m_distanceFromRoot + 1;
             }
             else //keep processing child nodes
             {
@@ -335,8 +284,6 @@ public class SolutionNode
     **/
     public bool IsCycling()
     {
-        Tile[] coveredTiles = this.m_brick.CoveredTiles;
-
         SolutionNode node = this.m_parentNode;
         int minDistanceForCycling = 5;
         while (node != null)

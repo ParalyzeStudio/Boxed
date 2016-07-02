@@ -4,6 +4,8 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Collections.Generic;
 
+using Permutation = System.Collections.Generic.List<int>;
+
 [Serializable]
 public class Level
 {
@@ -68,29 +70,22 @@ public class Level
         System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
         sw.Start();
 
-        SolutionNode[][] solutions = Solve(maxMovements);
+        SolutionNode[] solution = Solve(maxMovements);
 
         sw.Stop();
         Debug.Log("Level solved in " + sw.ElapsedMilliseconds + " ms");
 
-        if (solutions == null || solutions.GetLength(0) == 0) //no solution
+        if (solution == null) //no solution
         {
             validationData.m_success = false;
             validationData.m_solution = null;
             return validationData;
         }
-        else if (solutions.GetLength(0) == 1) //some bonuses were not on the solution path
-        {
-            Debug.Log("bonuses not reachable");
-            validationData.m_success = false;
-            validationData.m_bonusesAreReachable = false;
-            validationData.m_solution = solutions[0];
-        }
         else
         {
             validationData.m_success = true;
             validationData.m_bonusesAreReachable = true;
-            validationData.m_solution = solutions[1];
+            validationData.m_solution = solution;
         }
 
         validationData.m_success = true;
@@ -105,10 +100,144 @@ public class Level
     * Programmatically solve this level by testing every possible movement of the brick
     * Define a number of maximum movements a brick is allowed to do for a given path
     **/
-    public SolutionNode[][] Solve(int maxMovements)
+    public SolutionNode[] Solve(int maxMovements)
     {
-        SolutionTree solutionTree = new SolutionTree(this);
-        return solutionTree.SearchForSolutions(SolutionTree.SHORTEST_SOLUTION | SolutionTree.SHORTEST_SOLUTION_WITH_BONUSES);
+        List<Permutation> permutations = FindBonusPermutations();
+
+        if (permutations == null) //no bonus, solve the level between start and finish tiles
+        {
+            SolutionTree solutionTree = new SolutionTree(this);
+            SolutionNode[][] solutions = solutionTree.SearchForSolutions();
+            return (solutions != null) ? solutions[0] : null;
+        }
+        else
+        {
+            int minSolutionLength = int.MaxValue; //we store here the minimum length of a solution we found
+            SolutionNode[] minSolution = null; //solution with the above length
+
+            //Solve the level taking one bonus permutation after another
+            for (int i = 0; i != permutations.Count; i++)
+            {
+                minSolution = ExtractSolutionForPermutation(permutations[i], minSolutionLength);               
+            }
+
+            return (minSolution != null) ? minSolution : null;
+        }
+    }
+
+    private SolutionNode[] ExtractSolutionForPermutation(Permutation permutation, int maxSolutionLength)
+    {
+        Debug.Log("ExtractSolutionForPermutation");
+        List<Tile> bonusTiles = this.m_floor.GetBonusTiles();
+        List<SolutionNode> solution = new List<SolutionNode>();
+
+        int solutionLength = 0; //the length of the solution for this permutation
+
+        Tile[] startTiles = new Tile[2];
+        Tile finishTile;
+        int subpathsCount = permutation.Count + 1;
+        int p = 0;
+        while (p < subpathsCount)
+        {
+            if (p == 0)
+            {
+                startTiles[0] = this.m_floor.GetStartTile();
+                startTiles[1] = null;
+                finishTile = bonusTiles[permutation[0]];
+            }
+            else if (p == subpathsCount - 1)
+            {
+                startTiles[0] = bonusTiles[permutation[permutation.Count - 1]];
+                startTiles[1] = null;
+                finishTile = this.m_floor.GetFinishTile();
+            }
+            else
+            {
+                startTiles[0] = bonusTiles[permutation[p - 1]];
+                startTiles[1] = null;
+                finishTile = bonusTiles[permutation[p]];
+            }
+
+            SolutionTree solutionTree = new SolutionTree(100, startTiles, finishTile, (p == subpathsCount - 1));
+            SolutionNode[][] subpathSolutions = solutionTree.SearchForSolutions();
+
+            if (subpathSolutions != null)
+            {
+                SolutionNode[] subpathSolution = subpathSolutions[0];
+
+                if (solutionLength > maxSolutionLength)
+                    return null;
+                else
+                {
+                    solutionLength += subpathSolution.Length;
+                    solution.AddRange(subpathSolution);
+                }
+            }
+            else
+                return null;            
+
+            p++;
+        }
+
+        return solution.ToArray();
+    }
+
+    /**
+    * Find all permutations between bonuses
+    * The number of permutations is !bonusesCount
+    **/
+    private List<Permutation> FindBonusPermutations()
+    {
+        return FindPermutationsInInterval(m_floor.GetBonusTiles().Count - 1);
+    }
+
+    /**
+    * Find all permutations for the interval [0-N]
+    **/
+    private List<Permutation> FindPermutationsInInterval(int N)
+    {
+        //to compute the factorial function, as the number of bonuses wont exceed 3, just use a simple loop, no need for a complex and efficient algorithm
+        int permutationsCount = 1;
+        int i = 2;
+        while (i <= N)
+        {
+            permutationsCount *= i;
+            i++;
+        }
+
+        List<Permutation> permutations = new List<Permutation>(permutationsCount);
+
+        if (N == 0)
+            permutations.Add(new Permutation { 0 });
+        else
+        {
+            List<Permutation> lPermutations = FindPermutationsInInterval(N - 1);
+
+            int j = 0;
+            while (j <= N)
+            {
+                //First copy the permutations
+                List<Permutation> copiedPermutations = new List<Permutation>();
+                for (int p = 0; p != lPermutations.Count; p++)
+                {
+                    copiedPermutations.Add(new Permutation(lPermutations[p]));
+                }
+                                
+                InsertInPermutationsAtIndex(j, N, copiedPermutations);
+                permutations.AddRange(copiedPermutations);
+                j++;
+            }
+        }
+
+        return permutations;
+    }
+
+    private void InsertInPermutationsAtIndex(int index, int item, List<Permutation> permutations)
+    {
+        for (int i = 0; i != permutations.Count; i++)
+        {
+            permutations[i].Insert(index, item);
+        }
     }
 
     /**
