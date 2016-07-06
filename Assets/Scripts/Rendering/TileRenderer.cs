@@ -12,8 +12,10 @@ public class TileRenderer : MonoBehaviour
     public Material m_tileMaterial;
 
     //Bonus
-    public GameObject m_bonusPfb;
-    private GameObject m_bonusObject;
+    public BonusRenderer m_bonusPfb;
+    private BonusRenderer m_bonus;
+    public ParticleSystem m_bonusFxPfb;
+    private ParticleSystem m_bonusFx;
 
     //as we want to modify the color of a tile quickly, store the vertex of colors here
     private Color[] m_colors;
@@ -240,19 +242,26 @@ public class TileRenderer : MonoBehaviour
     **/
     public void BuildBonusObject()
     {
-        m_bonusObject = (GameObject)Instantiate(m_bonusPfb);
-        m_bonusObject.name = "Bonus";
+        m_bonus = Instantiate(m_bonusPfb);
+        m_bonus.name = "Bonus";
+
+        Vector3 bonusPosition = m_tile.GetWorldPosition() + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT + 0.25f, 0);
 
         GameObject bonusContainer = GameController.GetInstance().m_bonuses;
-        m_bonusObject.transform.parent = bonusContainer.transform;
+        m_bonus.transform.parent = bonusContainer.transform;
+        m_bonus.GetComponent<GameObjectAnimator>().SetPosition(bonusPosition);
 
-        GameObjectAnimator bonusAnimator = m_bonusObject.GetComponent<GameObjectAnimator>();
-        bonusAnimator.SetPosition(m_tile.GetWorldPosition() + new Vector3(0, 0.3f, 0));
+        //create the particle effect associated with this bonuss
+        //m_bonusFx = Instantiate(m_bonusFxPfb);
+        //m_bonusFx.transform.parent = bonusContainer.transform;
+        //m_bonusFx.transform.localPosition = bonusPosition;
     }
 
     public void DestroyBonusObject()
     {
-        Destroy(m_bonusObject.gameObject);
+        Destroy(m_bonus.gameObject);
+        if (m_bonusFx != null)
+            Destroy(m_bonusFx.gameObject);
     }
 
     /**
@@ -260,6 +269,7 @@ public class TileRenderer : MonoBehaviour
     **/
     public void OnCaptureBonus()
     {
+        m_tile.AttachedBonus = null;
         DestroyBonusObject();
     }
 

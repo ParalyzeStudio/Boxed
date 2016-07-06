@@ -100,77 +100,107 @@ public class Level
     * Programmatically solve this level by testing every possible movement of the brick
     * Define a number of maximum movements a brick is allowed to do for a given path
     **/
+    //public SolutionNode[] Solve(int maxMovements)
+    //{
+    //    List<Permutation> permutations = FindBonusPermutations();
+        
+    //    if (permutations == null) //no bonus, solve the level between start and finish tiles
+    //    {
+    //        SolutionTree solutionTree = new SolutionTree(this);
+    //        SolutionNode[][] solutions = solutionTree.SearchForSolutions();
+    //        return (solutions != null) ? solutions[0] : null;
+    //    }
+    //    else
+    //    {
+    //        int minSolutionLength = int.MaxValue; //we store here the minimum length of a solution we found
+    //        SolutionNode[] minSolution = null; //solution with the above length
+
+    //        //Solve the level taking one bonus permutation after another
+    //        for (int i = 0; i != permutations.Count; i++)
+    //        {
+    //            SolutionNode[] solution = ExtractSolutionForPermutation(permutations[i], minSolutionLength);
+    //            if (solution != null)
+    //            {
+    //                minSolution = solution;
+    //                minSolutionLength = minSolution.Length;
+    //            }
+    //        }
+
+    //        return minSolution;
+    //    }
+    //}
+
     public SolutionNode[] Solve(int maxMovements)
     {
-        List<Permutation> permutations = FindBonusPermutations();
-
-        if (permutations == null) //no bonus, solve the level between start and finish tiles
+        int treeHeight = 2;
+        SolutionNode[][] solutions;
+        do
         {
-            SolutionTree solutionTree = new SolutionTree(this);
-            SolutionNode[][] solutions = solutionTree.SearchForSolutions();
-            return (solutions != null) ? solutions[0] : null;
-        }
-        else
-        {
-            int minSolutionLength = int.MaxValue; //we store here the minimum length of a solution we found
-            SolutionNode[] minSolution = null; //solution with the above length
+            Debug.Log("solving tree with height:" + treeHeight);
+            SolutionTree solutionTree = new SolutionTree(treeHeight, this);
+            solutions = solutionTree.SearchForSolutions();
 
-            //Solve the level taking one bonus permutation after another
-            for (int i = 0; i != permutations.Count; i++)
-            {
-                minSolution = ExtractSolutionForPermutation(permutations[i], minSolutionLength);               
-            }
+            if (solutions != null)
+                Debug.Log("Found SOLUTION");
 
-            return (minSolution != null) ? minSolution : null;
+            treeHeight++;
         }
+        while (solutions == null);
+
+        return solutions[0];        
     }
 
     private SolutionNode[] ExtractSolutionForPermutation(Permutation permutation, int maxSolutionLength)
     {
-        Debug.Log("ExtractSolutionForPermutation");
         List<Tile> bonusTiles = this.m_floor.GetBonusTiles();
         List<SolutionNode> solution = new List<SolutionNode>();
 
         int solutionLength = 0; //the length of the solution for this permutation
 
-        Tile[] startTiles = new Tile[2];
-        Tile finishTile;
+        Tile[] subpathStartTiles = new Tile[2];
+        Tile subPathFinishTile;
         int subpathsCount = permutation.Count + 1;
         int p = 0;
         while (p < subpathsCount)
         {
             if (p == 0)
             {
-                startTiles[0] = this.m_floor.GetStartTile();
-                startTiles[1] = null;
-                finishTile = bonusTiles[permutation[0]];
+                subpathStartTiles[0] = this.m_floor.GetStartTile();
+                subpathStartTiles[1] = null;
+                subPathFinishTile = bonusTiles[permutation[0]];
             }
             else if (p == subpathsCount - 1)
             {
-                startTiles[0] = bonusTiles[permutation[permutation.Count - 1]];
-                startTiles[1] = null;
-                finishTile = this.m_floor.GetFinishTile();
+                subPathFinishTile = this.m_floor.GetFinishTile();
             }
             else
             {
-                startTiles[0] = bonusTiles[permutation[p - 1]];
-                startTiles[1] = null;
-                finishTile = bonusTiles[permutation[p]];
+                subPathFinishTile = bonusTiles[permutation[p]];
             }
 
-            SolutionTree solutionTree = new SolutionTree(100, startTiles, finishTile, (p == subpathsCount - 1));
+            SolutionTree solutionTree = new SolutionTree(100, subpathStartTiles, subPathFinishTile, (p == subpathsCount - 1));
             SolutionNode[][] subpathSolutions = solutionTree.SearchForSolutions();
 
             if (subpathSolutions != null)
             {
                 SolutionNode[] subpathSolution = subpathSolutions[0];
 
+                solutionLength += subpathSolution.Length;
                 if (solutionLength > maxSolutionLength)
+                {
                     return null;
+                }
                 else
                 {
-                    solutionLength += subpathSolution.Length;
+                    for (int m = 0; m != subpathSolution.Length; m++)
+                    {
+                        SolutionNode node = subpathSolution[m];
+                    }
+
                     solution.AddRange(subpathSolution);
+
+                    if (p < subpathsCount - 1)
+                        subpathStartTiles = subpathSolution[subpathSolution.Length - 1].m_coveredTiles; //set the start tiles for next subpath
                 }
             }
             else
@@ -196,6 +226,9 @@ public class Level
     **/
     private List<Permutation> FindPermutationsInInterval(int N)
     {
+        if (N < 0)
+            return null;
+
         //to compute the factorial function, as the number of bonuses wont exceed 3, just use a simple loop, no need for a complex and efficient algorithm
         int permutationsCount = 1;
         int i = 2;
@@ -365,7 +398,7 @@ public class Level
 
     public string GetFilename()
     {
-        if (m_title == null)
+        if (m_title == null) 
             return "Level_" + GetNumberAsString(this.m_number);
         else
             return m_title.Replace(" ", "_");

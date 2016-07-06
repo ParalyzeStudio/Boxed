@@ -18,54 +18,54 @@ public class IsometricCameraController : MonoBehaviour
         transform.position = -50 * cameraDirection;
     }
 
-    public void LateUpdate()
-    {
-        //Move camera with keys
-        //Move left/right
-        if (Input.GetKey(KeyCode.Q))
-        {
-            transform.position -= new Vector3(camMoveSpeed * Time.deltaTime, 0f, 0f);
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            transform.position += new Vector3(camMoveSpeed * Time.deltaTime, 0f, 0f);
-        }
+    //public void LateUpdate()
+    //{
+    //    //Move camera with keys
+    //    //Move left/right
+    //    if (Input.GetKey(KeyCode.Q))
+    //    {
+    //        transform.position -= new Vector3(camMoveSpeed * Time.deltaTime, 0f, 0f);
+    //    }
+    //    else if (Input.GetKey(KeyCode.D))
+    //    {
+    //        transform.position += new Vector3(camMoveSpeed * Time.deltaTime, 0f, 0f);
+    //    }
 
-        //Move forward/back
-        if (Input.GetKey(KeyCode.S))
-        {
-            transform.position -= new Vector3(0f, 0f, camMoveSpeed * Time.deltaTime);
-        }
-        else if (Input.GetKey(KeyCode.Z))
-        {
-            transform.position += new Vector3(0f, 0f, camMoveSpeed * Time.deltaTime);
-        }
+    //    //Move forward/back
+    //    if (Input.GetKey(KeyCode.S))
+    //    {
+    //        transform.position -= new Vector3(0f, 0f, camMoveSpeed * Time.deltaTime);
+    //    }
+    //    else if (Input.GetKey(KeyCode.Z))
+    //    {
+    //        transform.position += new Vector3(0f, 0f, camMoveSpeed * Time.deltaTime);
+    //    }
 
-        //Zoom
-        //float cameraMaxSize = 30;
-        //float cameraMinSize = 5;
-        //Camera camera = this.GetComponent<Camera>();
-        //float cameraCurrentSize = camera.orthographicSize;
-        //if (Input.GetAxis("Mouse ScrollWheel") > 0f || Input.GetKeyDown(KeyCode.I))
-        //{
-        //    if (cameraCurrentSize > cameraMinSize)
-        //    {
-        //        cameraCurrentSize -= zoomSpeed;
-        //        cameraCurrentSize = Mathf.Clamp(cameraCurrentSize, cameraMinSize, cameraMaxSize);
-        //        camera.orthographicSize = cameraCurrentSize;
-        //    }
-        //}
-        //else if (Input.GetAxis("Mouse ScrollWheel") < 0f || Input.GetKeyDown(KeyCode.O))
-        //{
-        //    if (cameraCurrentSize < cameraMaxSize)
-        //    {
-        //        cameraCurrentSize += zoomSpeed;
-        //        cameraCurrentSize = Mathf.Clamp(cameraCurrentSize, cameraMinSize, cameraMaxSize);
-        //        camera.orthographicSize = cameraCurrentSize;
-        //    }
-        //}
+    //    //Zoom
+    //    //float cameraMaxSize = 30;
+    //    //float cameraMinSize = 5;
+    //    //Camera camera = this.GetComponent<Camera>();
+    //    //float cameraCurrentSize = camera.orthographicSize;
+    //    //if (Input.GetAxis("Mouse ScrollWheel") > 0f || Input.GetKeyDown(KeyCode.I))
+    //    //{
+    //    //    if (cameraCurrentSize > cameraMinSize)
+    //    //    {
+    //    //        cameraCurrentSize -= zoomSpeed;
+    //    //        cameraCurrentSize = Mathf.Clamp(cameraCurrentSize, cameraMinSize, cameraMaxSize);
+    //    //        camera.orthographicSize = cameraCurrentSize;
+    //    //    }
+    //    //}
+    //    //else if (Input.GetAxis("Mouse ScrollWheel") < 0f || Input.GetKeyDown(KeyCode.O))
+    //    //{
+    //    //    if (cameraCurrentSize < cameraMaxSize)
+    //    //    {
+    //    //        cameraCurrentSize += zoomSpeed;
+    //    //        cameraCurrentSize = Mathf.Clamp(cameraCurrentSize, cameraMinSize, cameraMaxSize);
+    //    //        camera.orthographicSize = cameraCurrentSize;
+    //    //    }
+    //    //}
 
-        //make the camera movement speed relative to the level of zoom
-        //camMoveSpeed = cameraCurrentSize;
-    }
+    //    //make the camera movement speed relative to the level of zoom
+    //    //camMoveSpeed = cameraCurrentSize;
+    //}
 }

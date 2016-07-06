@@ -31,10 +31,10 @@ public class SolutionTree
         m_processedNodesCount = 0;
     }
 
-    public SolutionTree(Level levelToSolve) : this(50, 
-                                                   null,
-                                                   levelToSolve.m_floor.GetFinishTile(),
-                                                   true)
+    public SolutionTree(int height, Level levelToSolve) : this( height,
+                                                          null,
+                                                          levelToSolve.m_floor.GetFinishTile(),
+                                                          true)
     {
         m_startTiles = new Tile[2];
         m_startTiles[0] = levelToSolve.m_floor.GetStartTile();
@@ -53,11 +53,20 @@ public class SolutionTree
     public SolutionNode[][] SearchForSolutions(int bFilters = SHORTEST_SOLUTION)
     {
         //Construct 4 nodes and 4 bricks (1 for each rolling direction) starting from level start tile
+        Brick b1 = new Brick();
+        Brick b2 = new Brick();
+        Brick b3 = new Brick();
+        Brick b4 = new Brick();
+        b1.PlaceOnTiles(m_startTiles);
+        b2.PlaceOnTiles(m_startTiles);
+        b3.PlaceOnTiles(m_startTiles);
+        b4.PlaceOnTiles(m_startTiles);
+
         SolutionNode[] childNodes = new SolutionNode[4];
-        childNodes[0] = new SolutionNode(this, Brick.RollDirection.LEFT, null, 0, new Brick(m_startTiles));
-        childNodes[1] = new SolutionNode(this, Brick.RollDirection.RIGHT, null, 0, new Brick(m_startTiles));
-        childNodes[2] = new SolutionNode(this, Brick.RollDirection.TOP, null, 0, new Brick(m_startTiles));
-        childNodes[3] = new SolutionNode(this, Brick.RollDirection.BOTTOM, null, 0, new Brick(m_startTiles));
+        childNodes[0] = new SolutionNode(this, Brick.RollDirection.LEFT, null, 0, b1);
+        childNodes[1] = new SolutionNode(this, Brick.RollDirection.RIGHT, null, 0, b2);
+        childNodes[2] = new SolutionNode(this, Brick.RollDirection.TOP, null, 0, b3);
+        childNodes[3] = new SolutionNode(this, Brick.RollDirection.BOTTOM, null, 0, b4);
 
         //Process every of the 4 nodes declared above
         for (int i = 0; i != childNodes.Length; i++)
@@ -65,10 +74,9 @@ public class SolutionTree
             childNodes[i].Process();
         }
 
-        Debug.Log("processed nodes count:" + GetProcessedNodesCount());
+        //Debug.Log("processed nodes count:" + GetProcessedNodesCount());
 
         //now search for paths that are marked as successful and return them
-        Debug.Log("bFilters:" + bFilters);
         return ExtractSuccessPaths(bFilters);
     }
 
@@ -137,15 +145,15 @@ public class SolutionTree
     /**
     * Tell if the path ending with the parameter 'leafNode' goes through all bonuses
     **/
-    private bool PathContainsAllBonuses(SolutionNode[] path)
+    public bool PathContainsAllBonuses(SolutionNode leafNode)
     {
         int bonusTilesCount = m_bonusTiles.Count;
         bool[] bonusTilesCoveredState = new bool[bonusTilesCount];
         int bonusTilesCoveredCount = 0;
 
-        for (int i = 0; i != path.Length; i++)
+        SolutionNode node = leafNode;
+        while (node != null)
         {
-            SolutionNode node = path[i];
             for (int p = 0; p != bonusTilesCount; p++)
             {
                 if (!bonusTilesCoveredState[p] && node.CoversTile(m_bonusTiles[p]))
@@ -154,6 +162,8 @@ public class SolutionTree
                     bonusTilesCoveredCount++;
                 }
             }
+
+            node = node.m_parentNode;
         }
 
         return bonusTilesCoveredCount == bonusTilesCount;
@@ -228,9 +238,13 @@ public class SolutionNode
             }            
 
             if (targetTileHasBeenReached)
-            {                
-                m_parentTree.AddSuccessNode(this);
-                m_parentTree.m_maximumHeight = this.m_distanceFromRoot + 1;
+            {
+                //we want to check if this path contains all bonuses
+                if (m_parentTree.PathContainsAllBonuses(this))
+                {
+                    m_parentTree.AddSuccessNode(this);
+                    m_parentTree.m_maximumHeight = this.m_distanceFromRoot + 1;
+                }
             }
             else //keep processing child nodes
             {
@@ -249,6 +263,13 @@ public class SolutionNode
     **/
     public SolutionNode[] Split()
     {
+        //SolutionNode[] childNodes = new SolutionNode[4];
+
+        //childNodes[0] = new SolutionNode(m_parentTree, Brick.RollDirection.LEFT, this, m_distanceFromRoot + 1, m_brick);
+        //childNodes[1] = new SolutionNode(m_parentTree, Brick.RollDirection.TOP, this, m_distanceFromRoot + 1, new Brick(m_brick));
+        //childNodes[2] = new SolutionNode(m_parentTree, Brick.RollDirection.RIGHT, this, m_distanceFromRoot + 1, new Brick(m_brick));
+        //childNodes[3] = new SolutionNode(m_parentTree, Brick.RollDirection.BOTTOM, this, m_distanceFromRoot + 1, new Brick(m_brick));
+
         SolutionNode[] childNodes = new SolutionNode[3];
 
         if (m_direction == Brick.RollDirection.LEFT)
@@ -265,15 +286,15 @@ public class SolutionNode
         }
         else if (m_direction == Brick.RollDirection.TOP)
         {
-            childNodes[0] = new SolutionNode(m_parentTree, Brick.RollDirection.RIGHT, this, m_distanceFromRoot + 1, m_brick);
-            childNodes[1] = new SolutionNode(m_parentTree, Brick.RollDirection.LEFT, this, m_distanceFromRoot + 1, new Brick(m_brick));
+            childNodes[0] = new SolutionNode(m_parentTree, Brick.RollDirection.LEFT, this, m_distanceFromRoot + 1, m_brick);
+            childNodes[1] = new SolutionNode(m_parentTree, Brick.RollDirection.RIGHT, this, m_distanceFromRoot + 1, new Brick(m_brick));
             childNodes[2] = new SolutionNode(m_parentTree, Brick.RollDirection.TOP, this, m_distanceFromRoot + 1, new Brick(m_brick));
         }
         else
         {
-            childNodes[0] = new SolutionNode(m_parentTree, Brick.RollDirection.RIGHT, this, m_distanceFromRoot + 1, m_brick);
-            childNodes[1] = new SolutionNode(m_parentTree, Brick.RollDirection.BOTTOM, this, m_distanceFromRoot + 1, new Brick(m_brick));
-            childNodes[2] = new SolutionNode(m_parentTree, Brick.RollDirection.LEFT, this, m_distanceFromRoot + 1, new Brick(m_brick));
+            childNodes[0] = new SolutionNode(m_parentTree, Brick.RollDirection.LEFT, this, m_distanceFromRoot + 1, m_brick);
+            childNodes[1] = new SolutionNode(m_parentTree, Brick.RollDirection.RIGHT, this, m_distanceFromRoot + 1, new Brick(m_brick));
+            childNodes[2] = new SolutionNode(m_parentTree, Brick.RollDirection.BOTTOM, this, m_distanceFromRoot + 1, new Brick(m_brick));
         }
 
         return childNodes;

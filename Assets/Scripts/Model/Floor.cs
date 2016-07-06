@@ -138,6 +138,11 @@ public class Floor
         m_bonusTiles = bonusTiles; //cache value
         return bonusTiles;
     }
+
+    public void ClearBonusTilesCachedValue()
+    {
+        m_bonusTiles = null;
+    }
     
     /**
     * Return the index of the tile next to this tile given a direction (left, top, right or bottom)

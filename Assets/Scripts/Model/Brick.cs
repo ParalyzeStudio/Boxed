@@ -115,7 +115,7 @@ public class Brick
     * To handle lighting correctly, our cuboid will need 24 vertices (instead of 8) so light is interpolated correctly so one face has one single color.
     * Pass the tile or tiles the brick should be upon
     **/
-    public Brick(Tile[] tiles)
+    public Brick()
     {
         m_vertices = new Vector3[8];
         m_vertices[0] = new Vector3(0, 0, 0);
@@ -141,6 +141,8 @@ public class Brick
 
         //at start the first face is touching the ground with face 0 and is idle
         m_state = BrickState.IDLE;
+
+        m_rotation = Quaternion.identity;
     }
 
     /**
@@ -158,7 +160,6 @@ public class Brick
 
     public void PlaceOnTiles(Tile[] tiles)
     {
-        //tiles covered by the brick (only 1 at start)
         m_coveredTiles = tiles;
 
         //set initial rotation of the brick and the index of the face touching the ground depending on the number of covered tiles
@@ -168,13 +169,19 @@ public class Brick
             m_downFaceIndex = 0;
         }
         else //two tiles covered
-        {
-            m_downFaceIndex = 3;
-            //compute the rotation edge from face 0 to face 3
-            Geometry.Edge rotationEdge = m_faces[0].GetAdjacentFaceSharedEdge(m_downFaceIndex);
-            Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
+        {            
+            Vector3 brickDirection = tiles[1].GetLocalPosition() - tiles[0].GetLocalPosition();
 
-            m_rotation = Quaternion.AngleAxis(-90, rotationAxis);
+            if (brickDirection == Vector3.left)
+                m_downFaceIndex = 5;
+            else if (brickDirection == Vector3.forward)
+                m_downFaceIndex = 4;
+            else if (brickDirection == Vector3.right)
+                m_downFaceIndex = 3;
+            else if (brickDirection == Vector3.back)
+                m_downFaceIndex = 2;
+
+            m_rotation = Quaternion.FromToRotation(Vector3.up, brickDirection);
         }
     }
 
@@ -212,7 +219,7 @@ public class Brick
 
         //Associate one vector to every direction
         Vector3 direction = GetVector3DirectionForRollingDirection(rollDirection);
-
+        
         //Find the face that has the same normal vector as the roll direction
         float maxDotProduct = float.MinValue;
         int rollToFaceIdx = -1;

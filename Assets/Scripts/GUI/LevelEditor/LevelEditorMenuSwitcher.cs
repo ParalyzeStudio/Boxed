@@ -8,7 +8,7 @@ public class LevelEditorMenuSwitcher : MonoBehaviour
     public LevelEditorMenu m_mainMenu;
     public EditTilesSubMenu m_editTilesSubMenu;
     public LevelEditorMenu m_checkpointsSubMenu;
-    public LevelEditorMenu m_bonusesSubMenu;
+    public EditBonusesSubMenu m_bonusesSubMenu;
     public LevelEditorMenu m_resetSubMenu;
 
     private LevelEditorMenu m_activeMenu;

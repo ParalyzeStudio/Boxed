@@ -17,7 +17,7 @@ public class BrickRenderer : MonoBehaviour
     **/
     public void BuildOnTiles(Tile[] tiles)
     {
-        m_brick = new Brick(tiles);
+        m_brick = new Brick();
 
         //build mesh vertices
         Vector3[] vertices = new Vector3[24];
@@ -78,7 +78,7 @@ public class BrickRenderer : MonoBehaviour
 
         if (tiles[1] == null)
         {
-            brickAnimator.transform.rotation = Quaternion.Euler(0, 0, 0); //null rotation  
+            brickAnimator.transform.rotation = Quaternion.identity; //null rotation  
             brickAnimator.SetPosition(tiles[0].GetWorldPosition() + new Vector3(0, 1 + 0.5f * TileRenderer.TILE_HEIGHT, 0));
         }
         else
@@ -126,7 +126,7 @@ public class BrickRenderer : MonoBehaviour
                         m_fallRotationEdge = rotationEdge;
                         m_fallDirection = m_brick.GetVector3DirectionForRollingDirection(rollDirection);
                         m_transformRotationEdgeToLocal = false;
-                        normalRotationAngle = 90;
+                        normalRotationAngle = 135;
                         bPrefall = false;
                     }
                     else if (coveredTiles[0].CurrentState == Tile.State.NORMAL) //first tile is normal and second one is disabled
@@ -210,7 +210,7 @@ public class BrickRenderer : MonoBehaviour
         float fallSpeed = 1.5f  * 0.5f * Mathf.Deg2Rad * DEFAULT_ANGULAR_SPEED;
         float fallDuration = fallHeight / fallSpeed;
 
-        Vector3 brickToPosition = brickAnimator.GetPosition() + new Vector3(0, -fallHeight, 0) + 4.0f * m_fallDirection;
+        Vector3 brickToPosition = brickAnimator.GetPosition() + new Vector3(0, -fallHeight, 0) + 4.8f * m_fallDirection;
         brickAnimator.TranslateTo(brickToPosition, fallDuration, 0, ValueAnimator.InterpolationType.LINEAR, true);
 
         brickAnimator.SetRotationAxis(fallRotationAxis);

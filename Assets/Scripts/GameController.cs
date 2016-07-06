@@ -131,9 +131,9 @@ public class GameController : MonoBehaviour
 
             Tile[] coveredTiles = new Tile[2];
             coveredTiles[0] = (level == null) ? m_floor.m_floorData.GetCenterTile() : level.m_floor.GetStartTile();
-            coveredTiles[1] = m_floor.m_floorData.GetNextTileForDirection(coveredTiles[0], Brick.RollDirection.RIGHT);
+            //coveredTiles[1] = m_floor.m_floorData.GetNextTileForDirection(coveredTiles[0], Brick.RollDirection.BOTTOM);
+            coveredTiles[1] = null;
             m_brick.BuildOnTiles(coveredTiles);
-            //m_brick.BuildOnTile(m_floor.m_floorData.Tiles[1]);
         }
     }
 

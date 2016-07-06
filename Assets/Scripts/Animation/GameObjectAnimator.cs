@@ -6,9 +6,6 @@ public class GameObjectAnimator : ValueAnimator
     protected Vector3 m_pivotPoint; //the pivot point of this game object, if the pivot point position (which is m_poisiotn) 
                                     //is at the transform.localposition of the object then the pivot point is Vector3.zero
     private Vector3 m_objectSize; //the size of the object that will serve to position correctly our object in conjunction with the pivot point
-    //private Vector3 m_objectBBoxMinPoint;
-    //private Vector3 m_objectBBoxMaxPoint;
-    //private bool m_objectBoundsCalculated;
 
     public override void Awake()
     {
@@ -23,7 +20,7 @@ public class GameObjectAnimator : ValueAnimator
 
         //we need to calculate the size of the bounding box of the object once, when its rotation is null
         Quaternion tmpRotation = this.transform.rotation;
-        this.transform.rotation = Quaternion.Euler(0, 0, 0);
+        this.transform.rotation = Quaternion.identity;
         Vector3 bboxSize = GetGameObjectBoundingBox().size;
         this.transform.rotation = tmpRotation;
 

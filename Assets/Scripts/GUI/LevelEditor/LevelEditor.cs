@@ -9,6 +9,7 @@ public class LevelEditor : MonoBehaviour
     public SaveLoadLevelWindow m_saveLoadLevelWindowPfb;
     public ValidationWindow m_validationWindowPfb;
     public PublishWindow m_publishWindowPfb;
+    public PublishedLevelsWindow m_publishedLevelsWindowPfb;
     public TestMenu m_testMenuPfb;
     public SolutionPanel m_solutionPanelPfb;
 
@@ -82,6 +83,13 @@ public class LevelEditor : MonoBehaviour
     public void ShowPublishWindow()
     {
         PublishWindow window = Instantiate(m_publishWindowPfb);
+        window.transform.SetParent(this.transform, false);
+        window.Init(this);
+    }
+
+    public void ShowPublishedLevelsWindow()
+    {
+        PublishedLevelsWindow window = Instantiate(m_publishedLevelsWindowPfb);
         window.transform.SetParent(this.transform, false);
         window.Init(this);
     }

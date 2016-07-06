@@ -6,9 +6,9 @@ using UnityEngine.UI;
 public class SaveLoadLevelWindow : MonoBehaviour
 {
     public InputField m_input; //the input where the player can enter a level filename
-    public Text m_saveErrorMessage1;
-    public Text m_saveErrorMessage2;
-    public Text m_saveSuccessMessage;
+    //public Text m_saveErrorMessage1;
+    //public Text m_saveErrorMessage2;
+    //public Text m_saveSuccessMessage;
     public Button m_saveBtn;
     public Button m_loadBtn;
     public Transform m_levelsListTf; //holder for level items
@@ -109,7 +109,7 @@ public class SaveLoadLevelWindow : MonoBehaviour
         {
             m_selectedItem.m_level = editedLevel;
             m_selectedItem.InvalidateContent();
-            m_saveSuccessMessage.gameObject.SetActive(true);
+            //m_saveSuccessMessage.gameObject.SetActive(true);
             editedLevel.Save();
         }
         else
@@ -144,7 +144,10 @@ public class SaveLoadLevelWindow : MonoBehaviour
         if (m_selectedItem == item)
             return;
 
+        if (m_selectedItem != null)
+            m_selectedItem.Deselect();
         m_selectedItem = item;
+        item.Select();
         item.OnClick();
 
         if (item.m_level == null)

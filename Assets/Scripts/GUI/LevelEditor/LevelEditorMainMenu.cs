@@ -52,6 +52,11 @@ public class LevelEditorMainMenu : LevelEditorMenu
         m_parentSwitcher.m_parentEditor.ShowSaveLoadLevelWindow();
     }
 
+    public void OnClickPublishedLevels()
+    {
+        m_parentSwitcher.m_parentEditor.ShowPublishedLevelsWindow();
+    }
+
     public void ToggleValidatePublishButtons(bool bShowValidateBtn)
     {
         if (bShowValidateBtn)

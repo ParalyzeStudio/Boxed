@@ -87,4 +87,18 @@ public class LevelManager : MonoBehaviour
 
         return allLevels;
     }
+
+    public void DeletePublishedLevelFileForLevel(Level level)
+    {
+        string publishedLevelsPath = Application.persistentDataPath + "/Levels/PublishedLevels";
+        string[] levelFilenames = Directory.GetFiles(publishedLevelsPath);
+
+        for (int i = 0; i != levelFilenames.Length; i++)
+        {
+            Level loadedLevel = Level.LoadFromFile(levelFilenames[i]);
+
+            if (loadedLevel.m_number == level.m_number)
+                File.Delete(publishedLevelsPath + "/" + levelFilenames[i]);
+        }
+    }
 }
