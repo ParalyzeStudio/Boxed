@@ -47,10 +47,8 @@ public class GameController : MonoBehaviour
             guiManager.DisplayLevels();
         }
         else
-        {           
-            StartLevel(levelManager.GetPublishedLevelForNumber(1));
-
-            m_gameStarted = true;
+        {
+            StartGameForLevel(1);
         }
     }
 
@@ -106,6 +104,18 @@ public class GameController : MonoBehaviour
         BuildBonusesHolder();
         RenderFloor(level.m_floor);
         BuildBrick(level);
+    }
+
+    /**
+    * Called when we want to start a level from game scene (not level editor)
+    **/
+    public void StartGameForLevel(int levelNumber)
+    {
+        m_gameMode = GameMode.GAME;
+        LevelManager levelManager = this.GetComponent<LevelManager>();
+        StartLevel(levelManager.GetPublishedLevelForNumber(levelNumber));
+
+        m_gameStarted = true;
     }
 
     public void RenderFloor(Floor floor)

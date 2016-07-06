@@ -3,24 +3,38 @@ using UnityEngine.UI;
 
 public class LevelsGUI : MonoBehaviour
 {
-    public GameObject m_levelsList;
-    public GameObject m_levelItemPfb;
+    private const int NUM_LINES = 3;
+    private const int LEVELS_PER_LINE = 5;
 
-    public void Init()
+    public GameObject[] m_lines;
+    public LevelSlot m_levelSlotPfb;
+
+    public void Start()
     {
-        PopulateList();
+        for (int i = 0; i != NUM_LINES; i++)
+        {
+            PopulateLine(i);
+        }
     }
 
-    private void PopulateList()
+    private void PopulateLine(int lineIdx)
     {
-        LevelManager levelManager = GameController.GetInstance().GetComponent<LevelManager>();
-
-        for (int i = 0; i != levelManager.PublishedLevels.Count; i++)
+        for (int j = 0; j != 5; j++)
         {
-            Level level = levelManager.PublishedLevels[i];
-
-            GameObject levelItemObject = (GameObject)Instantiate(m_levelItemPfb);
-            levelItemObject.GetComponentInChildren<Text>().text = level.m_number + " - " + level.m_title;
+            LevelSlot slot = Instantiate(m_levelSlotPfb);
+            slot.Init(this, lineIdx * LEVELS_PER_LINE + j + 1);
+            slot.transform.SetParent(m_lines[lineIdx].transform, false);
         }
+    }
+
+    public void OnSlotClick(LevelSlot slot)
+    {
+        Dismiss();
+        GameController.GetInstance().StartGameForLevel(slot.m_number);
+    }
+
+    public void Dismiss()
+    {
+        Destroy(this.gameObject);
     }
 }

@@ -132,6 +132,13 @@ public class Level
 
     public SolutionNode[] Solve(int maxMovements)
     {
+        //SolutionNode[][] solutions;
+        //SolutionTree solutionTree = new SolutionTree(18, this);
+        //solutions = solutionTree.SearchForSolutions();
+
+        //if (solutions != null)
+        //    return solutions[0];
+
         int treeHeight = 2;
         SolutionNode[][] solutions;
         do

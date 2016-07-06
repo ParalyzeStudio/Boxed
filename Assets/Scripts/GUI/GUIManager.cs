@@ -81,8 +81,6 @@ public class GUIManager : MonoBehaviour
     {
         LevelsGUI levels = Instantiate(m_levelsGUIPfb);
         levels.transform.SetParent(m_canvas.transform, false);
-
-        levels.Init();
     }
 }
 
