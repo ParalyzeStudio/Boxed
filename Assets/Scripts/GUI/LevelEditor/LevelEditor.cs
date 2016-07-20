@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class LevelEditor : MonoBehaviour
+public class LevelEditor : BaseGUI
 {
     public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 35;
 

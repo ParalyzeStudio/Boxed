@@ -6,13 +6,18 @@ public class GUIManager : MonoBehaviour
 
     //level editor
     public LevelEditor m_levelEditorPfb;
-    public LevelEditor m_levelEditor { get; set; }
 
     //main menu
     public MainMenuGUI m_mainMenuGUIPfb;
 
     //levels
     public LevelsGUI m_levelsGUIPfb;
+
+    //game
+    public GameGUI m_gameGUIPfb;
+
+    //currently displayed GUI
+    public BaseGUI m_currentGUI { get; set; }
 
     //themes
     public ColorThemes m_themes;
@@ -26,7 +31,7 @@ public class GUIManager : MonoBehaviour
         m_themes = new ColorThemes();
         m_themes.Init();
 
-        ShowBackgroundForTheme(m_themes.Themes[0]);    
+        ShowBackgroundForTheme(m_themes.Themes[0]);
     }
 
     public void ShowBackgroundForTheme(ColorTheme theme)
@@ -43,16 +48,31 @@ public class GUIManager : MonoBehaviour
     **/
     public bool ProcessPointerEvent(Vector3 pointerLocation)
     {
-        //Test with level editor if available
-        if (m_levelEditor != null)
+        GameController.GameMode gameMode = GameController.GetInstance().m_gameMode;
+
+        ////Test with level editor if available
+        //if (gameMode == GameController.GameMode.LEVEL_EDITOR)
+        //{
+        //    RectTransform[] childTransforms = m_levelEditor.GetComponentsInChildren<RectTransform>();
+        //    for (int i = 0; i != childTransforms.Length; i++)
+        //    {
+        //        if (m_levelEditor.transform != childTransforms[i] && RectTransformUtility.RectangleContainsScreenPoint(childTransforms[i], pointerLocation))
+        //        {
+        //            return true;
+        //        }
+        //    }
+        //}
+        //else if (gameMode == GameController.GameMode.LEVEL_EDITOR)
+        //{
+
+        //}
+
+        RectTransform[] childTransforms = m_currentGUI.GetComponentsInChildren<RectTransform>();
+        for (int i = 0; i != childTransforms.Length; i++)
         {
-            RectTransform[] childTransforms = m_levelEditor.GetComponentsInChildren<RectTransform>();
-            for (int i = 0; i != childTransforms.Length; i++)
+            if (m_currentGUI.transform != childTransforms[i] && RectTransformUtility.RectangleContainsScreenPoint(childTransforms[i], pointerLocation))
             {
-                if (m_levelEditor.transform != childTransforms[i] && RectTransformUtility.RectangleContainsScreenPoint(childTransforms[i], pointerLocation))
-                {
-                    return true;
-                }
+                return true;
             }
         }
 
@@ -62,25 +82,47 @@ public class GUIManager : MonoBehaviour
     /**
     * Render the level editor GUI element that contains all menus/windows to easily create a level
     **/
-    public void DisplayLevelEditor()
+    public void DisplayLevelEditorGUI()
     {
         //build the level editor object
-        m_levelEditor = Instantiate(m_levelEditorPfb);
-        m_levelEditor.name = "LevelEditor";
-        m_levelEditor.transform.SetParent(m_canvas.transform, false);
-        m_levelEditor.Init();
+        LevelEditor levelEditor = Instantiate(m_levelEditorPfb);
+        levelEditor.name = "LevelEditor";
+        levelEditor.transform.SetParent(m_canvas.transform, false);
+        levelEditor.Init();
+
+        m_currentGUI = levelEditor;
     }
 
-    public void DisplayMainMenu()
+    public void DisplayMainMenuGUI()
     {
         MainMenuGUI mainMenu = Instantiate(m_mainMenuGUIPfb);
         mainMenu.transform.SetParent(m_canvas.transform, false);
+        m_currentGUI = mainMenu;
+
+        mainMenu.Show();
     }
 
-    public void DisplayLevels()
+    public void DisplayLevelsGUI()
     {
         LevelsGUI levels = Instantiate(m_levelsGUIPfb);
         levels.transform.SetParent(m_canvas.transform, false);
+        m_currentGUI = levels;
+
+        levels.Show();
+    }
+
+    public void DisplayGameGUIForLevel(Level level)
+    {
+        GameGUI game = Instantiate(m_gameGUIPfb);
+        game.transform.SetParent(m_canvas.transform, false);
+        game.Init(level);
+        m_currentGUI = game;
+        game.Show();
+    }
+
+    public void DismissCurrentGUI()
+    {
+        m_currentGUI.Dismiss();
     }
 }
 

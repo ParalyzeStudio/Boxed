@@ -103,12 +103,13 @@ public class TouchManager : MonoBehaviour
             }
         }
 #endif
-
+        
         if (eventType != PointerEventType.NONE)
         {
             //If GUI does not process the current mouse position, pass the pointer event to the GameTouchHandler
             if (!GameController.GetInstance().GetGUIManager().ProcessPointerEvent(Input.mousePosition))
             {
+                Debug.Log("pointerLocationX:" + pointerLocation.x + " pointerLocationY:" + pointerLocation.y);
                 this.GetComponent<GameTouchHandler>().ProcessPointerEvent(pointerLocation, eventType);
             }
         }

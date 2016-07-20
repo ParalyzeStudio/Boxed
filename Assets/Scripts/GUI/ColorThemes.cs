@@ -47,13 +47,13 @@ public class ColorThemes
         theme1.m_blockedTileColors.m_tileLeftFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(20, 20, 20, 255));
         theme1.m_blockedTileColors.m_tileRightFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(120, 120, 120, 255));
         theme1.m_blockedTileColors.m_tileTopFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(60, 60, 60, 255));
-        theme1.m_blockedTileColors.m_tileContourColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(240, 128, 180, 255));
+        theme1.m_blockedTileColors.m_tileContourColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(120, 120, 120, 255));
 
         theme1.m_disabledTileColors = new TileColors();
         theme1.m_disabledTileColors.m_tileLeftFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(28, 28, 28, 255));
         theme1.m_disabledTileColors.m_tileRightFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(75, 75, 75, 255));
         theme1.m_disabledTileColors.m_tileTopFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(126, 126, 126, 255));
-        theme1.m_disabledTileColors.m_tileContourColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(240, 128, 180, 255));
+        theme1.m_disabledTileColors.m_tileContourColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(90, 90, 90, 255));
 
         theme1.m_defaultTileColors = new TileColors();
         theme1.m_defaultTileColors.m_tileLeftFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(78, 28, 50, 255));

@@ -2,7 +2,7 @@
 
 public class BrickRenderer : MonoBehaviour
 {
-    private Brick m_brick;
+    public Brick m_brick { get; set; }
 
     private Geometry.Edge m_fallRotationEdge;
     private bool m_transformRotationEdgeToLocal;
@@ -124,12 +124,12 @@ public class BrickRenderer : MonoBehaviour
                     if (coveredTiles[0].CurrentState == Tile.State.DISABLED && coveredTiles[1].CurrentState == Tile.State.DISABLED) //brick fell on two disabled tiles
                     {
                         m_fallRotationEdge = rotationEdge;
-                        m_fallDirection = m_brick.GetVector3DirectionForRollingDirection(rollDirection);
+                        m_fallDirection = Brick.GetVector3DirectionForRollingDirection(rollDirection);
                         m_transformRotationEdgeToLocal = false;
                         normalRotationAngle = 135;
                         bPrefall = false;
                     }
-                    else if (coveredTiles[0].CurrentState == Tile.State.NORMAL) //first tile is normal and second one is disabled
+                    else if (coveredTiles[0].CurrentState == Tile.State.NORMAL || coveredTiles[0].CurrentState == Tile.State.START || coveredTiles[0].CurrentState == Tile.State.FINISH) //first tile is normal and second one is disabled
                     {
                         normalRotationAngle = 90;
                         m_fallDirection = coveredTiles[1].GetWorldPosition() - coveredTiles[0].GetWorldPosition();
@@ -150,7 +150,7 @@ public class BrickRenderer : MonoBehaviour
                 {
                     normalRotationAngle = 135;
                     m_fallRotationEdge = rotationEdge;
-                    m_fallDirection = m_brick.GetVector3DirectionForRollingDirection(rollDirection);
+                    m_fallDirection = Brick.GetVector3DirectionForRollingDirection(rollDirection);
                     m_transformRotationEdgeToLocal = false;
                     bPrefall = false;
                 }
@@ -179,15 +179,15 @@ public class BrickRenderer : MonoBehaviour
     * In case the normal rotation of the brick is not enough to make the brick fall, rotate it again by 45 degrees around the floor edge so it reaches the point it will start falling
     **/
     private void PreFall()
-    {
-        Vector3 rotationAxis = m_fallRotationEdge.m_pointB - m_fallRotationEdge.m_pointA;
-
+    {    
         if (m_transformRotationEdgeToLocal)
         {
             //transform this edge into brick local coordinates
             m_fallRotationEdge.Translate(-this.transform.localPosition);
             m_fallRotationEdge.ApplyRotation(Quaternion.Inverse(m_brick.m_rotation));
         }
+
+        Vector3 rotationAxis = m_fallRotationEdge.m_pointB - m_fallRotationEdge.m_pointA;
 
         //rotates the brick until the gravity makes it fall
         BrickAnimator brickAnimator = this.GetComponent<BrickAnimator>();

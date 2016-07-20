@@ -1,0 +1,4 @@
+for file in *.dat
+do
+mv "$file" "${file%.dat}.bytes" 
+done

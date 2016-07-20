@@ -7,6 +7,8 @@ public class Quad : MonoBehaviour
     public Vector4 m_textureRange { get; set; }
     public TextureWrapMode m_textureWrapMode { get; set; }
 
+    public Color[] m_colors { get; set; }
+
     //public void Start()
     //{
     //    //hide some components
@@ -107,6 +109,7 @@ public class Quad : MonoBehaviour
 
     public void SetColors(Color[] colors)
     {
+        m_colors = colors;
         GetComponent<MeshFilter>().sharedMesh.colors = colors;
     }
 }

@@ -273,7 +273,7 @@ public class Brick
         m_downFaceIndex = rollToFace.m_index;
     }
 
-    public Vector3 GetVector3DirectionForRollingDirection(Brick.RollDirection rollDirection)
+    public static Vector3 GetVector3DirectionForRollingDirection(Brick.RollDirection rollDirection)
     {
         if (rollDirection == RollDirection.LEFT)
             return new Vector3(-1, 0, 0);

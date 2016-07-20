@@ -83,7 +83,7 @@ public class Tile
     /**
     * Tell if this tile contains a point without taking account of its y coordinate
     **/
-    public bool ContainsXZPoint(Vector3 point)
+    public bool ContainsXZPoint(Vector2 point)
     {
         Vector3 tileWorldPosition = GetWorldPosition();
         float tileMinX = tileWorldPosition.x - 0.5f * m_size;
@@ -91,7 +91,7 @@ public class Tile
         float tileMinZ = tileWorldPosition.z - 0.5f * m_size;
         float tileMaxZ = tileWorldPosition.z + 0.5f * m_size;
 
-        return (point.x >= tileMinX && point.x <= tileMaxX && point.z >= tileMinZ && point.z <= tileMaxZ);
+        return (point.x >= tileMinX && point.x <= tileMaxX && point.y >= tileMinZ && point.y <= tileMaxZ);
     }
 
     public bool HasSameFloorPosition(Tile other)

@@ -72,4 +72,9 @@ public class Geometry
             m_pointB += dPos;
         }
     }
+
+    public static Vector2 RemoveYComponent(Vector3 point)
+    {
+        return new Vector2(point.x, point.z);
+    }
 }

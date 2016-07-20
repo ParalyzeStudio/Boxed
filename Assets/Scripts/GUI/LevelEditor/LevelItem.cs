@@ -4,16 +4,14 @@ using UnityEngine.UI;
 public class LevelItem : MonoBehaviour
 {    
     public Text m_title;
-    public int m_index { get; set; } //the index of this item in the list
     public Level m_level { get; set; } //the level associated with this item
     private bool m_selected;
 
     private Color m_selectedColor;
     private Color m_deselectedColor;
 
-    public void Init(int index, Level level)
+    public void Init(Level level)
     {
-        m_index = index;
         m_level = level;
         m_selected = false;
 
@@ -36,9 +34,9 @@ public class LevelItem : MonoBehaviour
         else
         {
             if (m_level.m_title == null)
-                m_title.text = m_level.GetFilename();
-            else
-                m_title.text = m_level.m_title;
+                m_level.m_title = m_level.GetFilename();
+
+            m_title.text = m_level.m_title;
             m_title.color = Color.white;
         }
 
@@ -58,10 +56,5 @@ public class LevelItem : MonoBehaviour
     {
         m_selected = false;
         InvalidateContent();
-    }
-
-    public void OnClick()
-    {
-        
     }
 }

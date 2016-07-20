@@ -22,7 +22,6 @@ public class EditTilesSubMenu : LevelEditorMenu
 
     public void OnClickSelectTileButton()
     {
-        Debug.Log("OnClickSelectTileButton");
         m_tileSelectionMode = TileSelectionMode.SELECT;
         EnableButton(m_selectTileButton);
         DisableButton(m_deselectTileButton);
@@ -30,7 +29,6 @@ public class EditTilesSubMenu : LevelEditorMenu
 
     public void OnClickDeselectTileButton()
     {
-        Debug.Log("OnClickDeselectTileButton");
         m_tileSelectionMode = TileSelectionMode.DESELECT;
         DisableButton(m_selectTileButton);
         EnableButton(m_deselectTileButton);

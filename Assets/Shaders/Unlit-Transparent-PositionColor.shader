@@ -1,7 +1,7 @@
 ﻿Shader "Custom/Unlit/Transparent/PositionColor" {
 
 SubShader {
-	Tags{ "Queue" = "Geometry" }
+	Tags{ "Queue" = "Transparent" }
 	
 	ZWrite Off
 	Blend SrcAlpha OneMinusSrcAlpha 
@@ -22,8 +22,6 @@ SubShader {
 				float4 vertex : SV_POSITION;
 				float4 color : COLOR;
 			};
-
-			fixed4 _Color;
 			
 			v2f vert (appdata_t IN)
 			{

@@ -3,21 +3,13 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SaveLoadLevelWindow : MonoBehaviour
+public class SaveLoadLevelWindow : LevelsListWindow
 {
-    public InputField m_input; //the input where the player can enter a level filename
     //public Text m_saveErrorMessage1;
     //public Text m_saveErrorMessage2;
     //public Text m_saveSuccessMessage;
     public Button m_saveBtn;
     public Button m_loadBtn;
-    public Transform m_levelsListTf; //holder for level items
-    
-    public LevelItem m_levelItemPfb;
-
-    private LevelItem m_selectedItem;
-
-    private LevelEditor m_parentLevelEditor;
 
     public OverwriteFilePopup m_overwriteFilePopupPfb;
 
@@ -28,62 +20,16 @@ public class SaveLoadLevelWindow : MonoBehaviour
         ID_CANCEL
     }
 
-    public void Init(LevelEditor parentLevelEditor)
+    public override void Init(LevelEditor parentEditor)
     {
-        m_parentLevelEditor = parentLevelEditor;
+        base.Init(parentEditor);
 
         DisableButton(ButtonID.ID_SAVE_LEVEL);
         DisableButton(ButtonID.ID_LOAD_LEVEL);
 
-        PopulateLevelsList();
-        m_selectedItem = null;
-    }
-
-    /**
-    * Populate the scroll list with levels saved inside persistent data path
-    * Return the size of the list
-    **/
-    public int PopulateLevelsList()
-    {
-        List<Level> allLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllEditedLevelsFromDisk();
-
-        int listIndex = 0;
-        for (int i = 0; i != allLevels.Count; i++)
-        {
-            Level level = allLevels[i];
-            int levelNumber = level.m_number;
-
-            //build empty levels until we reach the next valid level
-            while (listIndex < levelNumber - 1)
-            {
-                BuildListItemAtIndexForLevel(listIndex, null);
-                listIndex++;
-            }
-
-            //Build the valid level
-            BuildListItemAtIndexForLevel(listIndex, level);
-            listIndex++;
-        }
-
-        //Build another empty level just after the last valid level
-        BuildListItemAtIndexForLevel(listIndex, null);
-
-        return listIndex + 1;
-    }
-
-    /**
-    * Build a level item object and add it to the list
-    **/
-    private void BuildListItemAtIndexForLevel(int index, Level level)
-    {
-        LevelItem levelItemObject = (LevelItem)Instantiate(m_levelItemPfb);
-
-        LevelItem levelItem = levelItemObject.GetComponent<LevelItem>();
-        levelItem.Init(index, level);
-
-        levelItem.GetComponent<Button>().onClick.AddListener(delegate { OnItemClick(levelItem); });
-
-        levelItem.transform.SetParent(m_levelsListTf, false);
+        List<Level> editedLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllEditedLevelsFromDisk();
+        BuildLevelItemsForLevels(editedLevels);
+        InvalidateItemList();
     }
 
     /**
@@ -96,11 +42,10 @@ public class SaveLoadLevelWindow : MonoBehaviour
 
     public void OnClickSave()
     {
-        int levelNumber = m_selectedItem.m_index + 1;
+        int levelNumber = m_selectedItem.m_level.m_number;
 
         //Build a new floor and a new level that holds it
-        //Floor clampedFloor = GameController.GetInstance().m_floor.m_floorData.Clamp();
-        Level editedLevel = m_parentLevelEditor.m_editedLevel;
+        Level editedLevel = m_parentEditor.m_editedLevel;
         editedLevel.m_number = levelNumber;
         editedLevel.m_title = "Level_" + Level.GetNumberAsString(levelNumber);
 
@@ -118,16 +63,16 @@ public class SaveLoadLevelWindow : MonoBehaviour
             OverwriteFilePopup overwriteFilePopup = Instantiate(m_overwriteFilePopupPfb);
             overwriteFilePopup.Init(this);
 
-            overwriteFilePopup.transform.SetParent(m_parentLevelEditor.transform, false);
+            overwriteFilePopup.transform.SetParent(m_parentEditor.transform, false);
         }        
     }
 
     public void OnClickLoad()
     {
         GameController.GetInstance().ClearLevel();
-        m_parentLevelEditor.BuildLevel(m_selectedItem.m_level);
+        m_parentEditor.BuildLevel(m_selectedItem.m_level);
         if (m_selectedItem.m_level.m_validated)
-            m_parentLevelEditor.ShowTestMenu();
+            m_parentEditor.ShowTestMenu();
 
         //Dismiss the window
         OnClickCancel();
@@ -135,20 +80,13 @@ public class SaveLoadLevelWindow : MonoBehaviour
 
     public void OnClickCancel()
     {
-        m_parentLevelEditor.OnDismissSaveLoadLevelWindow();
+        m_parentEditor.OnDismissSaveLoadLevelWindow();
         Destroy(this.gameObject);
     }    
 
-    public void OnItemClick(LevelItem item)
+    public override void OnLevelItemClick(LevelItem item)
     {
-        if (m_selectedItem == item)
-            return;
-
-        if (m_selectedItem != null)
-            m_selectedItem.Deselect();
-        m_selectedItem = item;
-        item.Select();
-        item.OnClick();
+        base.OnLevelItemClick(item);
 
         if (item.m_level == null)
         {

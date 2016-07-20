@@ -5,11 +5,11 @@ public class BillboardSprite : Quad
     protected Camera m_camera;
     protected Vector2 m_size;
 
-    public override void Init(Material material, bool bTexturedQuad = true)
+    public void Init(Camera camera, Material material, bool bTexturedQuad = true)
     {
         base.Init(material, bTexturedQuad);
 
-        m_camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        m_camera = camera;
     }
 
     public virtual void LateUpdate()

@@ -387,6 +387,17 @@ public class Level
         return levelData;
     }
 
+    public static Level LoadFromByteArray(byte[] bytes)
+    {
+        MemoryStream memoryStream = new MemoryStream(bytes);
+
+        BinaryFormatter bf = new BinaryFormatter();
+        Level level = (Level) bf.Deserialize(memoryStream);
+        memoryStream.Close();
+
+        return level;
+    }
+
     /**
     * Return the level number as a string, adding zeros before it to match a 3 digit number
     **/
@@ -405,9 +416,6 @@ public class Level
 
     public string GetFilename()
     {
-        if (m_title == null) 
-            return "Level_" + GetNumberAsString(this.m_number);
-        else
-            return m_title.Replace(" ", "_");
+        return "Level_" + GetNumberAsString(this.m_number);
     }
 }

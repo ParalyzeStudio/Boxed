@@ -4,9 +4,9 @@ Properties {
 }
 
 SubShader {
-	Tags{ "Queue" = "Geometry" }
+	Tags{ "Queue" = "Transparent" }
 	
-	ZWrite On
+	ZWrite Off
 	Blend SrcAlpha OneMinusSrcAlpha 
 	
 	Pass {  

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class MainMenuGUI : MonoBehaviour
+public class MainMenuGUI : BaseGUI
 {
     public void OnClickSettings()
     {
@@ -19,6 +19,9 @@ public class MainMenuGUI : MonoBehaviour
 
     public void OnClickPlay()
     {
-        Debug.Log("OnClickPlay");
+        Dismiss();
+
+        CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
+        callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(GameController.GetInstance().GetComponent<GUIManager>().DisplayLevelsGUI), 0.5f);
     }
 }

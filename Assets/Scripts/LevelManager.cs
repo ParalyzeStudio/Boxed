@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
+    //levels that are currently edited and can be reopened inside the level editor
     private List<Level> m_editedLevels;
     public List<Level> EditedLevels
     {
@@ -13,6 +14,7 @@ public class LevelManager : MonoBehaviour
         }
     }
 
+    //levels that have been published through the level editor
     private List<Level> m_publishedLevels;
     public List<Level> PublishedLevels
     {
@@ -22,9 +24,14 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    public void Start()
+    //levels that have been created by me and set into the final executable
+    private List<Level> m_levels;
+    public List<Level> Levels
     {
-        CacheLevels();
+        get
+        {
+            return m_levels;
+        }
     }
 
     public Level GetEditedLevelForNumber(int number)
@@ -49,6 +56,42 @@ public class LevelManager : MonoBehaviour
         return null;
     }
 
+    public Level GetNextPublishedLevelForLevel(Level level)
+    {
+        for (int i = 0; i != m_publishedLevels.Count; i++)
+        {
+            if (level == m_publishedLevels[i] && i < m_publishedLevels.Count - 1)
+                return m_publishedLevels[i];                
+        }
+
+        return null;
+    }
+
+    public Level GetPreviousPublishedLevelForLevel(Level level)
+    {
+        for (int i = 1; i != m_publishedLevels.Count; i++)
+        {
+            if (level == m_publishedLevels[i])
+                return m_publishedLevels[i - 1];
+        }
+
+        return null;
+    }
+
+    /**
+    * Return a level that has been generated and set into the final executable
+    **/
+    public Level GetLevelForNumber(int number)
+    {
+        for (int i = 0; i != m_levels.Count; i++)
+        {
+            if (m_levels[i].m_number == number)
+                return m_levels[i];
+        }
+
+        return null;
+    }
+
     /**
     * Typically when app is launched we cache all levels obtained from disk in a list
     **/
@@ -56,6 +99,7 @@ public class LevelManager : MonoBehaviour
     {
         m_editedLevels = GetAllEditedLevelsFromDisk();
         m_publishedLevels = GetAllPublishedLevelsFromDisk();
+        m_levels = GetLevelsFromResources();
     }
 
     /**
@@ -71,6 +115,38 @@ public class LevelManager : MonoBehaviour
     {
         string publishedLevelsPath = Application.persistentDataPath + "/Levels/PublishedLevels";
         return GetAllLevelsFromFolder(publishedLevelsPath);
+    }
+
+    /**
+    * Return the levels stored inside the Resources folder of this executable
+    **/
+    public List<Level> GetLevelsFromResources()
+    {
+        List<Level> levels = new List<Level>();
+
+        Object levelObject = null;
+        int levelIdx = 0;
+
+        //Load levels we found consecutively, immediately break if we encounter a null level
+        do
+        {           
+            string levelLocalPath = "Levels/Level_" + Level.GetNumberAsString(levelIdx + 1);
+            Debug.Log(levelLocalPath);
+            levelObject = Resources.Load(levelLocalPath);
+
+            if (levelObject != null)
+            {
+                TextAsset levelContent = (TextAsset)levelObject;
+                levels.Add(Level.LoadFromByteArray(levelContent.bytes));
+            }
+            else
+                Debug.Log("null");
+
+            levelIdx++;
+        }
+        while (levelObject != null);
+
+        return levels;
     }
 
     public List<Level> GetAllLevelsFromFolder(string folderPath)
@@ -98,7 +174,7 @@ public class LevelManager : MonoBehaviour
             Level loadedLevel = Level.LoadFromFile(levelFilenames[i]);
 
             if (loadedLevel.m_number == level.m_number)
-                File.Delete(publishedLevelsPath + "/" + levelFilenames[i]);
+                File.Delete(levelFilenames[i]);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class LevelsGUI : MonoBehaviour
+public class LevelsGUI : BaseGUI
 {
     private const int NUM_LINES = 3;
     private const int LEVELS_PER_LINE = 5;
@@ -9,12 +9,16 @@ public class LevelsGUI : MonoBehaviour
     public GameObject[] m_lines;
     public LevelSlot m_levelSlotPfb;
 
-    public void Start()
+    private LevelSlot m_clickedSlot;
+
+    public override void Show()
     {
         for (int i = 0; i != NUM_LINES; i++)
         {
             PopulateLine(i);
         }
+
+        base.Show();
     }
 
     private void PopulateLine(int lineIdx)
@@ -29,12 +33,22 @@ public class LevelsGUI : MonoBehaviour
 
     public void OnSlotClick(LevelSlot slot)
     {
+        m_clickedSlot = slot;
+
         Dismiss();
-        GameController.GetInstance().StartGameForLevel(slot.m_number);
+
+        CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
+        callFuncHandler.AddCallFuncInstance(StartLevel, 0.5f);
     }
 
-    public void Dismiss()
+    private void StartLevel()
     {
-        Destroy(this.gameObject);
+        Level level = GameController.GetInstance().GetComponent<LevelManager>().GetLevelForNumber(m_clickedSlot.m_number);
+
+        if (level != null)
+        {
+            GameController.GetInstance().StartGameForLevel(level);
+            GameController.GetInstance().GetComponent<GUIManager>().DisplayGameGUIForLevel(level);
+        }
     }
 }

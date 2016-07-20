@@ -2,145 +2,162 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PublishedLevelsWindow : MonoBehaviour
+public class PublishedLevelsWindow : LevelsListWindow
 {
-    public Button m_swapLevelsBtn;
-    private Level m_swapLevel1;
-    private Level m_swapLevel2;
+    public Button m_moveUpBtn;
+    public Button m_moveDownBtn;    
 
-    private LevelEditor m_parentEditor;
-
-    public Transform m_levelsListTf; //holder for level items
-    public LevelItem m_levelItemPfb;
-
-    public void Init(LevelEditor parentEditor)
+    public override void Init(LevelEditor parentEditor)
     {
-        m_parentEditor = parentEditor;
+        base.Init(parentEditor);
 
-        PopulateLevelsList();
-    }
-
-    /**
-   * Populate the scroll list with levels saved inside persistent data path
-   * Return the size of the list
-   **/
-    public int PopulateLevelsList()
-    {
-        List<Level> allLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllPublishedLevelsFromDisk();
-
-        int listIndex = 0;
-        for (int i = 0; i != allLevels.Count; i++)
-        {
-            Level level = allLevels[i];
-            int levelNumber = level.m_number;
-
-            //build empty levels until we reach the next valid level
-            while (listIndex < levelNumber - 1)
-            {
-                BuildListItemAtIndexForLevel(listIndex, null);
-                listIndex++;
-            }
-
-            //Build the valid level
-            BuildListItemAtIndexForLevel(listIndex, level);
-            listIndex++;
-        }
-
-        return listIndex + 1;
-    }
-
-    /**
-    * Build a level item object and add it to the list
-    **/
-    private void BuildListItemAtIndexForLevel(int index, Level level)
-    {
-        LevelItem levelItemObject = (LevelItem)Instantiate(m_levelItemPfb);
-
-        LevelItem levelItem = levelItemObject.GetComponent<LevelItem>();
-        levelItem.Init(index, level);
-
-        levelItem.GetComponent<Button>().onClick.AddListener(delegate { OnLevelItemClick(levelItem); });
-
-        levelItem.transform.SetParent(m_levelsListTf, false);
-    }
-
-    public void OnClickSwapLevels()
-    {
-        SwapSelectedLevels();
-    }
-
+        List<Level> publishedLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllPublishedLevelsFromDisk();
+        BuildLevelItemsForLevels(publishedLevels);
+        InvalidateItemList();
+    }    
+    
+    /** ONCLICK methods **/
     public void OnClickQuit()
     {
         Destroy(this.gameObject);
     }
 
-    private void SwapSelectedLevels()
+    public void OnClickMoveLevelDown()
+    {
+        MoveSelectedItem(true);
+    }
+
+    public void OnClickMoveLevelUp()
+    {
+        MoveSelectedItem(false);
+    }
+
+    public void OnClickValidateReordering()
+    {
+        RepublishReorderedItems();
+    }
+
+    /**
+    * Republish all levels after reordering has been done
+    **/
+    private void RepublishReorderedItems()
     {
         LevelManager levelManager = GameController.GetInstance().GetComponent<LevelManager>();
 
-        //First destroy the two deprecated files
-        levelManager.DeletePublishedLevelFileForLevel(m_swapLevel1);
-        levelManager.DeletePublishedLevelFileForLevel(m_swapLevel2);
-
-        //swap the numbers
-        m_swapLevel1.m_number = m_swapLevel2.m_number;
-        m_swapLevel2.m_number = m_swapLevel1.m_number;
-
-        //republish the levels
-        m_swapLevel1.Publish();
-        m_swapLevel2.Publish();
-    }
-
-    private void EnableSwapButton()
-    {
-        Text buttonText = m_swapLevelsBtn.GetComponentInChildren<Text>();
-        Color oldColor = buttonText.color;
-        buttonText.color = new Color(oldColor.r, oldColor.g, oldColor.b, 1.0f);
-
-        m_swapLevelsBtn.interactable = true;
-    }
-
-    private void DisableSwapButton()
-    {
-        Text buttonText = m_swapLevelsBtn.GetComponentInChildren<Text>();
-        Color oldColor = buttonText.color;
-        buttonText.color = new Color(oldColor.r, oldColor.g, oldColor.b, 0.5f);
-
-        m_swapLevelsBtn.interactable = false;
-    }
-
-    public void OnLevelItemClick(LevelItem item)
-    {
-        if (item.m_level == m_swapLevel1)
+        List<Level> reorderedLevels = new List<Level>();
+        //First find level items that have been reordered
+        for (int i = 0; i != m_items.Count; i++)
         {
-            m_swapLevel1 = null;
-            item.Deselect();
-        }
-        else if (item.m_level == m_swapLevel2)
-        {
-            m_swapLevel2 = null;
-            item.Deselect();
-        }
-        else
-        {
-            if (m_swapLevel1 == null)
+            if (m_items[i].m_level != null && i != m_items[i].m_level.m_number - 1)
             {
-                m_swapLevel1 = item.m_level;
-                item.Select();
-            }
-            else if (m_swapLevel2 == null)
-            {
-                m_swapLevel2 = item.m_level;
-                item.Select();
+                levelManager.DeletePublishedLevelFileForLevel(m_items[i].m_level); //Destroy their associated level file
+                m_items[i].m_level.m_number = i + 1;//assign their new level number
+                reorderedLevels.Add(m_items[i].m_level);
             }
         }
+
+        for (int i = 0; i != reorderedLevels.Count; i++)
+        {
+            reorderedLevels[i].Publish(); //republish the level
+        }
+    }
+
+    /**
+    * Move the selected item either up or down
+    **/
+    private void MoveSelectedItem(bool bDown)
+    {
+        if (m_selectedItem == null)
+            return;
+
+        for (int i = 0; i != m_items.Count; i++)
+        {
+            if (m_selectedItem == m_items[i])
+            {
+                if (bDown && i < (m_items.Count - 1))
+                {
+                    m_items.Remove(m_selectedItem);
+                    m_items.Insert(i + 1, m_selectedItem);
+                    break;
+                }
+                else if (!bDown && i > 0)
+                {
+                    m_items.Remove(m_selectedItem);
+                    m_items.Insert(i - 1, m_selectedItem);
+                    break;
+                }
+            }
+        }
+
+        InvalidateItemList();
+    }
+
+    //private void SwapLevels(Level level1, Level level2)
+    //{
+    //    LevelManager levelManager = GameController.GetInstance().GetComponent<LevelManager>();
+
+    //    //First destroy the two deprecated files
+    //    levelManager.DeletePublishedLevelFileForLevel(level1);
+    //    levelManager.DeletePublishedLevelFileForLevel(level2);
+
+    //    //swap the numbers
+    //    level1.m_number = level2.m_number;
+    //    level2.m_number = level1.m_number;
+
+    //    //republish the levels
+    //    level1.Publish();
+    //    level2.Publish();
+    //}
+
+    //private void MoveLevelToEmptySlot(Level level, int slotIndex)
+    //{
+    //    LevelManager levelManager = GameController.GetInstance().GetComponent<LevelManager>();
+    //    levelManager.DeletePublishedLevelFileForLevel(level);
+    //    level.m_number = slotIndex + 1;
+    //    level.Publish();
+    //}
+
+    /**
+    * Enable buttons to move up or down a level that has been selected in the list
+    **/
+    private void EnableUpDownButtons()
+    {
+        Image moveDownIcon = m_moveDownBtn.GetComponent<Image>();
+        Image moveUpIcon = m_moveDownBtn.GetComponent<Image>();
+
+        Color oldColor = moveDownIcon.color;
+        moveDownIcon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 1.0f);
+
+        oldColor = moveUpIcon.color;
+        moveUpIcon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 1.0f);
+
+        m_moveUpBtn.interactable = true;
+        m_moveDownBtn.interactable = true;
+    }
+
+    /**
+    * Disable buttons to move up or down a level that has been selected in the list
+    **/
+    private void DisableUpDownButtons()
+    {
+        Image moveDownIcon = m_moveDownBtn.GetComponent<Image>();
+        Image moveUpIcon = m_moveDownBtn.GetComponent<Image>();
+
+        Color oldColor = moveDownIcon.color;
+        moveDownIcon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 0.5f);
+
+        oldColor = moveUpIcon.color;
+        moveUpIcon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 0.5f);
+
+        m_moveUpBtn.interactable = true;
+        m_moveDownBtn.interactable = true;
     }
 
     public void Update()
     {
-        if (m_swapLevel1 == null || m_swapLevel2 == null)
-            DisableSwapButton();
+        if (m_selectedItem == null)
+            DisableUpDownButtons();
         else
-            EnableSwapButton();
+            EnableUpDownButtons();
     }
 }

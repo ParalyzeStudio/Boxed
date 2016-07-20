@@ -13,7 +13,7 @@ public class GameTouchHandler : TouchHandler
     {
         if (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR)
         {
-            LevelEditor levelEditor = GameController.GetInstance().GetGUIManager().m_levelEditor;
+            LevelEditor levelEditor = (LevelEditor) GameController.GetInstance().GetGUIManager().m_currentGUI;
             if (levelEditor.m_editingMode == LevelEditor.EditingMode.TILES_EDITING)
                 EditTiles();
         }
@@ -30,7 +30,7 @@ public class GameTouchHandler : TouchHandler
     {
         if (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR)
         {
-            LevelEditor levelEditor = GameController.GetInstance().GetGUIManager().m_levelEditor;
+            LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetGUIManager().m_currentGUI;
             if (levelEditor.m_editingMode == LevelEditor.EditingMode.TILES_EDITING)
                 EditTiles();
         }
@@ -40,12 +40,14 @@ public class GameTouchHandler : TouchHandler
 
     protected override void OnClick(Vector2 clickLocation)
     {
-        if (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR)
+        GameController.GameMode gameMode = GameController.GetInstance().m_gameMode;
+
+        if (gameMode == GameController.GameMode.LEVEL_EDITOR)
         {
-            LevelEditor levelEditor = GameController.GetInstance().GetGUIManager().m_levelEditor;
+            LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetGUIManager().m_currentGUI;
 
             //Raycast the tiles to select them
-            Tile raycastTile = RayCastFloor();
+            Tile raycastTile = RayCastFloorForTile();
             if (raycastTile == null)
                 return;
             if (levelEditor.m_editingMode == LevelEditor.EditingMode.CHECKPOINTS_EDITING)
@@ -106,6 +108,21 @@ public class GameTouchHandler : TouchHandler
                 }
             }
         }
+        else if (gameMode == GameController.GameMode.GAME)
+        {
+            if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)
+            {
+                Vector3 raycastPoint;
+                if (RaycastFloor(out raycastPoint))
+                {
+                    //remove the y-component of this point
+                    Vector2 point = new Vector2(raycastPoint.x, raycastPoint.z);
+
+                    //pass it to the brick controller
+                    GameController.GetInstance().m_brick.GetComponent<BrickController>().ProcessTouch(point);
+                }
+            }
+        }
     }
 
     /**
@@ -113,12 +130,12 @@ public class GameTouchHandler : TouchHandler
     **/
     private bool EditTiles()
     {
-        Tile raycastTile = RayCastFloor();
+        Tile raycastTile = RayCastFloorForTile();
         if (raycastTile == null || raycastTile == m_lastRaycastTile)
             return false;
         m_lastRaycastTile = raycastTile;
 
-        LevelEditorMenuSwitcher menuSwitcher = GameController.GetInstance().GetGUIManager().m_levelEditor.m_menuSwitcher;
+        LevelEditorMenuSwitcher menuSwitcher = ((LevelEditor)GameController.GetInstance().GetGUIManager().m_currentGUI).m_menuSwitcher;
         EditTilesSubMenu.TileSelectionMode tileSelectionMode = ((EditTilesSubMenu)menuSwitcher.GetMenuForID(LevelEditorMenuSwitcher.MenuID.ID_EDIT_TILES)).m_tileSelectionMode;
 
         if (tileSelectionMode == EditTilesSubMenu.TileSelectionMode.SELECT)
@@ -145,22 +162,19 @@ public class GameTouchHandler : TouchHandler
         return true;
     }
 
-    private Tile RayCastFloor()
+    private Tile RayCastFloorForTile()
     {
-        //Build a ray starting from camera near clip plane mouse world space position
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        float rayDistance;
-        Plane floorPlane = new Plane(Vector3.up, GameController.GetInstance().m_floor.transform.position);
-        if (floorPlane.Raycast(ray, out rayDistance))
+        Vector3 raycastPoint;
+        if (RaycastFloor(out raycastPoint))
         {
-            Vector3 rayIntersectionPoint = ray.GetPoint(rayDistance);
+            Vector2 xzRaycastPoint = Geometry.RemoveYComponent(raycastPoint);
 
             //Find the tile which contain the intersection point
             Floor floor = GameController.GetInstance().m_floor.m_floorData;
             for (int i = 0; i != floor.Tiles.Length; i++)
             {
                 Tile tile = floor.Tiles[i];
-                if (tile.ContainsXZPoint(rayIntersectionPoint))
+                if (tile.ContainsXZPoint(xzRaycastPoint))
                 {
                     return tile;
                 }
@@ -168,5 +182,25 @@ public class GameTouchHandler : TouchHandler
         }
 
         return null;
+    }
+
+    private bool RaycastFloor(out Vector3 raycastPoint)
+    {
+        //Build a ray starting from camera near clip plane mouse world space position
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        float rayDistance;
+        Vector3 planePosition = GameController.GetInstance().m_floor.transform.position + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+        Plane floorPlane = new Plane(Vector3.up, planePosition);
+
+        if (floorPlane.Raycast(ray, out rayDistance))
+        {
+            raycastPoint = ray.GetPoint(rayDistance);
+            return true;
+        }
+        else
+        {
+            raycastPoint = Vector3.zero;
+            return false;
+        }
     }
 }

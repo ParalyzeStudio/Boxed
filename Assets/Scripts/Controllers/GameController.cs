@@ -18,6 +18,10 @@ public class GameController : MonoBehaviour
     }
     public GameMode m_gameMode;
 
+    public int m_levelToStartInGameMode = 1;
+
+    private Level m_currentLevel;
+
     private static GameController s_instance;
 
     public void Start()
@@ -31,7 +35,9 @@ public class GameController : MonoBehaviour
 
         //init the GUI manager
         GUIManager guiManager = GetComponent<GUIManager>();
-        guiManager.Init();       
+        guiManager.Init();
+
+        //m_gameMode = GameMode.MAIN_MENU;
 
         if (m_gameMode == GameMode.LEVEL_EDITOR)
         {
@@ -40,15 +46,15 @@ public class GameController : MonoBehaviour
         else if (m_gameMode == GameMode.MAIN_MENU)
         {
             //Show whole gui (title + buttons)
-            guiManager.DisplayMainMenu();
+            guiManager.DisplayMainMenuGUI();
         }
         else if (m_gameMode == GameMode.LEVELS)
         {
-            guiManager.DisplayLevels();
+            guiManager.DisplayLevelsGUI();
         }
         else
         {
-            StartGameForLevel(1);
+            StartGameForLevelNumber(m_levelToStartInGameMode);
         }
     }
 
@@ -62,7 +68,7 @@ public class GameController : MonoBehaviour
 
     public void EnterLevelEditor()
     {
-        this.GetComponent<GUIManager>().DisplayLevelEditor();
+        this.GetComponent<GUIManager>().DisplayLevelEditorGUI();
     }
 
     public void ClearLevel()
@@ -109,13 +115,42 @@ public class GameController : MonoBehaviour
     /**
     * Called when we want to start a level from game scene (not level editor)
     **/
-    public void StartGameForLevel(int levelNumber)
+    public bool StartGameForLevelNumber(int levelNumber)
     {
-        m_gameMode = GameMode.GAME;
-        LevelManager levelManager = this.GetComponent<LevelManager>();
-        StartLevel(levelManager.GetPublishedLevelForNumber(levelNumber));
+        Level level = GetComponent<LevelManager>().GetLevelForNumber(levelNumber);
+        if (level != null)
+        {
+            StartGameForLevel(level);
+            return true;
+        }
+        else
+            return false;
+    }
 
-        m_gameStarted = true;
+    public void StartGameForLevel(Level level)
+    {
+        m_victory = false;
+        m_defeat = false;
+
+        m_gameMode = GameMode.GAME;
+        m_currentLevel = level;
+        StartLevel(level);
+
+        GetComponent<GUIManager>().DisplayGameGUIForLevel(m_currentLevel);
+
+        m_gameStatus = GameStatus.RUNNING;
+    }
+
+    private void StartNextLevel()
+    {
+        int nextLevelNumber = m_currentLevel.m_number + 1;
+        StartGameForLevelNumber(nextLevelNumber);
+    }
+
+    public void RestartLevel()
+    {
+        ClearLevel();
+        StartGameForLevel(m_currentLevel);
     }
 
     public void RenderFloor(Floor floor)
@@ -165,38 +200,47 @@ public class GameController : MonoBehaviour
         DEFEAT //game has ended on a defeat
     }
 
-    private bool m_gameStarted;
+    public GameStatus m_gameStatus { get; set; }
 
     //cache the values of defeat or victory so we do not have to check the game status again if one of this case already happened
     private bool m_defeat;
     private bool m_victory;
 
-    private GameStatus GetGameStatus()
+    private void CheckForVictoryDefeat()
     {
-        if (!m_gameStarted)
-            return GameStatus.IDLE;
-
         if (m_victory || m_brick.IsOnFinishTile())
         {
+            Debug.Log("m_victory");
             m_victory = true;
-            return GameStatus.VICTORY;
+            m_gameStatus = GameStatus.VICTORY;
         }
 
         if (m_defeat || m_brick.IsFalling())
         {
             m_defeat = true;
-            return GameStatus.DEFEAT;
+            m_gameStatus = GameStatus.DEFEAT;
         }
-
-        return GameStatus.RUNNING;
     }
 
     public void Update()
     {
-        //GameStatus gameStatus = GetGameStatus();
-        //if (gameStatus == GameStatus.VICTORY)
-        //    Debug.Log("victory");
-        //else if (gameStatus == GameStatus.DEFEAT)
-        //    Debug.Log("defeat");
+        if (m_gameStatus == GameStatus.VICTORY)
+        {
+            int nextLevelNumber = m_currentLevel.m_number + 1;
+            GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
+
+            m_gameStatus = GameStatus.IDLE;
+            GetComponent<CallFuncHandler>().AddCallFuncInstance(new CallFuncHandler.CallFunc(ClearLevel), 1.5f);
+            GetComponent<CallFuncHandler>().AddCallFuncInstance(new CallFuncHandler.CallFunc(StartNextLevel), 1.55f);
+        }
+        else if (m_gameStatus == GameStatus.DEFEAT)
+        {
+            Debug.Log("defeat");
+            m_gameStatus = GameStatus.IDLE;
+        }
+        else if (m_gameStatus == GameStatus.RUNNING)
+        {
+            CheckForVictoryDefeat();
+        }
     }
 }

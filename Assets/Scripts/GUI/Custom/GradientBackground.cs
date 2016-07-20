@@ -5,12 +5,13 @@
 **/
 public class GradientBackground : BillboardSprite
 {
-    private Color m_startColor;
-    private Color m_endColor;
+    public Color m_startColor { get; set; }
+    public Color m_endColor { get; set; }
 
     public void Init(Color startColor, Color endColor)
     {
-        base.Init(null, false);
+        Camera camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        base.Init(camera, null, false);
 
         m_startColor = startColor;
         m_endColor = endColor;
@@ -19,19 +20,20 @@ public class GradientBackground : BillboardSprite
         this.name = "Background";
 
         SetColors(new Color[4] { startColor, startColor, endColor, endColor});
-
+        
+        //set the background at a long distance from camera so it is behind all scene elements
+        Vector3 cameraPosition = m_camera.gameObject.transform.position;
+        float distanceFromCamera = camera.farClipPlane;
         QuadAnimator backgroundAnimator = this.GetComponent<QuadAnimator>();
-        backgroundAnimator.SetScale(new Vector3(m_size.x, m_size.y, 1));
+        backgroundAnimator.SetPosition(cameraPosition + distanceFromCamera * m_camera.transform.forward);
     }
 
     public override void LateUpdate()
     {
-        //set the background at a long distance from camera so it is behind all scene elements
-        Vector3 cameraPosition = m_camera.gameObject.transform.position;
-        float distanceFromCamera = 1000;
-        this.transform.position = cameraPosition + distanceFromCamera * m_camera.transform.forward;
-
         base.LateUpdate();
+        
+        QuadAnimator backgroundAnimator = this.GetComponent<QuadAnimator>();
+        backgroundAnimator.SetScale(new Vector3(m_size.x, m_size.y, 1));
     }
 
     /**
