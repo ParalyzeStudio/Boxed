@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 public class PublishedLevelsWindow : LevelsListWindow
 {
+    public Button m_loadBtn;
     public Button m_moveUpBtn;
     public Button m_moveDownBtn;    
 
@@ -11,12 +12,26 @@ public class PublishedLevelsWindow : LevelsListWindow
     {
         base.Init(parentEditor);
 
+        DisableLoadButton();
+        DisableUpDownButtons();
+
         List<Level> publishedLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllPublishedLevelsFromDisk();
         BuildLevelItemsForLevels(publishedLevels);
         InvalidateItemList();
     }    
     
     /** ONCLICK methods **/
+    public void OnClickLoad()
+    {
+        GameController.GetInstance().ClearLevel();
+        m_parentEditor.BuildLevel(m_selectedItem.m_level);
+        if (m_selectedItem.m_level.m_validated)
+            m_parentEditor.ShowTestMenu();
+
+        //Dismiss the window
+        OnClickQuit();
+    }
+
     public void OnClickQuit()
     {
         Destroy(this.gameObject);
@@ -92,38 +107,13 @@ public class PublishedLevelsWindow : LevelsListWindow
         InvalidateItemList();
     }
 
-    //private void SwapLevels(Level level1, Level level2)
-    //{
-    //    LevelManager levelManager = GameController.GetInstance().GetComponent<LevelManager>();
-
-    //    //First destroy the two deprecated files
-    //    levelManager.DeletePublishedLevelFileForLevel(level1);
-    //    levelManager.DeletePublishedLevelFileForLevel(level2);
-
-    //    //swap the numbers
-    //    level1.m_number = level2.m_number;
-    //    level2.m_number = level1.m_number;
-
-    //    //republish the levels
-    //    level1.Publish();
-    //    level2.Publish();
-    //}
-
-    //private void MoveLevelToEmptySlot(Level level, int slotIndex)
-    //{
-    //    LevelManager levelManager = GameController.GetInstance().GetComponent<LevelManager>();
-    //    levelManager.DeletePublishedLevelFileForLevel(level);
-    //    level.m_number = slotIndex + 1;
-    //    level.Publish();
-    //}
-
     /**
     * Enable buttons to move up or down a level that has been selected in the list
     **/
     private void EnableUpDownButtons()
     {
         Image moveDownIcon = m_moveDownBtn.GetComponent<Image>();
-        Image moveUpIcon = m_moveDownBtn.GetComponent<Image>();
+        Image moveUpIcon = m_moveUpBtn.GetComponent<Image>();
 
         Color oldColor = moveDownIcon.color;
         moveDownIcon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 1.0f);
@@ -141,23 +131,49 @@ public class PublishedLevelsWindow : LevelsListWindow
     private void DisableUpDownButtons()
     {
         Image moveDownIcon = m_moveDownBtn.GetComponent<Image>();
-        Image moveUpIcon = m_moveDownBtn.GetComponent<Image>();
+        Image moveUpIcon = m_moveUpBtn.GetComponent<Image>();
 
         Color oldColor = moveDownIcon.color;
-        moveDownIcon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 0.5f);
+        moveDownIcon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 0);
 
         oldColor = moveUpIcon.color;
-        moveUpIcon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 0.5f);
+        moveUpIcon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 0);
 
         m_moveUpBtn.interactable = true;
         m_moveDownBtn.interactable = true;
     }
 
+    private void EnableLoadButton()
+    {
+        m_loadBtn.GetComponentInChildren<Text>().color = new Color(1, 1, 1, 1);
+        m_loadBtn.interactable = true;
+    }
+
+    private void DisableLoadButton()
+    {
+        m_loadBtn.GetComponentInChildren<Text>().color = new Color(1, 1, 1, 0.5f);
+        m_loadBtn.interactable = false;
+    }
+
     public void Update()
     {
         if (m_selectedItem == null)
+        {
+            DisableLoadButton();
             DisableUpDownButtons();
+        }
         else
-            EnableUpDownButtons();
+        {
+            if (m_selectedItem.m_level != null)
+            {
+                EnableLoadButton();
+                EnableUpDownButtons();
+            }
+            else
+            {
+                DisableLoadButton();
+                DisableUpDownButtons();
+            }
+        }
     }
 }

@@ -33,6 +33,8 @@ public class LevelManager : MonoBehaviour
             return m_levels;
         }
     }
+    
+    public Level m_currentLevel { get; set; }
 
     public Level GetEditedLevelForNumber(int number)
     {

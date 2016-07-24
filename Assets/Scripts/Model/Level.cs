@@ -69,7 +69,7 @@ public class Level
         //Now check if there is at least one valid path from start tile to finish tile
         System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
         sw.Start();
-
+        
         SolutionNode[] solution = Solve(maxMovements);
 
         sw.Stop();
@@ -140,6 +140,7 @@ public class Level
         //    return solutions[0];
 
         int treeHeight = 2;
+        maxMovements = 25;
         SolutionNode[][] solutions;
         do
         {
@@ -147,14 +148,22 @@ public class Level
             SolutionTree solutionTree = new SolutionTree(treeHeight, this);
             solutions = solutionTree.SearchForSolutions();
 
-            if (solutions != null)
-                Debug.Log("Found SOLUTION");
+            if (solutions == null)
+            {
+                //check if we failed to reach at least one leaf node of this tree
+                //if this is the case, no need to search for solutions on a bigger tree as we won't go any further than we have already reached
+                if (!solutionTree.m_maximumHeightReached)
+                    break;
+            }
 
             treeHeight++;
         }
-        while (solutions == null);
+        while (solutions == null && treeHeight < maxMovements);
 
-        return solutions[0];        
+        if (solutions != null)
+            return solutions[0];
+        else
+            return null;   
     }
 
     private SolutionNode[] ExtractSolutionForPermutation(Permutation permutation, int maxSolutionLength)

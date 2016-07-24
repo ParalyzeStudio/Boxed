@@ -200,6 +200,7 @@ public class Brick
         VALID, //the rolling operation is valid and brick is now on valid tiles
         NO_TILE_TO_ROLL, //there is no tile to perform the rolling, brick won't move
         FALL, //there are tiles to roll onto, but there are disabled tiles leading the brick to a fall off the floor
+        BLOCKED //the brick has been blocked
     }
 
     /**
@@ -214,8 +215,6 @@ public class Brick
             rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
             return;
         }
-        
-        m_state = BrickState.ROLLING;
 
         //Associate one vector to every direction
         Vector3 direction = GetVector3DirectionForRollingDirection(rollDirection);
@@ -239,6 +238,11 @@ public class Brick
 
         Tile[] newCoveredTiles = new Tile[2];
         rollResult = CanRoll(currentFace, rollToFace, rollDirection, out newCoveredTiles);
+        if (rollResult == RollResult.VALID)
+        {
+            //set the state of the brick to ROLLING
+            m_state = BrickState.ROLLING;
+        }
         if (rollResult == RollResult.NO_TILE_TO_ROLL) //there is no tile on which we can land, just interrupt the rolling action
         {
             m_state = BrickState.IDLE;
@@ -247,9 +251,14 @@ public class Brick
         }
         else if (rollResult == RollResult.FALL)
             m_state = BrickState.FALLING;
+        else if (rollResult == RollResult.NONE) //return immediately so the covered tiles are not updated
+        {
+            rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
+            return;
+        }
 
         //replace the old covered tiles by new ones
-        m_coveredTiles = newCoveredTiles;
+        m_coveredTiles = newCoveredTiles;        
 
         //Determine which of the 4 adjacent faces the rollToFace is equal to        
         int adjacentFaceIdx = -1;
@@ -314,7 +323,7 @@ public class Brick
                     if (nextTile2.CurrentState == Tile.State.DISABLED)
                         rollResult = RollResult.FALL;
                     else if (nextTile2.CurrentState == Tile.State.BLOCKED)
-                        return RollResult.NONE;                        
+                        return RollResult.NONE;
 
                     newCoveredTiles[0] = nextTile1;
                     newCoveredTiles[1] = nextTile2;

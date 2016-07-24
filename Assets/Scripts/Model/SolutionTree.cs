@@ -5,6 +5,7 @@ public class SolutionTree
 {
     //maximum height (or depth) of the tree, i.e the maximum number of nodes allowed along a path
     public int m_maximumHeight { get; set; }
+    public bool m_maximumHeightReached { get; set; } //did we reach a leaf node of this tree
 
     private List<SolutionNode> m_successNodes;
 
@@ -18,10 +19,12 @@ public class SolutionTree
     public bool m_isSolved; //is this tree solved (i.e contains at least one successful path to target)
 
     private long m_processedNodesCount;
-    
+    private long m_validNodesCount;
+
     public SolutionTree(int height, Tile[] startTiles, Tile targetTile, bool oneCoveredTileOnly = true)
     {
         m_maximumHeight = height;
+        m_maximumHeightReached = false;
         m_startTiles = startTiles;
         m_targetTile = targetTile;
         m_oneCoveredTileOnly = oneCoveredTileOnly;
@@ -29,6 +32,7 @@ public class SolutionTree
         m_isSolved = false;
 
         m_processedNodesCount = 0;
+        m_validNodesCount = 0;
     }
 
     public SolutionTree(int height, Level levelToSolve) : this( height,
@@ -73,16 +77,13 @@ public class SolutionTree
         {
             childNodes[i].Process();
         }
-
-        //Debug.Log("processed nodes count:" + GetProcessedNodesCount());
-
+        
         //now search for paths that are marked as successful and return them
         return ExtractSuccessPaths(bFilters);
     }
 
     public void AddSuccessNode(SolutionNode node)
     {
-        m_isSolved = true;
         m_successNodes.Add(node);
     }
 
@@ -91,9 +92,19 @@ public class SolutionTree
         m_processedNodesCount++;
     }
 
+    public void IncrementValidNodesCount()
+    {
+        m_validNodesCount++;
+    }
+
     public long GetProcessedNodesCount()
     {
         return m_processedNodesCount;
+    }
+
+    public long GetValidNodesCount()
+    {
+        return m_validNodesCount;
     }
 
     private SolutionNode[][] ExtractSuccessPaths(int bFilters = SHORTEST_SOLUTION)
@@ -182,7 +193,7 @@ public class SolutionNode
     public SolutionNode m_parentNode; //store the parent node to so we can navigate inside the tree along a path from bottom to top
     public int m_distanceFromRoot; //the distance from root of this node, must be between 0 and (parentTree.MaximumHeight - 1)
     public Brick m_brick; //a brick object that will simulate the rolling operation
-    public Tile[] m_coveredTiles; //as a brick object can be reused across several nodes, store here the tiles that are covered at that exact moment
+    public Tile[] m_coveredTiles; //as a brick object can be reused across several nodes, store here the tiles that are covered before the brick rolled
 
     public SolutionTree m_parentTree;
 
@@ -203,23 +214,17 @@ public class SolutionNode
         if (m_parentTree.m_stopWhenTreeIsSolved && m_parentTree.m_isSolved)
             return;
 
-        //we reach the maximum height of the tree
-        if (m_distanceFromRoot >= m_parentTree.m_maximumHeight)
-            return;
-
-        if (IsCycling())
-            return;
+        m_parentTree.IncrementProcessedNodesCount();
 
         //try to make the brick roll
         Brick.RollResult rollResult;
         Geometry.Edge rotationEdge;
-        m_brick.Roll(m_direction, out rollResult, out rotationEdge);
-
-        m_parentTree.IncrementProcessedNodesCount();
+        m_brick.Roll(m_direction, out rollResult, out rotationEdge);       
 
         if (rollResult == Brick.RollResult.VALID)
         {
-            m_coveredTiles = m_brick.CoveredTiles;
+            m_parentTree.IncrementValidNodesCount();
+            //m_coveredTiles = m_brick.CoveredTiles;
 
             //set the state of the brick to IDLE so it can roll at once
             m_brick.m_state = Brick.BrickState.IDLE;
@@ -235,7 +240,7 @@ public class SolutionNode
             {
                 if ((m_brick.CoveredTiles[0] == m_parentTree.m_targetTile || m_brick.CoveredTiles[1] == m_parentTree.m_targetTile))
                     targetTileHasBeenReached = true;
-            }            
+            }
 
             if (targetTileHasBeenReached)
             {
@@ -243,11 +248,24 @@ public class SolutionNode
                 if (m_parentTree.PathContainsAllBonuses(this))
                 {
                     m_parentTree.AddSuccessNode(this);
+                    m_parentTree.m_isSolved = true;
                     m_parentTree.m_maximumHeight = this.m_distanceFromRoot + 1;
                 }
-            }
+            }            
             else //keep processing child nodes
             {
+                //Did we just reach a leaf node?
+                if (m_distanceFromRoot == m_parentTree.m_maximumHeight - 1)
+                {
+                    m_parentTree.m_maximumHeightReached = true;
+                    return;
+                }
+
+                //is the current path cycling?
+                if (IsCycling())
+                    return;
+
+                //any other case, we keep processing child nodes
                 SolutionNode[] childNodes = Split();
                 for (int i = 0; i != childNodes.Length; i++)
                 {
@@ -301,12 +319,18 @@ public class SolutionNode
     }
 
     /**
-    * In case of this node underlying data is equal to one of its parent node, we can consider the brick is cycling and we can abort the process
+    * To optimize the algorithm we can skip paths that contain cycles in it.
+    * There is an exception to this rule, as we are allowed to cycle to get a bonus.
+    * So we need to check if the covered tiles inside a cycle contains at least one bonus before deciding whether to keep it or not.
     **/
     public bool IsCycling()
     {
+        if (m_distanceFromRoot < 2)
+            return false;
+
         SolutionNode node = this.m_parentNode;
-        int minDistanceForCycling = 5;
+        int minDistanceForCycling = 1; //we need at least to move the brick twice to obtain a minimum cycle
+        bool bCycleContainsBonuses = false;
         while (node != null)
         {
             if (minDistanceForCycling > 0)
@@ -316,12 +340,14 @@ public class SolutionNode
                 continue;
             }
 
-            if (this.CoversSameTiles(node))
+            if (!bCycleContainsBonuses && node.ContainsBonus()) //no need to check if this node contains a bonus if we already checked it positively before
+                bCycleContainsBonuses = true;
+
+            bool bCycling = this.CoversSameTiles(node);
+            if (bCycling)
             {
-                //Debug.Log("same tiles between node at depth:" + this.m_distanceFromRoot + " and node at depth:" + node.m_distanceFromRoot);
-                //Debug.Log("this coveredTiles[0]:" + this.m_brick.CoveredTiles[0].m_columnIndex + " - " + this.m_brick.CoveredTiles[0].m_lineIndex);
-                //Debug.Log("node coveredTiles[0]:" + node.m_brick.CoveredTiles[0].m_columnIndex + " - " + node.m_brick.CoveredTiles[0].m_lineIndex);
-                return true;
+                //check if it contains bonus. If not we consider that the cycle is useless and the path containing this cycle can be removed
+                return !bCycleContainsBonuses;
             }
 
             node = node.m_parentNode;            
@@ -356,6 +382,16 @@ public class SolutionNode
             if (CoversTile(node.m_coveredTiles[0]) && CoversTile(node.m_coveredTiles[1]))
                 return true;
         }
+
+        return false;
+    }
+
+    private bool ContainsBonus()
+    {
+        if (m_coveredTiles[0].AttachedBonus != null)
+            return true;
+        if (m_coveredTiles[1] != null && m_coveredTiles[1].AttachedBonus != null)
+            return true;
 
         return false;
     }

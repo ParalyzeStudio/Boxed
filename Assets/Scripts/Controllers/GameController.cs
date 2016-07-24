@@ -20,8 +20,6 @@ public class GameController : MonoBehaviour
 
     public int m_levelToStartInGameMode = 1;
 
-    private Level m_currentLevel;
-
     private static GameController s_instance;
 
     public void Start()
@@ -133,24 +131,24 @@ public class GameController : MonoBehaviour
         m_defeat = false;
 
         m_gameMode = GameMode.GAME;
-        m_currentLevel = level;
+        GetComponent<LevelManager>().m_currentLevel = level;
         StartLevel(level);
 
-        GetComponent<GUIManager>().DisplayGameGUIForLevel(m_currentLevel);
+        GetComponent<GUIManager>().DisplayGameGUIForLevel(level);
 
         m_gameStatus = GameStatus.RUNNING;
     }
 
     private void StartNextLevel()
     {
-        int nextLevelNumber = m_currentLevel.m_number + 1;
+        int nextLevelNumber = GetComponent<LevelManager>().m_currentLevel.m_number + 1;
         StartGameForLevelNumber(nextLevelNumber);
     }
 
     public void RestartLevel()
     {
         ClearLevel();
-        StartGameForLevel(m_currentLevel);
+        StartGameForLevel(GetComponent<LevelManager>().m_currentLevel);
     }
 
     public void RenderFloor(Floor floor)
@@ -226,7 +224,7 @@ public class GameController : MonoBehaviour
     {
         if (m_gameStatus == GameStatus.VICTORY)
         {
-            int nextLevelNumber = m_currentLevel.m_number + 1;
+            int nextLevelNumber = GetComponent<LevelManager>().m_currentLevel.m_number + 1;
             GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
 
             m_gameStatus = GameStatus.IDLE;

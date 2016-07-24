@@ -29,6 +29,10 @@ public class SaveLoadLevelWindow : LevelsListWindow
 
         List<Level> editedLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllEditedLevelsFromDisk();
         BuildLevelItemsForLevels(editedLevels);
+
+        //Add a empty slot to save another level
+        m_items.Add(BuildListItemForLevel(null));
+
         InvalidateItemList();
     }
 
@@ -42,16 +46,19 @@ public class SaveLoadLevelWindow : LevelsListWindow
 
     public void OnClickSave()
     {
-        int levelNumber = m_selectedItem.m_level.m_number;
+        //int levelNumber = m_selectedItem.m_level.m_number;
 
-        //Build a new floor and a new level that holds it
-        Level editedLevel = m_parentEditor.m_editedLevel;
-        editedLevel.m_number = levelNumber;
-        editedLevel.m_title = "Level_" + Level.GetNumberAsString(levelNumber);
+        ////Build a new floor and a new level that holds it
+        //Level editedLevel = m_parentEditor.m_editedLevel;
+        //editedLevel.m_number = levelNumber;
+        //editedLevel.m_title = "Level_" + Level.GetNumberAsString(levelNumber);
 
         //update the level item to display the new name
         if (m_selectedItem.m_level == null)
         {
+            Level editedLevel = m_parentEditor.m_editedLevel;
+            editedLevel.m_number = m_items.Count; //we save that level at the end of the list
+            //editedLevel.m_title = "Level_" + Level.GetNumberAsString(levelNumber);
             m_selectedItem.m_level = editedLevel;
             m_selectedItem.InvalidateContent();
             //m_saveSuccessMessage.gameObject.SetActive(true);
@@ -73,6 +80,8 @@ public class SaveLoadLevelWindow : LevelsListWindow
         m_parentEditor.BuildLevel(m_selectedItem.m_level);
         if (m_selectedItem.m_level.m_validated)
             m_parentEditor.ShowTestMenu();
+        else
+            m_parentEditor.DismissTestMenu();
 
         //Dismiss the window
         OnClickCancel();

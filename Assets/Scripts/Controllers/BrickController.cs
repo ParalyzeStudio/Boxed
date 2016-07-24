@@ -62,7 +62,7 @@ public class BrickController : MonoBehaviour
                 maxDotProductIdx = i;
             }
         }
-
+        
         m_brickRenderer.Roll(directions[maxDotProductIdx]);
     }
 
