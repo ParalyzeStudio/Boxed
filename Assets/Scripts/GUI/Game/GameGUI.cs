@@ -15,13 +15,27 @@ public class GameGUI : BaseGUI
     private bool m_solutionPanelActive;
     public Image m_solutionArrowPfb;
 
-    public void Init(Level level)
+    //actions count
+    public Text m_currentActionsCount;
+    public Text m_targetActionsCount;
+
+    public void BuildForLevel(Level level)
     {
         m_level = level;
-        BuildGradientOverlay();
+        if (m_overlay == null)
+            BuildGradientOverlay();
 
+        //disable any displayed solution panel
         m_solutionPanelActive = false;
+        m_solutionPanel.gameObject.SetActive(false);
+
+        //clear any solution on previous level and build the new one
+        ClearSolution(); 
         BuildSolution();
+
+        //actions count
+        InitTargetActionsCount();
+        UpdateActionsCount();
     }
 
     /**
@@ -59,10 +73,10 @@ public class GameGUI : BaseGUI
         base.Dismiss();
         QuadAnimator overlayAnimator = m_overlay.GetComponent<QuadAnimator>();
         overlayAnimator.SetOpacity(0);
-        overlayAnimator.FadeTo(1.0f, 0.5f, 0, ValueAnimator.InterpolationType.LINEAR, true);
+        overlayAnimator.FadeTo(1.0f, 0.5f, 0, ValueAnimator.InterpolationType.LINEAR, false);
     }
 
-    private void BuildSolution()
+    public void BuildSolution()
     {
         Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
         Brick.RollDirection[] solution = currentLevel.m_solution;
@@ -98,10 +112,31 @@ public class GameGUI : BaseGUI
         }
     }
 
+    public void ClearSolution()
+    {
+        HorizontalLayoutGroup[] lines = m_solutionPanel.GetComponentsInChildren<HorizontalLayoutGroup>();
+        for (int i = 0; i != lines.Length; i++)
+        {
+            Destroy(lines[i].gameObject);
+        }
+    }
+
     private void ToggleSolution()
     {        
         m_solutionPanel.gameObject.SetActive(!m_solutionPanelActive);
         m_solutionPanelActive = !m_solutionPanelActive;
+    }
+
+    private void InitTargetActionsCount()
+    {
+        Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
+        m_targetActionsCount.text = currentLevel.m_solution.Length.ToString();
+    }
+
+    public void UpdateActionsCount()
+    {
+        Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
+        m_currentActionsCount.text = currentLevel.GetActionsCount().ToString();
     }
 
     private Quaternion GetArrowRotationForDirection(Brick.RollDirection direction)

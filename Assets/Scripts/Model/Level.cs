@@ -42,6 +42,16 @@ public class Level
     }
 
     /**
+    * Class to hold data when level is used dynamically (i.e played)
+    **/
+    public struct DynamicData
+    {
+        public int m_currentActionsCount;
+    }
+
+    private DynamicData m_dynamicData;
+
+    /**
     * Call this method to validate a level that has been created inside the level editor
     **/
     public ValidationData Validate(int maxMovements)
@@ -426,5 +436,23 @@ public class Level
     public string GetFilename()
     {
         return "Level_" + GetNumberAsString(this.m_number);
+    }
+
+    ///
+    /// DYNAMIC DATA//
+    ///
+    public void InitDynamicData()
+    {
+        m_dynamicData.m_currentActionsCount = 0;
+    }
+
+    public void IncrementActionsCount()
+    {
+        m_dynamicData.m_currentActionsCount++;
+    }
+
+    public int GetActionsCount()
+    {
+        return m_dynamicData.m_currentActionsCount;
     }
 }

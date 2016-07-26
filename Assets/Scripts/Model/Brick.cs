@@ -409,10 +409,9 @@ public class Brick
         if (m_state == BrickState.FALLING)
             return;
 
-        m_state = Brick.BrickState.IDLE;
 
         //Capture bonuses
-        if (m_coveredTiles[0] != null && m_coveredTiles[0].AttachedBonus != null)
+        if (m_coveredTiles[0].AttachedBonus != null)
         {
             TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_coveredTiles[0]);
             tileRenderer.OnCaptureBonus();
@@ -423,6 +422,8 @@ public class Brick
             TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_coveredTiles[1]);
             tileRenderer.OnCaptureBonus();
         }
+
+        m_state = Brick.BrickState.IDLE;
 
         //Change the state of new covered tiles
         //if (m_coveredTiles[0] != null && m_coveredTiles[0].CurrentState == Tile.State.DISABLED)

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class BrickRenderer : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class BrickRenderer : MonoBehaviour
     private Vector3 m_fallDirection;
 
     private const float DEFAULT_ANGULAR_SPEED = 90 / 0.3f;
+
+    public GameObject m_cubePartPfb;
 
     /**
     * Build a rectangular cuboid that will serve as our main object in the scene.
@@ -110,8 +113,16 @@ public class BrickRenderer : MonoBehaviour
                 brickAnimator.SetRotationAxis(rotationAxis);
                 float rotationDuration = 90 / DEFAULT_ANGULAR_SPEED;
                 brickAnimator.RotateBy(90, rotationDuration);
+
+                //increment the actions count
+                Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
+                currentLevel.IncrementActionsCount();
+
+                //update the GameGUI
+                GameGUI gameGUI = (GameGUI) GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+                gameGUI.UpdateActionsCount();
             }
-            else if (rollResult == Brick.RollResult.FALL)
+            else
             {
                 CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
 
@@ -217,6 +228,100 @@ public class BrickRenderer : MonoBehaviour
         brickAnimator.RotateBy(540, fallDuration);
     }
 
+    private void Explode()
+    {
+        if (m_brick.CoveredTiles[1] == null)
+        {
+            //destroy the brick
+            Destroy(this.gameObject);
+
+            Vector3 tilePosition = m_brick.CoveredTiles[0].GetWorldPosition() + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+
+            //make the two cubes explode
+            SplitCubeAtPosition(tilePosition + new Vector3(0, 0.5f, 0));
+            SplitCubeAtPosition(tilePosition + new Vector3(0, 1.5f, 0));            
+        }
+        else
+        {
+            if (m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP && m_brick.CoveredTiles[1].CurrentState == Tile.State.TRAP)
+            {
+                Vector3 tile0Position = m_brick.CoveredTiles[0].GetWorldPosition() + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+                SplitCubeAtPosition(tile0Position + new Vector3(0, 0.5f, 0));
+                Vector3 tile1Position = m_brick.CoveredTiles[0].GetWorldPosition() + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+                SplitCubeAtPosition(tile1Position + new Vector3(0, 0.5f, 0));
+            }
+            else
+            {
+                //destroy the brick
+                Destroy(this.gameObject);
+
+                Vector3 trappedTilePosition = m_brick.CoveredTiles[m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP ? 0 : 1].GetWorldPosition();
+                Vector3 normalTilePosition = m_brick.CoveredTiles[m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP ? 1 : 0].GetWorldPosition();
+
+                trappedTilePosition += new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+                normalTilePosition += new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+
+                Debug.Log(trappedTilePosition);
+                SplitCubeAtPosition(trappedTilePosition + new Vector3(0, 0.5f, 0));
+                CreateCubeAtPosition(normalTilePosition + new Vector3(0, 0.5f, 0));
+            }
+        }
+    }
+
+    private void CreateCubeAtPosition(Vector3 position)
+    {
+        GameObject cubeObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        cubeObject.transform.position = position;
+    }
+
+    /**
+    * Split a cube into numPartsAlongDimension^3 smaller ones with
+    **/
+    private List<GameObject> SplitCubeAtPosition(Vector3 cubeWorldPosition, int numPartsAlongDimension = 8)
+    {
+        GameObject cubeExploded = new GameObject("CubeExploded");
+        cubeExploded.transform.position = cubeWorldPosition;
+
+        int cubePartsCount = numPartsAlongDimension * numPartsAlongDimension * numPartsAlongDimension;
+        List<GameObject> cubeParts = new List<GameObject>(cubePartsCount);
+        float cubePartSize = 1 / (float) numPartsAlongDimension;
+
+        for (int i = 0; i != numPartsAlongDimension; i++)
+        {
+            for (int j = 0; j != numPartsAlongDimension; j++)
+            {
+                for (int k = 0; k != numPartsAlongDimension; k++)
+                {
+                    Vector3 cubePartPosition;
+                    if (numPartsAlongDimension % 2 == 0)
+                        cubePartPosition = new Vector3((i - (numPartsAlongDimension / 2) + 0.5f) * cubePartSize, 
+                                                       (j - (numPartsAlongDimension / 2) + 0.5f) * cubePartSize, 
+                                                       (k - (numPartsAlongDimension / 2) + 0.5f) * cubePartSize);
+                    else
+                        cubePartPosition = new Vector3((i - (numPartsAlongDimension / 2)) * cubePartSize,
+                                                       (j - (numPartsAlongDimension / 2)) * cubePartSize,
+                                                       (k - (numPartsAlongDimension / 2)) * cubePartSize);
+
+                    GameObject cubePart = Instantiate(m_cubePartPfb);
+                    cubePart.transform.parent = cubeExploded.transform;
+                    cubePart.transform.localPosition = cubePartPosition;
+                    cubePart.transform.localScale = 1.0f * new Vector3(cubePartSize, cubePartSize, cubePartSize);
+
+                    cubeParts.Add(cubePart);
+                }
+            }
+        }
+
+        for (int i = 0; i != cubeParts.Count; i++)
+        {
+            Rigidbody rb = cubeParts[i].GetComponent<Rigidbody>();
+            //rb.useGravity = true;
+            rb.AddExplosionForce(300.0f, cubeWorldPosition, Mathf.Sqrt(3) / 2);
+        }
+
+        return cubeParts;
+    }
+
     /**
     * Get the object normalized coordinated for our pivot point given its local coordinates
     **/
@@ -231,6 +336,17 @@ public class BrickRenderer : MonoBehaviour
     public void OnFinishRolling()
     {
         m_brick.OnFinishRolling();
+        
+        if (m_brick.GetCoveredTilesCount() == 1)
+        {
+            if (m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP)
+                Explode();
+        }
+        else
+        {
+            if (m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP || m_brick.CoveredTiles[1].CurrentState == Tile.State.TRAP)
+                Explode();
+        }
     }
 
     /**

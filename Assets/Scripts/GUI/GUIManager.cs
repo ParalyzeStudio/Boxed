@@ -95,6 +95,8 @@ public class GUIManager : MonoBehaviour
 
     public void DisplayMainMenuGUI()
     {
+        DestroyCurrentGUI();
+
         MainMenuGUI mainMenu = Instantiate(m_mainMenuGUIPfb);
         mainMenu.transform.SetParent(m_canvas.transform, false);
         m_currentGUI = mainMenu;
@@ -104,6 +106,8 @@ public class GUIManager : MonoBehaviour
 
     public void DisplayLevelsGUI()
     {
+        DestroyCurrentGUI();
+
         LevelsGUI levels = Instantiate(m_levelsGUIPfb);
         levels.transform.SetParent(m_canvas.transform, false);
         m_currentGUI = levels;
@@ -113,16 +117,40 @@ public class GUIManager : MonoBehaviour
 
     public void DisplayGameGUIForLevel(Level level)
     {
-        GameGUI game = Instantiate(m_gameGUIPfb);
-        game.transform.SetParent(m_canvas.transform, false);
-        game.Init(level);
-        m_currentGUI = game;
+        DestroyCurrentGUI();
+
+        GameGUI game;
+        if (m_currentGUI is GameGUI)
+        {
+            game = (GameGUI)m_currentGUI;
+            game.BuildForLevel(level);
+        }
+        else
+        {
+            game = Instantiate(m_gameGUIPfb);
+            game.transform.SetParent(m_canvas.transform, false);
+            game.BuildForLevel(level);
+            m_currentGUI = game;
+        }
+
         game.Show();
+
+        //GameGUI game = Instantiate(m_gameGUIPfb);
+        //game.transform.SetParent(m_canvas.transform, false);
+        //game.BuildForLevel(level);
+        //m_currentGUI = game;
+
+        //game.Show();
     }
 
     public void DismissCurrentGUI()
     {
         m_currentGUI.Dismiss();
     }
+    
+    private void DestroyCurrentGUI()
+    {
+        if (m_currentGUI != null)
+            Destroy(m_currentGUI.gameObject);
+    }
 }
-

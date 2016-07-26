@@ -48,7 +48,7 @@ public class LevelsGUI : BaseGUI
         if (level != null)
         {
             GameController.GetInstance().StartGameForLevel(level);
-            GameController.GetInstance().GetComponent<GUIManager>().DisplayGameGUIForLevel(level);
+            //GameController.GetInstance().GetComponent<GUIManager>().DisplayGameGUIForLevel(level);
         }
     }
 }

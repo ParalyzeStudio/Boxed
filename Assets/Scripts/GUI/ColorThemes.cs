@@ -62,6 +62,8 @@ public class ColorThemes
         theme1.m_defaultTileColors.m_tileContourColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(240, 128, 180, 255));
         theme1.m_floorSupportColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(77, 9, 30, 255));
 
+        theme1.m_trapTileColors = theme1.m_blockedTileColors;
+
         m_themes[0] = theme1;
         m_currentTheme = theme1;
     }
@@ -84,6 +86,7 @@ public class ColorTheme
     public TileColors m_selectedTileColors; //colors used to render the tiles selected by the user inside level editor
     public TileColors m_blockedTileColors; //colors used to render the tiles selected by the user inside level editor
     public TileColors m_disabledTileColors; //colors used to render the disabled tiles
+    public TileColors m_trapTileColors;
     public TileColors m_defaultTileColors;
     public Color m_floorSupportColor;
 
@@ -99,6 +102,8 @@ public class ColorTheme
         //    return m_selectedTileColors;
         else if (state == Tile.State.START)
             return m_startTileColors;
+        else if (state == Tile.State.TRAP)
+            return m_trapTileColors;
         else //FINISH
             return m_finishTileColors;
     }

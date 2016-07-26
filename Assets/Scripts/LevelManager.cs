@@ -125,28 +125,19 @@ public class LevelManager : MonoBehaviour
     public List<Level> GetLevelsFromResources()
     {
         List<Level> levels = new List<Level>();
-
-        Object levelObject = null;
-        int levelIdx = 0;
-
-        //Load levels we found consecutively, immediately break if we encounter a null level
-        do
-        {           
-            string levelLocalPath = "Levels/Level_" + Level.GetNumberAsString(levelIdx + 1);
-            Debug.Log(levelLocalPath);
-            levelObject = Resources.Load(levelLocalPath);
+        
+        for (int i = 0; i != 100; i++)
+        {
+            string levelLocalPath = "Levels/Level_" + Level.GetNumberAsString(i + 1);
+            Object levelObject = Resources.Load(levelLocalPath);
 
             if (levelObject != null)
             {
                 TextAsset levelContent = (TextAsset)levelObject;
                 levels.Add(Level.LoadFromByteArray(levelContent.bytes));
             }
-            else
-                Debug.Log("null");
-
-            levelIdx++;
+            //else levels.Add(null);
         }
-        while (levelObject != null);
 
         return levels;
     }

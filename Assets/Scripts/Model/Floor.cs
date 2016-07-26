@@ -336,14 +336,14 @@ public class Floor
                 Tile lineNextTile = m_tiles[lineNextTileIndex];
 
                 if (linePreviousTile.CurrentState == Tile.State.NORMAL && lineNextTile.CurrentState == Tile.State.NORMAL)
-                    tile.CurrentState = Tile.State.BLOCKED;
+                    tile.CurrentState = Tile.State.TRAP;
                 else
                 {
                     Tile columnPreviousTile = m_tiles[i - 1];
                     Tile columnNextTile = m_tiles[i + 1];
 
                     if (columnPreviousTile.CurrentState == Tile.State.NORMAL && columnNextTile.CurrentState == Tile.State.NORMAL)
-                        tile.CurrentState = Tile.State.BLOCKED;
+                        tile.CurrentState = Tile.State.TRAP;
                 }
             }
         }

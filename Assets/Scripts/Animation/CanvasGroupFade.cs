@@ -10,7 +10,7 @@ public class CanvasGroupFade : ValueAnimator
 
     public void FadeOut()
     {
-        this.FadeTo(0.0f, 0.5f, 0, InterpolationType.LINEAR, true);
+        this.FadeTo(0.0f, 0.5f);
     }
      
     public void FadeIn()

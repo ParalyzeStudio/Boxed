@@ -130,10 +130,12 @@ public class GameController : MonoBehaviour
         m_victory = false;
         m_defeat = false;
 
+        level.InitDynamicData();
+
         m_gameMode = GameMode.GAME;
         GetComponent<LevelManager>().m_currentLevel = level;
         StartLevel(level);
-
+        
         GetComponent<GUIManager>().DisplayGameGUIForLevel(level);
 
         m_gameStatus = GameStatus.RUNNING;
