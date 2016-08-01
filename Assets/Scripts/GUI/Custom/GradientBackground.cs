@@ -10,8 +10,8 @@ public class GradientBackground : BillboardSprite
 
     private bool m_colorWheel;
 
-    private Vector3 m_startTSB;
-    private Vector3 m_endTSB;
+    private HSVColor m_startHSV;
+    private HSVColor m_endHSV;
     
     private const float HUE_VARIATION_SPEED = 60.0f;
 
@@ -25,11 +25,11 @@ public class GradientBackground : BillboardSprite
         m_colorWheel = bColorWheel;
         if (bColorWheel)
         {
-            m_startTSB = new Vector3(2, 0.5f, 0.75f);
-            m_endTSB = new Vector3(332, 0.5f, 0.5f);
+            m_startHSV = new HSVColor(2, 0.5f, 0.75f);
+            m_endHSV = new HSVColor(332, 0.5f, 0.5f);
 
-            startColor = ColorUtils.GetRGBAColorFromTSB(m_startTSB, 1);
-            endColor = ColorUtils.GetRGBAColorFromTSB(m_endTSB, 1);
+            startColor = m_startHSV.ToRGBA();
+            endColor = m_endHSV.ToRGBA();
 
             m_startColor = startColor;
             m_endColor = endColor;
@@ -63,11 +63,11 @@ public class GradientBackground : BillboardSprite
             float dt = Time.deltaTime;
             float dHue = HUE_VARIATION_SPEED * dt;
 
-            m_startTSB += new Vector3(dHue, 0, 0);
-            m_endTSB += new Vector3(dHue, 0, 0);
+            m_startHSV.TranslateHue(dHue);
+            m_endHSV.TranslateHue(dHue);
 
-            m_startColor = ColorUtils.GetRGBAColorFromTSB(m_startTSB, 1);
-            m_endColor = ColorUtils.GetRGBAColorFromTSB(m_endTSB, 1);
+            m_startColor = m_startHSV.ToRGBA();
+            m_endColor = m_endHSV.ToRGBA();
 
             InvalidateColors();
         }

@@ -20,9 +20,13 @@ public class LevelSlot : MonoBehaviour
         m_number = number;
     }
 
-    private void Disable()
+    private void Disable(bool bNullLevel)
     {
-        GetComponent<Image>().color = new Color(1, 1, 1, 0.5f);
+        if (bNullLevel)
+            GetComponent<Image>().color = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+        else
+            GetComponent<Image>().color = new Color(0.8f, 0.8f, 0.8f, 1.0f);
+
         GetComponent<Button>().interactable = false;
     }
 
@@ -37,8 +41,16 @@ public class LevelSlot : MonoBehaviour
         this.GetComponentInChildren<Text>().text = m_number.ToString();
 
         if (m_level == null)
-            Disable();
+            Disable(true);
         else
-            Enable();
+        {
+            LevelData levelData = LevelData.LoadFromFile(m_level.m_number);
+            if (levelData == null)
+                Disable(true);
+            else if (!levelData.m_done)
+                Disable(false);
+            else
+                Enable();
+        }
     }
 }

@@ -97,41 +97,223 @@ public class ColorUtils
         return new Color(r, g, b, opacity);
     }
 
-    /**
-     * Return the RGBA color (channels are not necessarily clamped between 0 and 1) to the corresponding TSB values and opacity
-     * **/
-    public static Color GetRGBAColorFromTSB(Vector3 tsb, float a)
+    public static Color GetRGBAColorFromHSL(Vector3 hsl, float a)
     {
-        float tint = tsb.x;
-        float saturation = tsb.y;
-        float brightness = tsb.z;
-        float C = saturation * brightness;
+        float hue = hsl.x;
+        float saturation = hsl.y;
+        float lightness = hsl.z;
+        float C = 1 - Mathf.Abs(2 * lightness - 1) * saturation;
 
-        tint = tint % 360.0f;
-        if (tint < 0)
-            tint = 360 - Mathf.Abs(tint);
-        tint /= 60.0f;
-        float X = C * (1 - Mathf.Abs(tint % 2.0f - 1));
+        hue = hue % 360.0f;
+        if (hue < 0)
+            hue = 360 - Mathf.Abs(hue);
+        hue /= 60.0f;
+        float X = C * (1 - Mathf.Abs(hue % 2.0f - 1));
 
         Color outColor;
-        if (0 <= tint && tint < 1)
+        if (0 <= hue && hue < 1)
             outColor = new Color(C, X, 0, a);
-        else if (1 <= tint && tint < 2)
+        else if (1 <= hue && hue < 2)
             outColor = new Color(X, C, 0, a);
-        else if (2 <= tint && tint < 3)
+        else if (2 <= hue && hue < 3)
             outColor = new Color(0, C, X, a);
-        else if (3 <= tint && tint < 4)
+        else if (3 <= hue && hue < 4)
             outColor = new Color(0, X, C, a);
-        else if (4 <= tint && tint < 5)
+        else if (4 <= hue && hue < 5)
             outColor = new Color(X, 0, C, a);
-        else if (5 <= tint && tint < 6)
+        else if (5 <= hue && hue < 6)
             outColor = new Color(C, 0, X, a);
         else
             outColor = new Color(0, 0, 0, a);
 
-        float m = brightness - C;
+        float m = lightness - 0.5f * C;
         outColor += new Color(m, m, m, 0);
 
         return outColor;
+    }
+    
+
+    public static Vector3 GetHSLFromRGBAColor(Color rgba)
+    {
+        float[] channels = new float[3];
+        channels[0] = rgba.r;
+        channels[1] = rgba.g;
+        channels[2] = rgba.b;
+        float min = Mathf.Min(channels);
+        float max = Mathf.Max(channels);
+
+        //Hue
+        float hue = 0;
+        if (min != max)
+        {
+            if (max == rgba.r)
+            {
+                hue = (60 * (rgba.g - rgba.b) / (max - min) + 360);
+                hue %= 360;
+            }
+            else if (max == rgba.g)
+            {
+                hue = 60 * (rgba.b - rgba.r) / (max - min) + 120;
+            }
+            else //max == rgba.b
+            {
+                hue = 60 * (rgba.r - rgba.g) / (max - min) + 240;
+            }
+        }
+
+        //Lightness
+        float lightness = 0.5f * (max + min);
+
+        //Saturation
+        float saturation = 0;
+        if (min != max)
+            saturation = (max - min) / (1 - Mathf.Abs(2 * lightness - 1));
+
+        return new Vector3(hue, saturation, lightness);
+    }
+
+    //public static void UnitTests()
+    //{
+    //    Color color1 = Color.black;
+    //    Vector3 hsv1 = new Vector3(0,0,0);
+    //    Vector3 hsl1 = new Vector3(0,0,0);
+
+    //    if (GetHSVFromRGBAColor(color1) == hsv1 && GetHSLFromRGBAColor(color1) == hsl1)
+    //        Debug.Log("Color Test1 SUCCESS");
+    //    else
+    //        Debug.Log("Color Test1 FAILURE");
+
+    //    Color color2 = Color.white;
+    //    Vector3 hsv2 = new Vector3(0, 0, 1);
+    //    Vector3 hsl2 = new Vector3(0, 0, 1);
+
+    //    if (GetHSVFromRGBAColor(color2) == hsv2 && GetHSLFromRGBAColor(color2) == hsl2)
+    //        Debug.Log("Color Test2 SUCCESS");
+    //    else
+    //        Debug.Log("Color Test2 FAILURE");
+
+    //    Color color3 = Color.blue;
+    //    Vector3 hsv3 = new Vector3(240, 1, 1);
+    //    Vector3 hsl3 = new Vector3(240, 1, 0.5f);
+
+    //    if (GetHSVFromRGBAColor(color3) == hsv3 && GetHSLFromRGBAColor(color3) == hsl3)
+    //        Debug.Log("Color Test3 SUCCESS");
+    //    else
+    //        Debug.Log("Color Test3 FAILURE");
+
+    //    Color color4 = new Color(153 / 255.0f,10 / 255.0f, 68 / 255.0f);
+    //    Vector3 hsv4 = new Vector3(336, 0.877f, 0.32f);
+    //    Vector3 hsl4 = new Vector3(336, 0.935f, 0.6f);
+
+    //    float distanceHSV = (hsv4 - GetHSVFromRGBAColor(color4)).magnitude;
+    //    float distanceHSL = (hsl4 - GetHSLFromRGBAColor(color4)).magnitude;
+
+    //    if (distanceHSV <= 1f && distanceHSL <= 1f)
+    //        Debug.Log("Color Test4 SUCCESS");
+    //    else
+    //        Debug.Log("Color Test4 FAILURE");
+
+    //    Color color5 = new Color(132 / 255.0f, 69 / 255.0f, 214 / 255.0f);
+    //    Vector3 hsv5 = new Vector3(266, 0.678f, 0.839f);
+    //    Vector3 hsl5 = new Vector3(266, 0.639f, 0.555f);
+
+    //    distanceHSV = (hsv5 - GetHSVFromRGBAColor(color5)).magnitude;
+    //    distanceHSL = (hsl5 - GetHSLFromRGBAColor(color5)).magnitude;
+
+    //    if (distanceHSV <= 1f && distanceHSL <= 1f)
+    //        Debug.Log("Color Test5 SUCCESS");
+    //    else
+    //        Debug.Log("Color Test5 FAILURE");
+    //}
+}
+
+public struct HSVColor
+{
+    Vector3 m_hsv;
+
+    public HSVColor(float hue, float saturation, float value)
+    {
+        m_hsv.x = hue;
+        m_hsv.y = saturation;
+        m_hsv.z = value;
+    }
+
+    public HSVColor(Color rgb)
+    {
+        float[] channels = new float[3];
+        channels[0] = rgb.r;
+        channels[1] = rgb.g;
+        channels[2] = rgb.b;
+        float min = Mathf.Min(channels);
+        float max = Mathf.Max(channels);
+
+        //Hue
+        float hue = 0;
+        if (min != max)
+        {
+            if (max == rgb.r)
+            {
+                hue = (60 * (rgb.g - rgb.b) / (max - min) + 360);
+                hue %= 360;
+            }
+            else if (max == rgb.g)
+            {
+                hue = 60 * (rgb.b - rgb.r) / (max - min) + 120;
+            }
+            else //max == rgba.b
+            {
+                hue = 60 * (rgb.r - rgb.g) / (max - min) + 240;
+            }
+        }
+
+        //Saturation
+        float saturation = 0;
+        if (min != max)
+            saturation = 1 - min / max;
+
+        //Value
+        float value = max;
+
+        m_hsv = new Vector3(hue, saturation, value);
+    }
+
+    public Color ToRGBA(float a = 1)
+    {
+        float hue = m_hsv.x;
+        float saturation = m_hsv.y;
+        float value = m_hsv.z;
+        float C = saturation * value;
+
+        hue = hue % 360.0f;
+        if (hue < 0)
+            hue = 360 - Mathf.Abs(hue);
+        hue /= 60.0f;
+        float X = C * (1 - Mathf.Abs(hue % 2.0f - 1));
+
+        Color outColor;
+        if (0 <= hue && hue < 1)
+            outColor = new Color(C, X, 0, a);
+        else if (1 <= hue && hue < 2)
+            outColor = new Color(X, C, 0, a);
+        else if (2 <= hue && hue < 3)
+            outColor = new Color(0, C, X, a);
+        else if (3 <= hue && hue < 4)
+            outColor = new Color(0, X, C, a);
+        else if (4 <= hue && hue < 5)
+            outColor = new Color(X, 0, C, a);
+        else if (5 <= hue && hue < 6)
+            outColor = new Color(C, 0, X, a);
+        else
+            outColor = new Color(0, 0, 0, a);
+
+        float m = value - C;
+        outColor += new Color(m, m, m, 0);
+
+        return outColor;
+    }
+
+    public void TranslateHue(float deltaHue)
+    {
+        m_hsv.x = (m_hsv.x + deltaHue) % 360;
     }
 }

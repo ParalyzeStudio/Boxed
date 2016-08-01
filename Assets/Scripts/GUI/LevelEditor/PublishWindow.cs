@@ -25,7 +25,6 @@ public class PublishWindow : MonoBehaviour
     {
         string levelNumber = m_levelNumberInputField.text;
         m_parentEditor.m_editedLevel.m_number = int.Parse(levelNumber);
-        m_parentEditor.m_editedLevel.m_title = null;
         m_parentEditor.m_editedLevel.Publish();
 
         ShowConfirmation();

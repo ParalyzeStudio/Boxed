@@ -35,6 +35,7 @@ public class LevelManager : MonoBehaviour
     }
     
     public Level m_currentLevel { get; set; }
+    public LevelData m_currentLevelData { get; set; }
 
     public Level GetEditedLevelForNumber(int number)
     {

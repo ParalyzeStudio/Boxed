@@ -55,7 +55,7 @@ public class GameTouchHandler : TouchHandler
                 Tile levelStartTile = levelEditor.m_editedLevel.m_floor.GetStartTile();
                 Tile levelFinishTile = levelEditor.m_editedLevel.m_floor.GetFinishTile();
 
-                if (raycastTile.CurrentState == Tile.State.NORMAL)
+                if (raycastTile.CurrentState == Tile.State.NORMAL || raycastTile.CurrentState == Tile.State.BLOCKED)
                 {   
                     if (levelStartTile == null) //there is no other tile that has been marked as start tile
                     {
@@ -140,7 +140,7 @@ public class GameTouchHandler : TouchHandler
 
         if (tileSelectionMode == EditTilesSubMenu.TileSelectionMode.SELECT)
         {
-            if (raycastTile.CurrentState == Tile.State.DISABLED)
+            if (raycastTile.CurrentState == Tile.State.DISABLED || raycastTile.CurrentState == Tile.State.BLOCKED)
                 raycastTile.CurrentState = Tile.State.NORMAL;
         }
         else if (tileSelectionMode == EditTilesSubMenu.TileSelectionMode.DESELECT)
@@ -189,7 +189,7 @@ public class GameTouchHandler : TouchHandler
         //Build a ray starting from camera near clip plane mouse world space position
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         float rayDistance;
-        Vector3 planePosition = GameController.GetInstance().m_floor.transform.position + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+        Vector3 planePosition = GameController.GetInstance().m_floor.transform.position + new Vector3(0, 0.5f * Tile.TILE_DEFAULT_HEIGHT, 0);
         Plane floorPlane = new Plane(Vector3.up, planePosition);
 
         if (floorPlane.Raycast(ray, out rayDistance))

@@ -82,12 +82,12 @@ public class BrickRenderer : MonoBehaviour
         if (tiles[1] == null)
         {
             brickAnimator.transform.rotation = Quaternion.identity; //null rotation  
-            brickAnimator.SetPosition(tiles[0].GetWorldPosition() + new Vector3(0, 1 + 0.5f * TileRenderer.TILE_HEIGHT, 0));
+            brickAnimator.SetPosition(tiles[0].GetXZWorldPosition() + new Vector3(0, 1, 0));
         }
         else
         {
             brickAnimator.transform.rotation = m_brick.m_rotation;
-            brickAnimator.SetPosition(0.5f * (tiles[0].GetWorldPosition() + tiles[1].GetWorldPosition()) + new Vector3(0, 0.5f + 0.5f * TileRenderer.TILE_HEIGHT, 0));
+            brickAnimator.SetPosition(0.5f * (tiles[0].GetWorldPosition() + tiles[1].GetXZWorldPosition()) + new Vector3(0, 0.5f, 0));
         }
     }
 
@@ -114,13 +114,15 @@ public class BrickRenderer : MonoBehaviour
                 float rotationDuration = 90 / DEFAULT_ANGULAR_SPEED;
                 brickAnimator.RotateBy(90, rotationDuration);
 
-                //increment the actions count
-                Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
-                currentLevel.IncrementActionsCount();
+                if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
+                {
+                    //increment the actions count
+                    GameController.GetInstance().GetComponent<LevelManager>().m_currentLevelData.m_currentActionsCount++;
 
-                //update the GameGUI
-                GameGUI gameGUI = (GameGUI) GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
-                gameGUI.UpdateActionsCount();
+                    //update the GameGUI
+                    GameGUI gameGUI = (GameGUI)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+                    gameGUI.UpdateActionsCount();
+                }
             }
             else
             {
@@ -235,7 +237,7 @@ public class BrickRenderer : MonoBehaviour
             //destroy the brick
             Destroy(this.gameObject);
 
-            Vector3 tilePosition = m_brick.CoveredTiles[0].GetWorldPosition() + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+            Vector3 tilePosition = m_brick.CoveredTiles[0].GetXZWorldPosition();
 
             //make the two cubes explode
             SplitCubeAtPosition(tilePosition + new Vector3(0, 0.5f, 0));
@@ -245,9 +247,9 @@ public class BrickRenderer : MonoBehaviour
         {
             if (m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP && m_brick.CoveredTiles[1].CurrentState == Tile.State.TRAP)
             {
-                Vector3 tile0Position = m_brick.CoveredTiles[0].GetWorldPosition() + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+                Vector3 tile0Position = m_brick.CoveredTiles[0].GetXZWorldPosition();
                 SplitCubeAtPosition(tile0Position + new Vector3(0, 0.5f, 0));
-                Vector3 tile1Position = m_brick.CoveredTiles[0].GetWorldPosition() + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+                Vector3 tile1Position = m_brick.CoveredTiles[1].GetXZWorldPosition();
                 SplitCubeAtPosition(tile1Position + new Vector3(0, 0.5f, 0));
             }
             else
@@ -255,11 +257,10 @@ public class BrickRenderer : MonoBehaviour
                 //destroy the brick
                 Destroy(this.gameObject);
 
-                Vector3 trappedTilePosition = m_brick.CoveredTiles[m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP ? 0 : 1].GetWorldPosition();
-                Vector3 normalTilePosition = m_brick.CoveredTiles[m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP ? 1 : 0].GetWorldPosition();
-
-                trappedTilePosition += new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
-                normalTilePosition += new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+                Tile trapTile = m_brick.CoveredTiles[m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP ? 0 : 1];
+                Tile normalTile = m_brick.CoveredTiles[m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP ? 1 : 0];
+                Vector3 trappedTilePosition = trapTile.GetXZWorldPosition();
+                Vector3 normalTilePosition = normalTile.GetXZWorldPosition();
 
                 Debug.Log(trappedTilePosition);
                 SplitCubeAtPosition(trappedTilePosition + new Vector3(0, 0.5f, 0));

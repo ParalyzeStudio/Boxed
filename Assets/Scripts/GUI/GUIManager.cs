@@ -31,7 +31,7 @@ public class GUIManager : MonoBehaviour
         m_themes = new ColorThemes();
         m_themes.Init();
 
-        ShowBackgroundForTheme(m_themes.Themes[0]);
+        ShowBackgroundForTheme(m_themes.m_currentTheme);
     }
 
     public void ShowBackgroundForTheme(ColorTheme theme)
@@ -40,6 +40,7 @@ public class GUIManager : MonoBehaviour
         m_background = Instantiate(m_gradientBackgroundPfb);
         Color startColor = theme.m_backgroundGradientTopColor;
         Color endColor = theme.m_backgroundGradientBottomColor;
+
         m_background.Init(startColor, endColor);
     }
 
@@ -117,8 +118,6 @@ public class GUIManager : MonoBehaviour
 
     public void DisplayGameGUIForLevel(Level level)
     {
-        DestroyCurrentGUI();
-
         GameGUI game;
         if (m_currentGUI is GameGUI)
         {
@@ -127,6 +126,8 @@ public class GUIManager : MonoBehaviour
         }
         else
         {
+            DestroyCurrentGUI();
+
             game = Instantiate(m_gameGUIPfb);
             game.transform.SetParent(m_canvas.transform, false);
             game.BuildForLevel(level);

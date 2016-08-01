@@ -192,7 +192,7 @@ public class Floor
     **/
     static public Geometry.Edge GetCommonEdgeForConsecutiveTiles(Tile tile1, Tile tile2)
     {
-        Vector3 edgeMiddle = 0.5f * (tile2.GetWorldPosition() + tile1.GetWorldPosition()) + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT, 0);
+        Vector3 edgeMiddle = 0.5f * (tile2.GetWorldPosition() + tile1.GetWorldPosition()) + new Vector3(0, 0.5f * Tile.TILE_DEFAULT_HEIGHT, 0);
         Vector3 edgeDirection = tile2.GetWorldPosition() - tile1.GetWorldPosition();
         edgeDirection = Quaternion.AngleAxis(90, Vector3.up) * edgeDirection;
 
@@ -326,8 +326,9 @@ public class Floor
         for (int i = 0; i != m_tiles.Length; i++)
         {
             Tile tile = m_tiles[i];
-            if (tile.CurrentState != Tile.State.DISABLED)
+            if (tile.CurrentState == Tile.State.NORMAL || tile.CurrentState == Tile.State.START || tile.CurrentState == Tile.State.FINISH)
                 continue;
+
             if (tile.m_columnIndex > 0 && tile.m_columnIndex < this.m_gridWidth - 1 && tile.m_lineIndex > 0 && tile.m_lineIndex < this.m_gridHeight - 1)
             {
                 int linePreviousTileIndex = (tile.m_columnIndex - 1) * m_gridHeight + tile.m_lineIndex;
@@ -335,15 +336,19 @@ public class Floor
                 Tile linePreviousTile = m_tiles[linePreviousTileIndex];
                 Tile lineNextTile = m_tiles[lineNextTileIndex];
 
-                if (linePreviousTile.CurrentState == Tile.State.NORMAL && lineNextTile.CurrentState == Tile.State.NORMAL)
-                    tile.CurrentState = Tile.State.TRAP;
+                if ((linePreviousTile.CurrentState == Tile.State.NORMAL || linePreviousTile.CurrentState == Tile.State.BLOCKED)
+                    && 
+                    (lineNextTile.CurrentState == Tile.State.NORMAL || lineNextTile.CurrentState == Tile.State.BLOCKED))
+                    tile.CurrentState = Tile.State.BLOCKED;
                 else
                 {
                     Tile columnPreviousTile = m_tiles[i - 1];
                     Tile columnNextTile = m_tiles[i + 1];
 
-                    if (columnPreviousTile.CurrentState == Tile.State.NORMAL && columnNextTile.CurrentState == Tile.State.NORMAL)
-                        tile.CurrentState = Tile.State.TRAP;
+                    if ((columnPreviousTile.CurrentState == Tile.State.NORMAL || columnPreviousTile.CurrentState == Tile.State.BLOCKED)
+                        && 
+                        (columnNextTile.CurrentState == Tile.State.NORMAL || columnNextTile.CurrentState == Tile.State.BLOCKED))
+                        tile.CurrentState = Tile.State.BLOCKED;
                 }
             }
         }
@@ -377,8 +382,8 @@ public class Floor
                 if (tile == null)
                     continue;
 
-                Vector3 tileEdgePoint1 = tile.GetLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, 0.5f * tile.m_size);
-                Vector3 tileEdgePoint2 = tile.GetLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size);
+                Vector3 tileEdgePoint1 = tile.GetXZLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, 0.5f * tile.m_size);
+                Vector3 tileEdgePoint2 = tile.GetXZLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size);
 
                 frontLeftContour.Add(new Geometry.Edge(tileEdgePoint1, tileEdgePoint2));
             }
@@ -398,8 +403,8 @@ public class Floor
                 if (tile == null)
                     continue;
 
-                Vector3 tileEdgePoint1 = tile.GetLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size);
-                Vector3 tileEdgePoint2 = tile.GetLocalPosition() + new Vector3(0.5f * tile.m_size, 0, -0.5f * tile.m_size);
+                Vector3 tileEdgePoint1 = tile.GetXZLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size);
+                Vector3 tileEdgePoint2 = tile.GetXZLocalPosition() + new Vector3(0.5f * tile.m_size, 0, -0.5f * tile.m_size);
 
                 frontRightContour.Add(new Geometry.Edge(tileEdgePoint1, tileEdgePoint2));
             }
@@ -418,15 +423,15 @@ public class Floor
 
             if (tile.CurrentState != Tile.State.DISABLED)
             {
-                if (i == 0)
-                    tiles.Add(tile);
-                else
-                {
+                //if (i == 0)
+                //    tiles.Add(tile);
+                //else
+                //{
                     int previousTileIndex = (i - 1) * m_gridHeight + lineIndex;
                     Tile previousTile = m_tiles[previousTileIndex];
                     if (previousTile.CurrentState == Tile.State.DISABLED)
                         tiles.Add(tile);
-                }
+                //}
             }
 
             i++;
@@ -447,15 +452,15 @@ public class Floor
 
             if (tile.CurrentState != Tile.State.DISABLED)
             {
-                if (i == 0)
-                    tiles.Add(tile);
-                else
-                {
+                //if (i == 0)
+                //    tiles.Add(tile);
+                //else
+                //{
                     int previousTileIndex = columnIndex * m_gridHeight + (i - 1);
                     Tile previousTile = m_tiles[previousTileIndex];
                     if (previousTile.CurrentState == Tile.State.DISABLED)
                         tiles.Add(tile);
-                }
+                //}
             }
 
             i++;

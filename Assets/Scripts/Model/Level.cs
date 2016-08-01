@@ -42,16 +42,6 @@ public class Level
     }
 
     /**
-    * Class to hold data when level is used dynamically (i.e played)
-    **/
-    public struct DynamicData
-    {
-        public int m_currentActionsCount;
-    }
-
-    private DynamicData m_dynamicData;
-
-    /**
     * Call this method to validate a level that has been created inside the level editor
     **/
     public ValidationData Validate(int maxMovements)
@@ -150,7 +140,6 @@ public class Level
         //    return solutions[0];
 
         int treeHeight = 2;
-        maxMovements = 25;
         SolutionNode[][] solutions;
         do
         {
@@ -347,6 +336,10 @@ public class Level
         m_floor = m_floor.Clamp(); //clamp floor before saving
         m_floor.ClearCachedValues(); //remove cached values
 
+        //Create a new LevelData file
+        LevelData levelData = new LevelData(this.m_number);
+        levelData.SaveToFile();
+
         string publishedLevelsFolderPath = Application.persistentDataPath + "/Levels/PublishedLevels";
         return SaveToFile(publishedLevelsFolderPath);
     }
@@ -361,8 +354,9 @@ public class Level
         FileStream fs = null;
         try
         {
-            fs = File.Open(path + "/" + GetFilename() + ".dat", FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
-            Debug.Log("level saved to path:" + path + "/" + GetFilename() + ".dat");
+            string filePath = path + "/" + GetFilename() + ".dat";
+            fs = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+            Debug.Log("level saved to path:" + filePath);
         }
         catch (Exception)
         {
@@ -441,18 +435,18 @@ public class Level
     ///
     /// DYNAMIC DATA//
     ///
-    public void InitDynamicData()
-    {
-        m_dynamicData.m_currentActionsCount = 0;
-    }
+    //public void InitDynamicData()
+    //{
+    //    m_dynamicData.m_currentActionsCount = 0;
+    //}
 
-    public void IncrementActionsCount()
-    {
-        m_dynamicData.m_currentActionsCount++;
-    }
+    //public void IncrementActionsCount()
+    //{
+    //    m_dynamicData.m_currentActionsCount++;
+    //}
 
-    public int GetActionsCount()
-    {
-        return m_dynamicData.m_currentActionsCount;
-    }
+    //public int GetActionsCount()
+    //{
+    //    return m_dynamicData.m_currentActionsCount;
+    //}
 }

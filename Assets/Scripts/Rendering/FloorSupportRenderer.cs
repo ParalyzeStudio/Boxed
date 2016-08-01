@@ -43,12 +43,12 @@ public class FloorSupportRenderer : MonoBehaviour
         GetComponent<MeshFilter>().sharedMesh = supportMesh;
     }
 
-    private void BuildFaces(List<Geometry.Edge> contour, Color color)
+    private void BuildFaces(List<Geometry.Edge> contour, Color color, float verticalOffset = 0)
     {
         int i = 0;
         while (i < contour.Count)
         {
-            BuildFace(contour[i], color);
+            BuildFace(contour[i], color, verticalOffset);
             i++;
         }       
     }
@@ -56,16 +56,16 @@ public class FloorSupportRenderer : MonoBehaviour
     /**
     * Build a face whose top edge is given by parameter 'topEdge' and add it at index 'index'
     **/
-    private void BuildFace(Geometry.Edge topEdge, Color color)
+    private void BuildFace(Geometry.Edge topEdge, Color color, float verticalOffset = 0)
     {
         int triangleFirstIndex = m_vertices.Count;
 
-        m_vertices.Add(topEdge.m_pointA); //top-left
-        m_vertices.Add(topEdge.m_pointB); //top-right
+        m_vertices.Add(topEdge.m_pointA + new Vector3(0, verticalOffset, 0)); //top-left
+        m_vertices.Add(topEdge.m_pointB + new Vector3(0, verticalOffset, 0)); //top-right
         Vector3 bottomEdgePointA = topEdge.m_pointA - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0);
         Vector3 bottomEdgePointB = topEdge.m_pointB - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0);
-        m_vertices.Add(bottomEdgePointA); //bottom-left
-        m_vertices.Add(bottomEdgePointB); //bottom-right        
+        m_vertices.Add(bottomEdgePointA + new Vector3(0, verticalOffset, 0)); //bottom-left
+        m_vertices.Add(bottomEdgePointB + new Vector3(0, verticalOffset, 0)); //bottom-right        
 
         int[] indices = new int[6] { triangleFirstIndex, triangleFirstIndex + 1 , triangleFirstIndex + 2, triangleFirstIndex + 3, triangleFirstIndex + 2, triangleFirstIndex + 1 };
         m_triangles.AddRange(indices);

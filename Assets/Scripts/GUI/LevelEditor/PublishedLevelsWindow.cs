@@ -18,8 +18,49 @@ public class PublishedLevelsWindow : LevelsListWindow
         List<Level> publishedLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllPublishedLevelsFromDisk();
         BuildLevelItemsForLevels(publishedLevels);
         InvalidateItemList();
-    }    
-    
+    }
+
+    protected override void BuildLevelItemsForLevels(List<Level> levels)
+    {
+        if (m_items == null)
+            m_items = new List<LevelItem>();
+
+        int listIndex = 0;
+        for (int i = 0; i != levels.Count; i++)
+        {
+            Level level = levels[i];
+            int levelNumber = level.m_number;
+
+            //build empty levels until we reach the next valid level
+            while (listIndex < levelNumber - 1)
+            {
+                m_items.Add(BuildListItemForLevel(null));
+                listIndex++;
+            }
+
+            //Build the valid level
+            m_items.Add(BuildListItemForLevel(level));
+            listIndex++;
+        }
+    }
+
+    /**
+    * Build a level item object and add it to the list
+    **/
+    protected override LevelItem BuildListItemForLevel(Level level)
+    {
+        LevelItem levelItemObject = (LevelItem)Instantiate(m_levelItemPfb);
+
+        LevelItem levelItem = levelItemObject.GetComponent<LevelItem>();
+        if (level != null)
+            level.m_title = "Level_" + Level.GetNumberAsString(level.m_number);
+        levelItem.Init(level);
+
+        levelItem.GetComponent<Button>().onClick.AddListener(delegate { OnLevelItemClick(levelItem); });
+
+        return levelItem;
+    }
+
     /** ONCLICK methods **/
     public void OnClickLoad()
     {

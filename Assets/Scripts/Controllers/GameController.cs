@@ -113,7 +113,7 @@ public class GameController : MonoBehaviour
     /**
     * Called when we want to start a level from game scene (not level editor)
     **/
-    public bool StartGameForLevelNumber(int levelNumber)
+    private bool StartGameForLevelNumber(int levelNumber)
     {
         Level level = GetComponent<LevelManager>().GetLevelForNumber(levelNumber);
         if (level != null)
@@ -130,10 +130,12 @@ public class GameController : MonoBehaviour
         m_victory = false;
         m_defeat = false;
 
-        level.InitDynamicData();
-
         m_gameMode = GameMode.GAME;
-        GetComponent<LevelManager>().m_currentLevel = level;
+
+        LevelManager levelManager = GetComponent<LevelManager>();
+        levelManager.m_currentLevel = level;
+        levelManager.m_currentLevelData = LevelData.LoadFromFile(level.m_number);
+        levelManager.m_currentLevelData.m_currentActionsCount = 0;
         StartLevel(level);
         
         GetComponent<GUIManager>().DisplayGameGUIForLevel(level);
@@ -226,7 +228,12 @@ public class GameController : MonoBehaviour
     {
         if (m_gameStatus == GameStatus.VICTORY)
         {
-            int nextLevelNumber = GetComponent<LevelManager>().m_currentLevel.m_number + 1;
+            LevelData currentLevelData = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevelData;
+            currentLevelData.m_done = true;
+            currentLevelData.SaveToFile();
+
+            Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
+            int nextLevelNumber = currentLevel.m_number + 1;
             GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
 
             m_gameStatus = GameStatus.IDLE;

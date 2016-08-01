@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(MeshRenderer))]
 public class TileRenderer : MonoBehaviour
 {
-    public const float TILE_HEIGHT = 0.5f;
+    private const float TILE_DEFAULT_CONTOUR_THICKNESS = 0.05f;
 
     public Tile m_tile; //the tile data used to render a cuboid tile
 
@@ -15,7 +15,7 @@ public class TileRenderer : MonoBehaviour
     public BonusRenderer m_bonusPfb;
     private BonusRenderer m_bonus;
     public ParticleSystem m_bonusFxPfb;
-    private ParticleSystem m_bonusFx;
+    //private ParticleSystem m_bonusFx;
 
     //as we want to modify the color of a tile quickly, store the vertex of colors here
     private Color[] m_colors;
@@ -29,7 +29,7 @@ public class TileRenderer : MonoBehaviour
     {
         m_tile = tile;
 
-        BuildFaces(0.05f);
+        BuildFaces();
 
         m_colorsArrayDirty = false;
         m_verticesArrayDirty = false;
@@ -45,34 +45,36 @@ public class TileRenderer : MonoBehaviour
     * Build faces for this tile. The top face can have a contour on it, just set bDrawContourOnTopFace to true in this case and set a contourThicknessRatio
     * between 0 and 1, 0 meaning zero-thickness (no contour) and 1 meaning 0.5f * tile.m_size thickness
     **/
-    private void BuildFaces(float contourThicknessRatio = 0.2f)
+    private void BuildFaces(float contourThicknessRatio = TILE_DEFAULT_CONTOUR_THICKNESS)
     {
+        float tileHeight = GetTileHeight();
+
         //build only two faces as the 3 other wont be visible
         m_vertices = new Vector3[20];
-        m_vertices[0] = new Vector3(-0.5f * m_tile.m_size, -0.5f * TILE_HEIGHT, 0.5f * m_tile.m_size);
-        m_vertices[1] = new Vector3(-0.5f * m_tile.m_size, -0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-        m_vertices[2] = new Vector3(-0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-        m_vertices[3] = new Vector3(-0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, 0.5f * m_tile.m_size);
-        m_vertices[4] = new Vector3(-0.5f * m_tile.m_size, -0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-        m_vertices[5] = new Vector3(0.5f * m_tile.m_size, -0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-        m_vertices[6] = new Vector3(0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-        m_vertices[7] = new Vector3(-0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
+        m_vertices[0] = new Vector3(-0.5f * m_tile.m_size, -0.5f * tileHeight, 0.5f * m_tile.m_size);
+        m_vertices[1] = new Vector3(-0.5f * m_tile.m_size, -0.5f * tileHeight, -0.5f * m_tile.m_size);
+        m_vertices[2] = new Vector3(-0.5f * m_tile.m_size, 0.5f * tileHeight, -0.5f * m_tile.m_size);
+        m_vertices[3] = new Vector3(-0.5f * m_tile.m_size, 0.5f * tileHeight, 0.5f * m_tile.m_size);
+        m_vertices[4] = new Vector3(-0.5f * m_tile.m_size, -0.5f * tileHeight, -0.5f * m_tile.m_size);
+        m_vertices[5] = new Vector3(0.5f * m_tile.m_size, -0.5f * tileHeight, -0.5f * m_tile.m_size);
+        m_vertices[6] = new Vector3(0.5f * m_tile.m_size, 0.5f * tileHeight, -0.5f * m_tile.m_size);
+        m_vertices[7] = new Vector3(-0.5f * m_tile.m_size, 0.5f * tileHeight, -0.5f * m_tile.m_size);
 
         float innerSquareSize = (1 - contourThicknessRatio) * m_tile.m_size;
-        m_vertices[8] = new Vector3(-0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, 0.5f * innerSquareSize);
-        m_vertices[9] = new Vector3(-0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, -0.5f * innerSquareSize);
-        m_vertices[10] = new Vector3(0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, -0.5f * innerSquareSize);
-        m_vertices[11] = new Vector3(0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, 0.5f * innerSquareSize);
+        m_vertices[8] = new Vector3(-0.5f * innerSquareSize, 0.5f * tileHeight, 0.5f * innerSquareSize);
+        m_vertices[9] = new Vector3(-0.5f * innerSquareSize, 0.5f * tileHeight, -0.5f * innerSquareSize);
+        m_vertices[10] = new Vector3(0.5f * innerSquareSize, 0.5f * tileHeight, -0.5f * innerSquareSize);
+        m_vertices[11] = new Vector3(0.5f * innerSquareSize, 0.5f * tileHeight, 0.5f * innerSquareSize);
 
         //build actual contour
-        m_vertices[12] = new Vector3(-0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, 0.5f * m_tile.m_size);
-        m_vertices[13] = new Vector3(-0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-        m_vertices[14] = new Vector3(0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-        m_vertices[15] = new Vector3(0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, 0.5f * m_tile.m_size);
-        m_vertices[16] = new Vector3(-0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, 0.5f * innerSquareSize);
-        m_vertices[17] = new Vector3(-0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, -0.5f * innerSquareSize);
-        m_vertices[18] = new Vector3(0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, -0.5f * innerSquareSize);
-        m_vertices[19] = new Vector3(0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, 0.5f * innerSquareSize);
+        m_vertices[12] = new Vector3(-0.5f * m_tile.m_size, 0.5f * tileHeight, 0.5f * m_tile.m_size);
+        m_vertices[13] = new Vector3(-0.5f * m_tile.m_size, 0.5f * tileHeight, -0.5f * m_tile.m_size);
+        m_vertices[14] = new Vector3(0.5f * m_tile.m_size, 0.5f * tileHeight, -0.5f * m_tile.m_size);
+        m_vertices[15] = new Vector3(0.5f * m_tile.m_size, 0.5f * tileHeight, 0.5f * m_tile.m_size);
+        m_vertices[16] = new Vector3(-0.5f * innerSquareSize, 0.5f * tileHeight, 0.5f * innerSquareSize);
+        m_vertices[17] = new Vector3(-0.5f * innerSquareSize, 0.5f * tileHeight, -0.5f * innerSquareSize);
+        m_vertices[18] = new Vector3(0.5f * innerSquareSize, 0.5f * tileHeight, -0.5f * innerSquareSize);
+        m_vertices[19] = new Vector3(0.5f * innerSquareSize, 0.5f * tileHeight, 0.5f * innerSquareSize);
 
         int[] triangles = new int[] { 0, 2, 1, 0, 3, 2, //face 1
                                     4, 6, 5, 4, 7, 6, //face 2
@@ -92,64 +94,7 @@ public class TileRenderer : MonoBehaviour
         facesMesh.colors = m_colors;
 
         this.GetComponent<MeshFilter>().sharedMesh = facesMesh;
-    }
-
-    /**
-    * Build every face of this tile except the top one
-    **/
-    //private GameObject BuildSideFaces()
-    //{
-    //    //build only two faces as the 3 other wont be visible
-    //    Vector3[] vertices = new Vector3[8];
-    //    vertices[0] = new Vector3(-0.5f * m_tile.m_size, -0.5f * TILE_HEIGHT, 0.5f * m_tile.m_size);
-    //    vertices[1] = new Vector3(-0.5f * m_tile.m_size, -0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-    //    vertices[2] = new Vector3(-0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-    //    vertices[3] = new Vector3(-0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, 0.5f * m_tile.m_size);
-    //    vertices[4] = new Vector3(-0.5f * m_tile.m_size, -0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-    //    vertices[5] = new Vector3(0.5f * m_tile.m_size, -0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-    //    vertices[6] = new Vector3(0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-    //    vertices[7] = new Vector3(-0.5f * m_tile.m_size, 0.5f * TILE_HEIGHT, -0.5f * m_tile.m_size);
-
-    //    int[] triangles = new int[] { 0, 2, 1, 0, 3, 2, 4, 6, 5, 4, 7, 6 };
-
-    //    Vector3[] normals = new Vector3[8];
-    //    normals[0] = new Vector3(-1, 0, 0);
-    //    normals[1] = new Vector3(-1, 0, 0);
-    //    normals[2] = new Vector3(-1, 0, 0);
-    //    normals[3] = new Vector3(-1, 0, 0);
-    //    normals[4] = new Vector3(0, 0, -1);
-    //    normals[5] = new Vector3(0, 0, -1);
-    //    normals[6] = new Vector3(0, 0, -1);
-    //    normals[7] = new Vector3(0, 0, -1);
-
-    //    Mesh facesMesh = new Mesh();
-    //    facesMesh.vertices = vertices;
-    //    facesMesh.triangles = triangles;
-    //    facesMesh.normals = normals;
-
-    //    GameObject facesObject = new GameObject();
-    //    MeshFilter meshFilter = facesObject.AddComponent<MeshFilter>();
-    //    meshFilter.sharedMesh = facesMesh;
-    //    MeshRenderer meshRenderer = facesObject.AddComponent<MeshRenderer>();
-    //    meshRenderer.material = m_sideFacesMaterial;
-
-    //    return facesObject;
-    //}
-
-    /**
-    * Build top face of this tile
-    **/
-    //private GameObject BuildTopFace()
-    //{
-    //    Quad topFace = Instantiate(m_menuTileTopFacePfb);
-    //    topFace.Init(null, true);
-    //    topFace.transform.localPosition = new Vector3(0, 0.5f * TILE_HEIGHT, 0);
-    //    topFace.transform.rotation = Quaternion.AngleAxis(90, Vector3.right);
-
-    //    return topFace.gameObject;
-    //}
-    
-   
+    }   
 
     public void SetLeftFaceColor(Color color, bool bUpdateMeshDirectly = true)
     {
@@ -213,16 +158,26 @@ public class TileRenderer : MonoBehaviour
 
     public void SetContourThicknessRatio(float ratio, bool bUpdateMeshDirectly = true)
     {
+        float tileHeight = Tile.TILE_DEFAULT_HEIGHT;
+        if (m_tile.CurrentState == Tile.State.BLOCKED)
+            tileHeight *= 2;
+
         float innerSquareSize = (1 - ratio) * m_tile.m_size;
-        m_vertices[16] = new Vector3(-0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, 0.5f * innerSquareSize);
-        m_vertices[17] = new Vector3(-0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, -0.5f * innerSquareSize);
-        m_vertices[18] = new Vector3(0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, -0.5f * innerSquareSize);
-        m_vertices[19] = new Vector3(0.5f * innerSquareSize, 0.5f * TILE_HEIGHT, 0.5f * innerSquareSize);
+        m_vertices[16] = new Vector3(-0.5f * innerSquareSize, 0.5f * tileHeight, 0.5f * innerSquareSize);
+        m_vertices[17] = new Vector3(-0.5f * innerSquareSize, 0.5f * tileHeight, -0.5f * innerSquareSize);
+        m_vertices[18] = new Vector3(0.5f * innerSquareSize, 0.5f * tileHeight, -0.5f * innerSquareSize);
+        m_vertices[19] = new Vector3(0.5f * innerSquareSize, 0.5f * tileHeight, 0.5f * innerSquareSize);
 
         if (bUpdateMeshDirectly)
             GetComponent<MeshFilter>().sharedMesh.vertices = m_vertices;
         else
             m_verticesArrayDirty = true;
+    }
+
+    public void UpdateTileHeightAndPosition()
+    {
+        BuildFaces(); //rebuild the tile
+        transform.localPosition = m_tile.GetLocalPosition();
     }
 
     public void UpdateTileColors()
@@ -245,7 +200,7 @@ public class TileRenderer : MonoBehaviour
         m_bonus = Instantiate(m_bonusPfb);
         m_bonus.name = "Bonus";
 
-        Vector3 bonusPosition = m_tile.GetWorldPosition() + new Vector3(0, 0.5f * TileRenderer.TILE_HEIGHT + 0.25f, 0);
+        Vector3 bonusPosition = m_tile.GetWorldPosition() + new Vector3(0, 0.5f * GetTileHeight() + 0.25f, 0);
 
         GameObject bonusContainer = GameController.GetInstance().m_bonuses;
         m_bonus.transform.parent = bonusContainer.transform;
@@ -260,8 +215,8 @@ public class TileRenderer : MonoBehaviour
     public void DestroyBonusObject()
     {
         Destroy(m_bonus.gameObject);
-        if (m_bonusFx != null)
-            Destroy(m_bonusFx.gameObject);
+        //if (m_bonusFx != null)
+        //    Destroy(m_bonusFx.gameObject);
     }
 
     /**
@@ -273,10 +228,20 @@ public class TileRenderer : MonoBehaviour
         DestroyBonusObject();
     }
 
+    private float GetTileHeight()
+    {
+        float tileHeight = Tile.TILE_DEFAULT_HEIGHT;
+        if (m_tile.CurrentState == Tile.State.BLOCKED)
+            tileHeight *= 2;
+
+        return tileHeight;
+    }
+
     public void Update()
     {
         if (m_tile.m_tileStateDirty)
         {
+            UpdateTileHeightAndPosition();
             UpdateTileColors();
             m_tile.m_tileStateDirty = false;
         }

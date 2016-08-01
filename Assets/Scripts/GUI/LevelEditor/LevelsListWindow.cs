@@ -20,43 +20,17 @@ public class LevelsListWindow : MonoBehaviour
     /**
     * Build a list of LevelItem objects corresponding to the list of Level object passed as parameter
     **/
-    protected void BuildLevelItemsForLevels(List<Level> levels)
+    protected virtual void BuildLevelItemsForLevels(List<Level> levels)
     {
-        if (m_items == null)
-            m_items = new List<LevelItem>();
 
-        int listIndex = 0;
-        for (int i = 0; i != levels.Count; i++)
-        {
-            Level level = levels[i];
-            int levelNumber = level.m_number;
-
-            //build empty levels until we reach the next valid level
-            while (listIndex < levelNumber - 1)
-            {
-                m_items.Add(BuildListItemForLevel(null));
-                listIndex++;
-            }
-
-            //Build the valid level
-            m_items.Add(BuildListItemForLevel(level));
-            listIndex++;
-        }
     }
 
     /**
     * Build a level item object and add it to the list
     **/
-    protected LevelItem BuildListItemForLevel(Level level)
+    protected virtual LevelItem BuildListItemForLevel(Level level)
     {
-        LevelItem levelItemObject = (LevelItem)Instantiate(m_levelItemPfb);
-
-        LevelItem levelItem = levelItemObject.GetComponent<LevelItem>();
-        levelItem.Init(level);
-
-        levelItem.GetComponent<Button>().onClick.AddListener(delegate { OnLevelItemClick(levelItem); });
-
-        return levelItem;
+        return null;
     }
 
     /**

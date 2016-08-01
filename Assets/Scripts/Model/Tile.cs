@@ -4,9 +4,10 @@ using UnityEngine;
 [Serializable]
 public class Tile
 {
-    public float m_size { get; set; }
+    public float m_size { get; set; } //tile dimension along x and z
 
     private const float TILE_SIZE = 1.0f;
+    public const float TILE_DEFAULT_HEIGHT = 0.5f;
 
     public enum State
     {
@@ -69,7 +70,8 @@ public class Tile
     **/
     public Vector3 GetLocalPosition()
     {
-        return new Vector3(m_columnIndex * m_size, CurrentState == State.BLOCKED ? 0.5f : 0, m_lineIndex * m_size);
+        float tilePositionY = (CurrentState == State.BLOCKED) ? 0.5f * TILE_DEFAULT_HEIGHT : 0;
+        return new Vector3(m_columnIndex * m_size, tilePositionY, m_lineIndex * m_size);
     }
 
     /**
@@ -79,6 +81,24 @@ public class Tile
     {
         Vector3 parentFloorPosition = GameController.GetInstance().m_floor.transform.position;
         return parentFloorPosition + GetLocalPosition();
+    }
+
+    /**
+    * Same as GetLocalPosition() but with y-component removed
+    **/
+    public Vector3 GetXZLocalPosition()
+    {
+        Vector3 localPosition = GetLocalPosition();
+        return new Vector3(localPosition.x, 0, localPosition.z);
+    }
+
+    /**
+    * Same as GetWorldPosition() but with y-component removed
+    **/
+    public Vector3 GetXZWorldPosition()
+    {
+        Vector3 worldPosition = GetWorldPosition();
+        return new Vector3(worldPosition.x, 0, worldPosition.z);
     }
 
     /**

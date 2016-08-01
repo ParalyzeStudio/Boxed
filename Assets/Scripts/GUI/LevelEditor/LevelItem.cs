@@ -26,16 +26,12 @@ public class LevelItem : MonoBehaviour
         Image background = this.GetComponent<Image>();
         if (m_level == null)
         {
-            //m_title.text = "Level_" + Level.GetNumberAsString(index + 1);
             m_title.text = "Click to add new level";
             m_title.color = Color.red;
             background.color = m_deselectedColor;
         }
         else
         {
-            if (m_level.m_title == null)
-                m_level.m_title = m_level.GetFilename();
-
             m_title.text = m_level.m_title;
             m_title.color = Color.white;
         }

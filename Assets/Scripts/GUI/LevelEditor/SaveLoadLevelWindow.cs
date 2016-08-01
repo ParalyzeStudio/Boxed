@@ -37,11 +37,56 @@ public class SaveLoadLevelWindow : LevelsListWindow
     }
 
     /**
+    * Build a list of LevelItem objects corresponding to the list of Level object passed as parameter
+    **/
+    protected override void BuildLevelItemsForLevels(List<Level> levels)
+    {
+        if (m_items == null)
+            m_items = new List<LevelItem>();
+        
+        for (int i = 0; i != levels.Count; i++)
+        {
+            Level level = levels[i];
+
+            //Build the valid level
+            m_items.Add(BuildListItemForLevel(level));
+        }
+    }
+
+    /**
+    * Build a level item object and add it to the list
+    **/
+    protected override LevelItem BuildListItemForLevel(Level level)
+    {
+        LevelItem levelItemObject = (LevelItem)Instantiate(m_levelItemPfb);
+
+        LevelItem levelItem = levelItemObject.GetComponent<LevelItem>();
+        if (level != null)
+            level.m_title = "Level_" + Level.GetNumberAsString(m_items.Count + 1);
+        levelItem.Init(level);
+
+        levelItem.GetComponent<Button>().onClick.AddListener(delegate { OnLevelItemClick(levelItem); });
+
+        return levelItem;
+    }
+
+    /**
     * In case we want to overwrite the currently selected level we need to nullify the related level so DoSave() actually performs the overwriting of the file
     **/
     public void ClearLevelOnSelectedItem()
     {
         m_selectedItem.m_level = null;
+    }
+
+    private int GetItemIndexInList(LevelItem item)
+    {
+        for (int i = 0;i != m_items.Count; i++)
+        {
+            if (m_items[i] == item)
+                return i;
+        }
+
+        return -1;
     }
 
     public void OnClickSave()
@@ -57,8 +102,7 @@ public class SaveLoadLevelWindow : LevelsListWindow
         if (m_selectedItem.m_level == null)
         {
             Level editedLevel = m_parentEditor.m_editedLevel;
-            editedLevel.m_number = m_items.Count; //we save that level at the end of the list
-            //editedLevel.m_title = "Level_" + Level.GetNumberAsString(levelNumber);
+            //editedLevel.m_number = m_items.Count; //we save that level at the end of the list
             m_selectedItem.m_level = editedLevel;
             m_selectedItem.InvalidateContent();
             //m_saveSuccessMessage.gameObject.SetActive(true);

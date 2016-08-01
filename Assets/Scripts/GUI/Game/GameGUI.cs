@@ -135,8 +135,7 @@ public class GameGUI : BaseGUI
 
     public void UpdateActionsCount()
     {
-        Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
-        m_currentActionsCount.text = currentLevel.GetActionsCount().ToString();
+        m_currentActionsCount.text = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevelData.m_currentActionsCount.ToString();
     }
 
     private Quaternion GetArrowRotationForDirection(Brick.RollDirection direction)
