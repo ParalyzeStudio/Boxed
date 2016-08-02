@@ -102,11 +102,14 @@ public class SaveLoadLevelWindow : LevelsListWindow
         if (m_selectedItem.m_level == null)
         {
             Level editedLevel = m_parentEditor.m_editedLevel;
-            //editedLevel.m_number = m_items.Count; //we save that level at the end of the list
+            editedLevel.m_number = GetItemIndexInList(m_selectedItem) + 1; //we save that level at the end of the list
+            editedLevel.m_title = "Level_" + Level.GetNumberAsString(editedLevel.m_number); //we save that level at the end of the list
             m_selectedItem.m_level = editedLevel;
             m_selectedItem.InvalidateContent();
             //m_saveSuccessMessage.gameObject.SetActive(true);
             editedLevel.Save();
+            
+            m_selectedItem.InvalidateContent();
         }
         else
         {
@@ -115,7 +118,10 @@ public class SaveLoadLevelWindow : LevelsListWindow
             overwriteFilePopup.Init(this);
 
             overwriteFilePopup.transform.SetParent(m_parentEditor.transform, false);
-        }        
+        }
+
+        m_selectedItem.Deselect();
+        DisableButton(ButtonID.ID_SAVE_LEVEL);
     }
 
     public void OnClickLoad()

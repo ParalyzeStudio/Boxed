@@ -45,7 +45,7 @@ public class GameGUI : BaseGUI
     {
         m_overlay = Instantiate(m_overlayPfb);
         GradientBackground background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
-        m_overlay.Init(background.m_startColor, background.m_endColor);
+        m_overlay.Init(background.m_topColor, background.m_bottomColor);
         m_overlay.name = "Overlay";
 
         QuadAnimator overlayAnimator = m_overlay.GetComponent<QuadAnimator>();
@@ -154,6 +154,11 @@ public class GameGUI : BaseGUI
     {
         Dismiss();
         GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(new CallFuncHandler.CallFunc(GameController.GetInstance().RestartLevel), 0.5f);
+    }
+
+    public void OnClickHome()
+    {
+
     }
 
     public void OnClickSolution()

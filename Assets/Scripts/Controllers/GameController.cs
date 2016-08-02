@@ -229,8 +229,11 @@ public class GameController : MonoBehaviour
         if (m_gameStatus == GameStatus.VICTORY)
         {
             LevelData currentLevelData = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevelData;
-            currentLevelData.m_done = true;
-            currentLevelData.SaveToFile();
+            if (!currentLevelData.m_done)
+            {
+                currentLevelData.m_done = true;
+                currentLevelData.SaveToFile();
+            }
 
             Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
             int nextLevelNumber = currentLevel.m_number + 1;
@@ -244,6 +247,10 @@ public class GameController : MonoBehaviour
         {
             Debug.Log("defeat");
             m_gameStatus = GameStatus.IDLE;
+            
+            GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
+            GetComponent<CallFuncHandler>().AddCallFuncInstance(new CallFuncHandler.CallFunc(ClearLevel), 1.5f);
+            GetComponent<CallFuncHandler>().AddCallFuncInstance(new CallFuncHandler.CallFunc(RestartLevel), 2.0f);
         }
         else if (m_gameStatus == GameStatus.RUNNING)
         {
