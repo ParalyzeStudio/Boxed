@@ -43,12 +43,11 @@ public class GameController : MonoBehaviour
         }
         else if (m_gameMode == GameMode.MAIN_MENU)
         {
-            //Show whole gui (title + buttons)
-            guiManager.DisplayMainMenuGUI();
+            StartMainMenu();
         }
         else if (m_gameMode == GameMode.LEVELS)
         {
-            guiManager.DisplayLevelsGUI();
+            StartLevels();
         }
         else
         {
@@ -67,6 +66,21 @@ public class GameController : MonoBehaviour
     public void EnterLevelEditor()
     {
         this.GetComponent<GUIManager>().DisplayLevelEditorGUI();
+    }
+
+    public void StartMainMenu()
+    {
+        m_gameMode = GameMode.MAIN_MENU;
+
+        //Show whole gui (title + buttons)
+        GetComponent<GUIManager>().DisplayMainMenuGUI();
+    }
+
+    public void StartLevels()
+    {
+        m_gameMode = GameMode.LEVELS;
+        
+        GetComponent<GUIManager>().DisplayLevelsGUI();
     }
 
     public void ClearLevel()
@@ -240,8 +254,8 @@ public class GameController : MonoBehaviour
             GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
 
             m_gameStatus = GameStatus.IDLE;
-            GetComponent<CallFuncHandler>().AddCallFuncInstance(new CallFuncHandler.CallFunc(ClearLevel), 1.5f);
-            GetComponent<CallFuncHandler>().AddCallFuncInstance(new CallFuncHandler.CallFunc(StartNextLevel), 1.55f);
+            GetComponent<CallFuncHandler>().AddCallFuncInstance(ClearLevel, 1.5f);
+            GetComponent<CallFuncHandler>().AddCallFuncInstance(StartNextLevel, 1.55f);
         }
         else if (m_gameStatus == GameStatus.DEFEAT)
         {
@@ -249,8 +263,8 @@ public class GameController : MonoBehaviour
             m_gameStatus = GameStatus.IDLE;
             
             GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
-            GetComponent<CallFuncHandler>().AddCallFuncInstance(new CallFuncHandler.CallFunc(ClearLevel), 1.5f);
-            GetComponent<CallFuncHandler>().AddCallFuncInstance(new CallFuncHandler.CallFunc(RestartLevel), 2.0f);
+            GetComponent<CallFuncHandler>().AddCallFuncInstance(ClearLevel, 1.5f);
+            GetComponent<CallFuncHandler>().AddCallFuncInstance(RestartLevel, 2.0f);
         }
         else if (m_gameStatus == GameStatus.RUNNING)
         {

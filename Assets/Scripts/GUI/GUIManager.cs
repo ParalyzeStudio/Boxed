@@ -51,22 +51,8 @@ public class GUIManager : MonoBehaviour
     {
         GameController.GameMode gameMode = GameController.GetInstance().m_gameMode;
 
-        ////Test with level editor if available
-        //if (gameMode == GameController.GameMode.LEVEL_EDITOR)
-        //{
-        //    RectTransform[] childTransforms = m_levelEditor.GetComponentsInChildren<RectTransform>();
-        //    for (int i = 0; i != childTransforms.Length; i++)
-        //    {
-        //        if (m_levelEditor.transform != childTransforms[i] && RectTransformUtility.RectangleContainsScreenPoint(childTransforms[i], pointerLocation))
-        //        {
-        //            return true;
-        //        }
-        //    }
-        //}
-        //else if (gameMode == GameController.GameMode.LEVEL_EDITOR)
-        //{
-
-        //}
+        if (gameMode == GameController.GameMode.LEVELS) //do not use this method on Levels scene as slots are melted with numbers (GUI Text)
+            return false;  
 
         RectTransform[] childTransforms = m_currentGUI.GetComponentsInChildren<RectTransform>();
         for (int i = 0; i != childTransforms.Length; i++)
@@ -110,6 +96,8 @@ public class GUIManager : MonoBehaviour
         DestroyCurrentGUI();
 
         LevelsGUI levels = Instantiate(m_levelsGUIPfb);
+        levels.Init();
+        levels.SetChapterNumber(1);
         levels.transform.SetParent(m_canvas.transform, false);
         m_currentGUI = levels;
 

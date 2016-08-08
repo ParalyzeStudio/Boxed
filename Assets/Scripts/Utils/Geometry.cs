@@ -77,4 +77,30 @@ public class Geometry
     {
         return new Vector2(point.x, point.z);
     }
+
+
+    public struct Triangle
+    {
+        public Vector3[] m_points;
+
+        public Triangle(Vector3 A, Vector3 B, Vector3 C)
+        {
+            m_points = new Vector3[3];
+            m_points[0] = A;
+            m_points[1] = B;
+            m_points[2] = C;
+        }
+
+        public bool ContainsPoint(Vector2 point, bool bStrictlyInside = false)
+        {
+            float det1 = MathUtils.Determinant(m_points[0], m_points[1], point);
+            float det2 = MathUtils.Determinant(m_points[1], m_points[2], point);
+            float det3 = MathUtils.Determinant(m_points[2], m_points[0], point);
+
+            if (bStrictlyInside)
+                return (det1 < 0 && det2 < 0 && det3 < 0) || (det1 > 0 && det2 > 0 && det3 > 0);
+            else
+                return (det1 <= 0 && det2 <= 0 && det3 <= 0) || (det1 >= 0 && det2 >= 0 && det3 >= 0);
+        }
+    }
 }

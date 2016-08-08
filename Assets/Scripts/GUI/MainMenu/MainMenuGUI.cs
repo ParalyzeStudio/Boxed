@@ -22,7 +22,7 @@ public class MainMenuGUI : BaseGUI
         Dismiss();
 
         CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
-        callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(GameController.GetInstance().GetComponent<GUIManager>().DisplayLevelsGUI), 0.5f);
+        callFuncHandler.AddCallFuncInstance(GameController.GetInstance().GetComponent<GUIManager>().DisplayLevelsGUI, 0.5f);
 
 
         //Generate random theme

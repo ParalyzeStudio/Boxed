@@ -108,6 +108,11 @@ public class GameTouchHandler : TouchHandler
                 }
             }
         }
+        else if (gameMode == GameController.GameMode.LEVELS)
+        {
+            LevelsGUI levelsGUI = (LevelsGUI)GameController.GetInstance().GetGUIManager().m_currentGUI;
+            levelsGUI.ProcessClickOnSlots(clickLocation);
+        }
         else if (gameMode == GameController.GameMode.GAME)
         {
             if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)

@@ -5,11 +5,7 @@ public class GameGUI : BaseGUI
 {
     public Text m_levelNumber;
     public Level m_level { get; set; }
-
-    //fading overlay
-    public GradientBackground m_overlayPfb;
-    public GradientBackground m_overlay { get; set; }
-
+    
     //solution panel
     public Transform m_solutionPanel;
     private bool m_solutionPanelActive;
@@ -19,11 +15,15 @@ public class GameGUI : BaseGUI
     public Text m_currentActionsCount;
     public Text m_targetActionsCount;
 
+    //confirm home window
+    public GameObject m_confirmHomeWindowPfb;
+
     public void BuildForLevel(Level level)
     {
         m_level = level;
-        if (m_overlay == null)
-            BuildGradientOverlay();
+        base.Init();
+        //if (m_overlay == null)
+        //    BuildGradientOverlay();
 
         //disable any displayed solution panel
         m_solutionPanelActive = false;
@@ -37,43 +37,17 @@ public class GameGUI : BaseGUI
         InitTargetActionsCount();
         UpdateActionsCount();
     }
-
-    /**
-    * Build a gradient billboard sprite that we put on the near clip plane of the camera to achieve fading effects
-    **/
-    public void BuildGradientOverlay()
-    {
-        m_overlay = Instantiate(m_overlayPfb);
-        GradientBackground background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
-        m_overlay.Init(background.m_topColor, background.m_bottomColor);
-        m_overlay.name = "Overlay";
-
-        QuadAnimator overlayAnimator = m_overlay.GetComponent<QuadAnimator>();
-        overlayAnimator.SetOpacity(0);
-
-        //set the background at a long distance from camera so it is behind all scene elements
-        Camera camera = Camera.main;
-        Vector3 cameraPosition = camera.gameObject.transform.position;
-        float distanceFromCamera = camera.nearClipPlane + 10;
-        m_overlay.GetComponent<QuadAnimator>().SetPosition(cameraPosition + distanceFromCamera * camera.transform.forward);
-    }
+    
 
     public override void Show()
     {
         m_levelNumber.text = m_level.m_number.ToString();
         base.Show();
-
-        QuadAnimator overlayAnimator = m_overlay.GetComponent<QuadAnimator>();
-        overlayAnimator.SetOpacity(1);
-        overlayAnimator.FadeTo(0.0f, 0.5f);
     }
 
     public override void Dismiss()
     {
         base.Dismiss();
-        QuadAnimator overlayAnimator = m_overlay.GetComponent<QuadAnimator>();
-        overlayAnimator.SetOpacity(0);
-        overlayAnimator.FadeTo(1.0f, 0.5f, 0, ValueAnimator.InterpolationType.LINEAR, false);
     }
 
     public void BuildSolution()
@@ -153,12 +127,13 @@ public class GameGUI : BaseGUI
     public void OnClickRestart()
     {
         Dismiss();
-        GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(new CallFuncHandler.CallFunc(GameController.GetInstance().RestartLevel), 0.5f);
+        GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(GameController.GetInstance().RestartLevel, 0.5f);
     }
 
     public void OnClickHome()
     {
-
+        GameObject confirmHomeWindow = Instantiate(m_confirmHomeWindowPfb);
+        confirmHomeWindow.transform.SetParent(GameController.GetInstance().GetComponent<GUIManager>().m_canvas.transform, false);
     }
 
     public void OnClickSolution()

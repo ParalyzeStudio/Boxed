@@ -179,11 +179,11 @@ public class BrickRenderer : MonoBehaviour
                 if (bPrefall)
                 {
                     //rotate the brick to get to the point where it is going to fall
-                    callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(PreFall), rotationDuration);
+                    callFuncHandler.AddCallFuncInstance(PreFall, rotationDuration);
                 }
 
                 //finally make it fall
-                callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(Fall), rotationDuration + (bPrefall ? 45 / DEFAULT_ANGULAR_SPEED : 0));
+                callFuncHandler.AddCallFuncInstance(Fall, rotationDuration + (bPrefall ? 45 / DEFAULT_ANGULAR_SPEED : 0));
             }
         }
     }

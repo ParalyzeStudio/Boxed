@@ -24,7 +24,7 @@ public class ColorThemes
         m_themes[0] = defaultTheme;
         m_themes[1] = new ColorTheme(defaultTheme, 25);
 
-        m_currentTheme = m_themes[1];
+        m_currentTheme = m_themes[0];
     }
 
     private ColorTheme BuildDefaultTheme()

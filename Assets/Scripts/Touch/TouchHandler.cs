@@ -91,7 +91,7 @@ public class TouchHandler : MonoBehaviour
     }
 
     /**
-     * Player clicked on this object
+     * OnClick event
      * **/
     protected virtual void OnClick(Vector2 clickLocation)
     {
