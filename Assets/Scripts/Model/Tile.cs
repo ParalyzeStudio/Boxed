@@ -16,7 +16,9 @@ public class Tile
         START, //tile used to show the start tile on the floor (where the brick starts)
         FINISH, //tile used to show the finish tile on the floor (where the brick has to end)
         BLOCKED, //we cannot land on this tile, the rotation movement of the brick is blocked
-        TRAP //brick will explode on this brick
+        TRAP, //brick will explode on this brick
+        SWITCH, //switch that will make some tiles appear or disappear on the floor
+        TRIGGERED_BY_SWITCH, //tiles that are triggered by a switch
     }
 
     private State m_currentState;

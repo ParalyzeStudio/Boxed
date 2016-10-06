@@ -8,9 +8,9 @@ public class CanvasGroupFade : ValueAnimator
         GetComponent<CanvasGroup>().alpha = fOpacity;
     }
 
-    public void FadeOut()
+    public void FadeOut(bool bDestroyOnFinish)
     {
-        this.FadeTo(0.0f, 0.5f);
+        this.FadeTo(0.0f, 0.5f, 0, InterpolationType.LINEAR, bDestroyOnFinish);
     }
      
     public void FadeIn()

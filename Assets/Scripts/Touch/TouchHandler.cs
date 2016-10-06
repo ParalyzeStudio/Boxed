@@ -83,9 +83,11 @@ public class TouchHandler : MonoBehaviour
     {
         Vector2 prevPointerLocation = GetTouchManager().m_prevPointerLocation;
         float pointerDisplacementSqrLength = (prevPointerLocation - m_pointerDownPointerLocation).sqrMagnitude;
-
+        
         if (m_selected && IsPointerLocationContainedInObject(prevPointerLocation) && pointerDisplacementSqrLength <= ON_CLICK_MAX_DISPLACEMENT)
+        {
             OnClick(prevPointerLocation);
+        }
 
         m_selected = false;
     }

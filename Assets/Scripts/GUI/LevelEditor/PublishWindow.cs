@@ -28,6 +28,8 @@ public class PublishWindow : MonoBehaviour
         m_parentEditor.m_editedLevel.Publish();
 
         ShowConfirmation();
+
+        m_parentEditor.m_mainMenu.InvalidateValidatePublishButtons();
     }
 
     public void OnClickClose()

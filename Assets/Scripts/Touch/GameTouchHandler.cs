@@ -88,6 +88,22 @@ public class GameTouchHandler : TouchHandler
                     levelEditor.m_editedLevel.m_floor.SetFinishTile(null);
                 }
             }
+            else if (levelEditor.m_editingMode == LevelEditor.EditingMode.SWITCHES_EDITING)
+            {
+                SwitchesEditingPanel switchEditingPanel = (SwitchesEditingPanel)levelEditor.m_activeEditingPanel;
+                Switch editedSwitch = switchEditingPanel.m_selectedItem.m_switch;
+
+                if (switchEditingPanel.m_editingSwitch)
+                {
+                    if (raycastTile.CurrentState == Tile.State.NORMAL)
+                    {
+                        if (editedSwitch.m_switchTile != null)
+                            editedSwitch.m_switchTile.CurrentState = Tile.State.NORMAL;
+                        editedSwitch.m_switchTile = raycastTile;
+                        raycastTile.CurrentState = Tile.State.SWITCH;
+                    }
+                }
+            }
             else if (levelEditor.m_editingMode == LevelEditor.EditingMode.BONUSES_EDITING)
             {
                 if (raycastTile.CurrentState == Tile.State.NORMAL)
@@ -113,21 +129,21 @@ public class GameTouchHandler : TouchHandler
             LevelsGUI levelsGUI = (LevelsGUI)GameController.GetInstance().GetGUIManager().m_currentGUI;
             levelsGUI.ProcessClickOnSlots(clickLocation);
         }
-        else if (gameMode == GameController.GameMode.GAME)
-        {
-            if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)
-            {
-                Vector3 raycastPoint;
-                if (RaycastFloor(out raycastPoint))
-                {
-                    //remove the y-component of this point
-                    Vector2 point = new Vector2(raycastPoint.x, raycastPoint.z);
+        //else if (gameMode == GameController.GameMode.GAME)
+        //{
+        //    if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)
+        //    {
+        //        Vector3 raycastPoint;
+        //        if (RaycastFloor(out raycastPoint))
+        //        {
+        //            //remove the y-component of this point
+        //            Vector2 point = new Vector2(raycastPoint.x, raycastPoint.z);
 
-                    //pass it to the brick controller
-                    GameController.GetInstance().m_brick.GetComponent<BrickController>().ProcessTouch(point);
-                }
-            }
-        }
+        //            //pass it to the brick controller
+        //            GameController.GetInstance().m_brick.GetComponent<BrickController>().ProcessTouch(point);
+        //        }
+        //    }
+        //}
     }
 
     /**
@@ -140,15 +156,16 @@ public class GameTouchHandler : TouchHandler
             return false;
         m_lastRaycastTile = raycastTile;
 
-        LevelEditorMenuSwitcher menuSwitcher = ((LevelEditor)GameController.GetInstance().GetGUIManager().m_currentGUI).m_menuSwitcher;
-        EditTilesSubMenu.TileSelectionMode tileSelectionMode = ((EditTilesSubMenu)menuSwitcher.GetMenuForID(LevelEditorMenuSwitcher.MenuID.ID_EDIT_TILES)).m_tileSelectionMode;
+        LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetGUIManager().m_currentGUI;
+        TileEditingPanel tileEditingPanel = (TileEditingPanel) levelEditor.m_activeEditingPanel;
+        TileEditingPanel.TileSelectionMode tileSelectionMode = tileEditingPanel.m_tileSelectionMode;
 
-        if (tileSelectionMode == EditTilesSubMenu.TileSelectionMode.SELECT)
+        if (tileSelectionMode == TileEditingPanel.TileSelectionMode.SELECT)
         {
             if (raycastTile.CurrentState == Tile.State.DISABLED || raycastTile.CurrentState == Tile.State.BLOCKED)
                 raycastTile.CurrentState = Tile.State.NORMAL;
         }
-        else if (tileSelectionMode == EditTilesSubMenu.TileSelectionMode.DESELECT)
+        else if (tileSelectionMode == TileEditingPanel.TileSelectionMode.DESELECT)
         {
             if (raycastTile.CurrentState == Tile.State.NORMAL)
             {

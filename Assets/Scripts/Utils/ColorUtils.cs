@@ -26,6 +26,11 @@ public class ColorUtils
         return outColor;
     }
 
+    public static Color FadeColor(Color color, float opacity)
+    {
+        return new Color(color.r, color.g, color.b, opacity);
+    }
+
     public static Color IntensifyColorChannels(Color color, bool rChannel, bool gChannel, bool bChannel, float rt, float gt, float bt)
     {
         return new Color(rChannel ? Mathf.Lerp(color.r, 1, rt) : color.r,
@@ -315,5 +320,35 @@ public struct HSVColor
     public void TranslateHue(float deltaHue)
     {
         m_hsv.x = (m_hsv.x + deltaHue) % 360;
+    }
+
+    public float GetHue()
+    {
+        return m_hsv.x;
+    }
+
+    public float GetSaturation()
+    {
+        return m_hsv.y;
+    }
+
+    public float GetValue()
+    {
+        return m_hsv.z;
+    }
+
+    public void SetHue(float hue)
+    {
+        m_hsv.x = hue;
+    }
+
+    public void SetSaturation(float saturation)
+    {
+        m_hsv.y = saturation;
+    }
+
+    public void SetValue(float value)
+    {
+        m_hsv.z = value;
     }
 }

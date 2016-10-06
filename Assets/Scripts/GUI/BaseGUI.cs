@@ -5,36 +5,6 @@ using UnityEngine.UI;
 [RequireComponent(typeof(CanvasGroupFade))]
 public class BaseGUI : MonoBehaviour
 {
-    //fading overlay
-    public GradientBackground m_overlayPfb;
-    public GradientBackground m_overlay { get; set; }
-
-    public void Init()
-    {
-        if (m_overlay == null)
-            BuildGradientOverlay();
-    }
-
-    /**
-    * Build a gradient billboard sprite that we put on the near clip plane of the camera to achieve fading effects
-    **/
-    public void BuildGradientOverlay()
-    {
-        m_overlay = Instantiate(m_overlayPfb);
-        GradientBackground background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
-        m_overlay.Init(background.m_topColor, background.m_bottomColor);
-        m_overlay.name = "Overlay";
-
-        QuadAnimator overlayAnimator = m_overlay.GetComponent<QuadAnimator>();
-        overlayAnimator.SetOpacity(0);
-
-        //set the background at a long distance from camera so it is behind all scene elements
-        Camera camera = Camera.main;
-        Vector3 cameraPosition = camera.gameObject.transform.position;
-        float distanceFromCamera = camera.nearClipPlane + 10;
-        m_overlay.GetComponent<QuadAnimator>().SetPosition(cameraPosition + distanceFromCamera * camera.transform.forward);
-    }
-
     public virtual void Show()
     {
         CanvasGroup canvasGroup = this.GetComponent<CanvasGroup>();
@@ -44,23 +14,21 @@ public class BaseGUI : MonoBehaviour
         canvasGroupFade.m_opacity = 0;
         canvasGroupFade.FadeIn();
 
-        QuadAnimator overlayAnimator = m_overlay.GetComponent<QuadAnimator>();
-        overlayAnimator.SetOpacity(1);
-        overlayAnimator.FadeTo(0.0f, 0.5f);
+        GradientBackground overlay = GameController.GetInstance().GetComponent<GUIManager>().m_overlay;
+        overlay.FadeOut(0.5f);
     }
 
-    public virtual void Dismiss()
+    public virtual void Dismiss(bool bDestroyOnFinish = false)
     {
         CanvasGroupFade canvasGroupFade = this.GetComponent<CanvasGroupFade>();
-        canvasGroupFade.FadeOut();
+        canvasGroupFade.FadeOut(bDestroyOnFinish);
 
-        QuadAnimator overlayAnimator = m_overlay.GetComponent<QuadAnimator>();
-        overlayAnimator.SetOpacity(0);
-        overlayAnimator.FadeTo(1.0f, 0.5f, 0, ValueAnimator.InterpolationType.LINEAR, false);
+        GradientBackground overlay = GameController.GetInstance().GetComponent<GUIManager>().m_overlay;
+        overlay.FadeIn(0.5f);
     }
 
-    public void DestroyOverlay()
+    public void DestroySelf()
     {
-        Destroy(m_overlay.gameObject);
+        Destroy(this.gameObject);
     }
 }

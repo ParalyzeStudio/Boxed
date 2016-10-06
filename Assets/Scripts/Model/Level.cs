@@ -69,7 +69,7 @@ public class Level
         //Now check if there is at least one valid path from start tile to finish tile
         System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
         sw.Start();
-        
+
         SolutionNode[] solution = Solve(maxMovements);
 
         sw.Stop();
@@ -103,7 +103,7 @@ public class Level
     //public SolutionNode[] Solve(int maxMovements)
     //{
     //    List<Permutation> permutations = FindBonusPermutations();
-        
+
     //    if (permutations == null) //no bonus, solve the level between start and finish tiles
     //    {
     //        SolutionTree solutionTree = new SolutionTree(this);
@@ -132,13 +132,6 @@ public class Level
 
     public SolutionNode[] Solve(int maxMovements)
     {
-        //SolutionNode[][] solutions;
-        //SolutionTree solutionTree = new SolutionTree(18, this);
-        //solutions = solutionTree.SearchForSolutions();
-
-        //if (solutions != null)
-        //    return solutions[0];
-
         int treeHeight = 2;
         SolutionNode[][] solutions;
         do
@@ -162,7 +155,7 @@ public class Level
         if (solutions != null)
             return solutions[0];
         else
-            return null;   
+            return null;
     }
 
     private SolutionNode[] ExtractSolutionForPermutation(Permutation permutation, int maxSolutionLength)
@@ -219,7 +212,7 @@ public class Level
                 }
             }
             else
-                return null;            
+                return null;
 
             p++;
         }
@@ -270,7 +263,7 @@ public class Level
                 {
                     copiedPermutations.Add(new Permutation(lPermutations[p]));
                 }
-                                
+
                 InsertInPermutationsAtIndex(j, N, copiedPermutations);
                 permutations.AddRange(copiedPermutations);
                 j++;
@@ -323,7 +316,7 @@ public class Level
     }
 
     public bool Save()
-    {        
+    {
         m_floor = m_floor.Clamp(); //clamp floor before saving
         m_floor.ClearCachedValues(); //remove cached values
 
@@ -333,6 +326,8 @@ public class Level
 
     public bool Publish()
     {
+        m_published = true;
+
         m_floor = m_floor.Clamp(); //clamp floor before saving
         m_floor.ClearCachedValues(); //remove cached values
 
@@ -345,7 +340,7 @@ public class Level
     }
 
     /**
-     * Save level data to the associated file
+     * Save level data to file
      * **/
     public bool SaveToFile(string path)
     {
@@ -405,7 +400,7 @@ public class Level
         MemoryStream memoryStream = new MemoryStream(bytes);
 
         BinaryFormatter bf = new BinaryFormatter();
-        Level level = (Level) bf.Deserialize(memoryStream);
+        Level level = (Level)bf.Deserialize(memoryStream);
         memoryStream.Close();
 
         return level;

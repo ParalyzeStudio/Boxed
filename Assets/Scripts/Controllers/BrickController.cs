@@ -66,23 +66,43 @@ public class BrickController : MonoBehaviour
         m_brickRenderer.Roll(directions[maxDotProductIdx]);
     }
 
+    public void RollLeft()
+    {
+        m_brickRenderer.Roll(Brick.RollDirection.LEFT);
+    }
+
+    public void RollRight()
+    {
+        m_brickRenderer.Roll(Brick.RollDirection.RIGHT);
+    }
+
+    public void RollTop()
+    {
+        m_brickRenderer.Roll(Brick.RollDirection.TOP);
+    }
+
+    public void RollBottom()
+    {
+        m_brickRenderer.Roll(Brick.RollDirection.BOTTOM);
+    }
+
     void Update()
     {
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            m_brickRenderer.Roll(Brick.RollDirection.LEFT);
+            RollLeft();
         }
         else if (Input.GetKey(KeyCode.UpArrow))
         {
-            m_brickRenderer.Roll(Brick.RollDirection.TOP);
+            RollTop();
         }
         else if (Input.GetKey(KeyCode.RightArrow))
         {
-            m_brickRenderer.Roll(Brick.RollDirection.RIGHT);
+            RollRight();
         }
         else if(Input.GetKey(KeyCode.DownArrow))
         {
-            m_brickRenderer.Roll(Brick.RollDirection.BOTTOM);
+            RollBottom();
         }
     }
 }

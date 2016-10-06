@@ -5,18 +5,20 @@ public class LevelEditor : BaseGUI
 {
     public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 35;
 
-    public LevelEditorMenuSwitcher m_levelEditorMenuSwitcherPfb;
+    //public LevelEditorMenuSwitcher m_levelEditorMenuSwitcherPfb;
     public SaveLoadLevelWindow m_saveLoadLevelWindowPfb;
     public ValidationWindow m_validationWindowPfb;
     public PublishWindow m_publishWindowPfb;
     public PublishedLevelsWindow m_publishedLevelsWindowPfb;
-    public TestMenu m_testMenuPfb;
-    public SolutionPanel m_solutionPanelPfb;
+    //public TestMenu m_testMenuPfb;
+    //public SolutionPanel m_solutionPanelPfb;
 
-    public LevelEditorMenuSwitcher m_menuSwitcher { get; set; }
-    private TestMenu m_testMenu;
-    private SolutionPanel m_solutionPanel;  
+    //public LevelEditorMenuSwitcher m_menuSwitcher { get; set; }
+    public LevelEditorMainMenu m_mainMenu;
+    public TestMenu m_testMenu;
+    public SolutionPanel m_solutionPanel;
 
+    public ActionPanel m_activeEditingPanel { get; set; }
     public Level m_editedLevel { get; set; }
 
     public enum EditingMode
@@ -24,6 +26,7 @@ public class LevelEditor : BaseGUI
         NONE = 0,
         TILES_EDITING,
         CHECKPOINTS_EDITING,
+        SWITCHES_EDITING,
         BONUSES_EDITING
     }
 
@@ -31,8 +34,9 @@ public class LevelEditor : BaseGUI
 
     public void Init()
     {
-        BuildMainMenu();
         BuildLevel(null);
+        m_mainMenu.m_parentEditor = this;
+        ShowMainMenu();
     }
 
     /**
@@ -56,21 +60,24 @@ public class LevelEditor : BaseGUI
             level.m_floor = unclampedFloor;
             GameController.GetInstance().RenderFloor(unclampedFloor);
 
-            if (level.m_validated)
-                m_menuSwitcher.GetMainMenu().ToggleValidatePublishButtons(false);
-            else
-                m_menuSwitcher.GetMainMenu().ToggleValidatePublishButtons(true);
+            //if (level.m_validated)
+            //    m_mainMenu.ToggleValidatePublishButtons(false);
+            //else
+            //    m_mainMenu.ToggleValidatePublishButtons(true);
 
             m_editedLevel = level;
         }        
     }
 
-    public void BuildMainMenu()
+    public void ShowMainMenu()
     {
-        m_menuSwitcher = Instantiate(m_levelEditorMenuSwitcherPfb);
-        m_menuSwitcher.name = "MenuSwitcher";
-        m_menuSwitcher.transform.SetParent(this.transform, false);
-        m_menuSwitcher.Init(this);
+        m_mainMenu.gameObject.SetActive(true);
+        m_mainMenu.InvalidateValidatePublishButtons();
+    }
+
+    public void HideMainMenu()
+    {
+        m_mainMenu.gameObject.SetActive(false);
     }
 
     public void ShowSaveLoadLevelWindow()
@@ -115,22 +122,13 @@ public class LevelEditor : BaseGUI
     **/
     public void ShowTestMenu()
     {
-        if (m_testMenu != null)
-            return;
-
-        m_testMenu = Instantiate(m_testMenuPfb);
-        m_testMenu.gameObject.name = "TestMenu";
-        m_testMenu.gameObject.transform.SetParent(this.transform, false);
         m_testMenu.Init(this);
+        m_testMenu.gameObject.SetActive(true);
     }
 
     public void DismissTestMenu()
     {
-        if (m_testMenu != null)
-        {
-            Destroy(m_testMenu.gameObject);
-            m_testMenu = null;
-        }
+        m_testMenu.gameObject.SetActive(false);
     }
 
     public void OnClickTestLevel(bool isEditingLevel)
@@ -154,22 +152,20 @@ public class LevelEditor : BaseGUI
 
     public void DisplaySolutions()
     {
+        m_solutionPanel.gameObject.SetActive(true);
+
         Brick.RollDirection[] solution = m_editedLevel.m_solution;
 
         //Create an instance of a panel to display the arrow images
-        m_solutionPanel = Instantiate(m_solutionPanelPfb);
-        m_solutionPanel.gameObject.name = "SolutionPanel";
-        m_solutionPanel.transform.SetParent(this.transform, false);
+        //m_solutionPanel = Instantiate(m_solutionPanelPfb);
+        //m_solutionPanel.gameObject.name = "SolutionPanel";
+        //m_solutionPanel.transform.SetParent(this.transform, false);
 
-        m_solutionPanel.AddSolution(solution);
+        m_solutionPanel.SetSolution(solution);
     }
 
     public void DismissSolutions()
     {
-        if (m_solutionPanel != null)
-        {
-            Destroy(m_solutionPanel.gameObject);
-            m_solutionPanel = null;
-        }
+        m_solutionPanel.gameObject.SetActive(false);
     }
 }

@@ -36,9 +36,24 @@ public class LevelManager : MonoBehaviour
             return m_levels;
         }
     }
-    
+
     public Level m_currentLevel { get; set; }
     public LevelData m_currentLevelData { get; set; }
+
+    //public void Start()
+    //{
+    //    RepublishAllLevelsForUpgrade();
+    //}
+
+    //private void RepublishAllLevelsForUpgrade()
+    //{
+    //    List<Level> oldLevels = GetAllPublishedLevelsFromDisk();
+    //    for (int i = 0; i != oldLevels.Count; i++)
+    //    {
+    //        Level upgradedLevel = new Level(oldLevels[i], null);
+    //        upgradedLevel.Publish();
+    //    }
+    //}
 
     public Level GetEditedLevelForNumber(int number)
     {
@@ -67,7 +82,7 @@ public class LevelManager : MonoBehaviour
         for (int i = 0; i != m_publishedLevels.Count; i++)
         {
             if (level == m_publishedLevels[i] && i < m_publishedLevels.Count - 1)
-                return m_publishedLevels[i];                
+                return m_publishedLevels[i];
         }
 
         return null;
@@ -112,7 +127,7 @@ public class LevelManager : MonoBehaviour
     * Return all levels save on disk through a list of Level objects
     **/
     public List<Level> GetAllEditedLevelsFromDisk()
-    {   
+    {
         string editedLevelsPath = Application.persistentDataPath + "/Levels/EditedLevels";
         return GetAllLevelsFromFolder(editedLevelsPath);
     }
@@ -129,7 +144,7 @@ public class LevelManager : MonoBehaviour
     public List<Level> GetLevelsFromResources()
     {
         List<Level> levels = new List<Level>();
-        
+
         for (int i = 0; i != 100; i++)
         {
             string levelLocalPath = "Levels/Level_" + Level.GetNumberAsString(i + 1);

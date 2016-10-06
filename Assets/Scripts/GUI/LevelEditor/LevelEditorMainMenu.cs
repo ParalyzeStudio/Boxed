@@ -3,63 +3,70 @@ using UnityEngine.UI;
 
 public class LevelEditorMainMenu : LevelEditorMenu
 {
+    public EditTilesSubMenu m_tilesEditingSubMenu;
+    public ActionPanel m_bonusesEditing;
+    public ResetConfirmationPanel m_resetConfirmation;
+
     public Button m_validateBtn;
     public Button m_publishBtn;
 
     public void OnClickEditTiles()
     {
-        m_parentSwitcher.m_parentEditor.m_editingMode = LevelEditor.EditingMode.TILES_EDITING;
-        m_parentSwitcher.ShowMenu(LevelEditorMenuSwitcher.MenuID.ID_EDIT_TILES);
+        //m_parentEditor.m_editingMode = LevelEditor.EditingMode.TILES_EDITING;
+        //ShowMenu(LevelEditorMenuSwitcher.MenuID.ID_EDIT_TILES);
+
+        this.gameObject.SetActive(false);
+        m_tilesEditingSubMenu.gameObject.SetActive(true);
+        m_tilesEditingSubMenu.m_parentEditor = this.m_parentEditor;
     }
 
-    public void OnClickCheckpoints()
+    public void OnClickEditBonuses()
     {
-        m_parentSwitcher.m_parentEditor.m_editingMode = LevelEditor.EditingMode.CHECKPOINTS_EDITING;
-        m_parentSwitcher.ShowMenu(LevelEditorMenuSwitcher.MenuID.ID_CHECKPOINTS);
-    }
-
-    public void OnClickBonuses()
-    {
-        m_parentSwitcher.m_parentEditor.m_editingMode = LevelEditor.EditingMode.BONUSES_EDITING;
-        m_parentSwitcher.ShowMenu(LevelEditorMenuSwitcher.MenuID.ID_BONUSES);
+        m_parentEditor.m_editingMode = LevelEditor.EditingMode.BONUSES_EDITING;
+        m_parentEditor.m_activeEditingPanel = m_bonusesEditing;
+        this.gameObject.SetActive(false);
+        m_bonusesEditing.gameObject.SetActive(true);
+        m_bonusesEditing.m_parentMenu = this;
     }
 
     public void OnClickReset()
     {
-        m_parentSwitcher.ShowMenu(LevelEditorMenuSwitcher.MenuID.ID_RESET);
+        this.gameObject.SetActive(false);
+        m_resetConfirmation.gameObject.SetActive(true);
+        m_resetConfirmation.m_parentMenu = this;
     }
 
     public void OnClickValidateLevel()
     {
-        Level.ValidationData output = m_parentSwitcher.m_parentEditor.m_editedLevel.Validate(45);
-        m_parentSwitcher.m_parentEditor.DisplayLevelValidationOutput(output);
+        Level.ValidationData output = m_parentEditor.m_editedLevel.Validate(45);
+        m_parentEditor.DisplayLevelValidationOutput(output);
 
         //remove the validate button and make the Test level button active
         if (output.m_success)
         {
-            ToggleValidatePublishButtons(false);
-            m_parentSwitcher.m_parentEditor.ShowTestMenu();
+            InvalidateValidatePublishButtons();
+            m_parentEditor.ShowTestMenu();
         }
     }
 
     public void OnClickPublishLevel()
     {
-        m_parentSwitcher.m_parentEditor.ShowPublishWindow();
+        m_parentEditor.ShowPublishWindow();
     }
 
     public void OnClickSaveLoad()
     {
-        m_parentSwitcher.m_parentEditor.ShowSaveLoadLevelWindow();
+        m_parentEditor.ShowSaveLoadLevelWindow();
     }
 
     public void OnClickPublishedLevels()
     {
-        m_parentSwitcher.m_parentEditor.ShowPublishedLevelsWindow();
+        m_parentEditor.ShowPublishedLevelsWindow();
     }
 
-    public void ToggleValidatePublishButtons(bool bShowValidateBtn)
+    public void InvalidateValidatePublishButtons()
     {
-        if (bShowValidateBtn)
+        if (!m_parentEditor.m_editedLevel.m_validated)
         {
             m_validateBtn.transform.parent.gameObject.SetActive(true);
             m_publishBtn.transform.parent.gameObject.SetActive(false);
@@ -67,7 +74,7 @@ public class LevelEditorMainMenu : LevelEditorMenu
         else
         {
             m_validateBtn.transform.parent.gameObject.SetActive(false);
-            m_publishBtn.transform.parent.gameObject.SetActive(true);
+            m_publishBtn.transform.parent.gameObject.SetActive(!m_parentEditor.m_editedLevel.m_published);
         }
     }
 }

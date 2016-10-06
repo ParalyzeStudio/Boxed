@@ -3,50 +3,40 @@ using UnityEngine.UI;
 
 public class EditTilesSubMenu : LevelEditorMenu
 {
-    public Button m_selectTileButton;
-    public Button m_deselectTileButton;
+    public ActionPanel m_tilesEditing;
+    public ActionPanel m_checkpointsEditing;
+    public ActionPanel m_switchesEditing;
 
-    public enum TileSelectionMode
+    public void OnClickTiles()
     {
-        SELECT,
-        DESELECT
+        m_parentEditor.m_editingMode = LevelEditor.EditingMode.TILES_EDITING;
+        m_parentEditor.m_activeEditingPanel = m_tilesEditing;
+        m_tilesEditing.m_parentMenu = this;
+        this.gameObject.SetActive(false);
+        m_tilesEditing.gameObject.SetActive(true);
     }
 
-    public TileSelectionMode m_tileSelectionMode { get; set; }
-
-    public void Start()
+    public void OnClickCheckpoints()
     {
-        EnableButton(m_selectTileButton);
-        DisableButton(m_deselectTileButton);
+        m_parentEditor.m_editingMode = LevelEditor.EditingMode.CHECKPOINTS_EDITING;
+        m_parentEditor.m_activeEditingPanel = m_checkpointsEditing;
+        m_checkpointsEditing.m_parentMenu = this;
+        this.gameObject.SetActive(false);
+        m_checkpointsEditing.gameObject.SetActive(true);
     }
 
-    public void OnClickSelectTileButton()
+    public void OnClickSwitches()
     {
-        m_tileSelectionMode = TileSelectionMode.SELECT;
-        EnableButton(m_selectTileButton);
-        DisableButton(m_deselectTileButton);
+        m_parentEditor.m_editingMode = LevelEditor.EditingMode.SWITCHES_EDITING;
+        m_parentEditor.m_activeEditingPanel = m_switchesEditing;
+        m_switchesEditing.m_parentMenu = this;
+        this.gameObject.SetActive(false);
+        m_switchesEditing.gameObject.SetActive(true);
     }
 
-    public void OnClickDeselectTileButton()
+    public void OnClickBack()
     {
-        m_tileSelectionMode = TileSelectionMode.DESELECT;
-        DisableButton(m_selectTileButton);
-        EnableButton(m_deselectTileButton);
-    }
-
-    public override void OnClickValidateSubMenu()
-    {
-        GameController.GetInstance().m_floor.m_floorData.AssignBlockedTiles();
-        base.OnClickValidateSubMenu();
-    }
-
-    private void EnableButton(Button button)
-    {
-        button.GetComponent<Image>().color = Color.white;
-    }
-
-    private void DisableButton(Button button)
-    {
-        button.GetComponent<Image>().color = new Color(1, 1, 1, 0.5f);
+        this.gameObject.SetActive(false);
+        m_parentEditor.ShowMainMenu();
     }
 }

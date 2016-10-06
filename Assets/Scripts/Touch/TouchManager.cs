@@ -47,7 +47,7 @@ public class TouchManager : MonoBehaviour
         if (Input.touchCount == 1)
         {
             Touch touch = Input.GetTouch(0);
-            pointerLocation = Camera.main.ScreenToWorldPoint(touch.position);
+            pointerLocation = touch.position;
 
             if (m_touchCount == 0) //first press = OnPointerDown
             {
@@ -107,7 +107,7 @@ public class TouchManager : MonoBehaviour
         if (eventType != PointerEventType.NONE)
         {
             //If GUI does not process the current mouse position, pass the pointer event to the GameTouchHandler
-            if (!GameController.GetInstance().GetGUIManager().ProcessPointerEvent(pointerLocation))
+            if (!GameController.GetInstance().GetGUIManager().EventProcessedByGUI(pointerLocation, eventType))
             {
                 this.GetComponent<GameTouchHandler>().ProcessPointerEvent(pointerLocation, eventType);
             }

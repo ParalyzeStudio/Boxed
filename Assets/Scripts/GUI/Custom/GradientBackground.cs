@@ -5,8 +5,10 @@
 **/
 public class GradientBackground : BillboardSprite
 {
-    public Color m_topColor { get; set; }
-    public Color m_bottomColor { get; set; }
+    //public Color m_topColor { get; set; }
+    //public Color m_bottomColor { get; set; }
+    public Color m_topColor;
+    public Color m_bottomColor;
 
     private bool m_colorWheel;
 
@@ -16,14 +18,14 @@ public class GradientBackground : BillboardSprite
     private const float HUE_VARIATION_SPEED = 60.0f;
 
     //Color variation
-    bool m_colorVariating;
-    Color m_topFromColor;
-    Color m_bottomFromColor;
-    Color m_topToColor;
-    Color m_bottomToColor;
-    float m_duration;
-    float m_elapsedTime;
-    float m_delay;
+    private bool m_colorVariating;
+    private Color m_topFromColor;
+    private Color m_bottomFromColor;
+    private Color m_topToColor;
+    private Color m_bottomToColor;
+    private float m_duration;
+    private float m_elapsedTime;
+    private float m_delay;
 
     public void Init(Color startColor, Color endColor, bool bColorWheel = false)
     {
@@ -57,11 +59,11 @@ public class GradientBackground : BillboardSprite
         //set the background at a long distance from camera so it is behind all scene elements
         Vector3 cameraPosition = m_camera.gameObject.transform.position;
         float distanceFromCamera = camera.farClipPlane;
-        QuadAnimator backgroundAnimator = this.GetComponent<QuadAnimator>();
+        GameObjectAnimator backgroundAnimator = this.GetComponent<GameObjectAnimator>();
         backgroundAnimator.SetPosition(cameraPosition + distanceFromCamera * m_camera.transform.forward);
     }
 
-    private void InvalidateColors()
+    public void InvalidateColors()
     {
         SetColors(new Color[4] { m_topColor, m_topColor, m_bottomColor, m_bottomColor });
     }
@@ -73,6 +75,30 @@ public class GradientBackground : BillboardSprite
         m_bottomFromColor = m_bottomColor;
         m_topToColor = topToColor;
         m_bottomToColor = bottomToColor;
+        m_duration = duration;
+        m_delay = delay;
+        m_elapsedTime = 0;
+    }
+
+    public void FadeIn(float duration, float delay = 0.0f)
+    {
+        m_colorVariating = true;
+        m_topFromColor = m_topColor;
+        m_bottomFromColor = m_bottomColor;
+        m_topToColor = new Color(m_topColor.r, m_topColor.g, m_topColor.b, 1);
+        m_bottomToColor = new Color(m_bottomColor.r, m_bottomColor.g, m_bottomColor.b, 1);
+        m_duration = duration;
+        m_delay = delay;
+        m_elapsedTime = 0;
+    }
+
+    public void FadeOut(float duration, float delay = 0.0f)
+    {
+        m_colorVariating = true;
+        m_topFromColor = m_topColor;
+        m_bottomFromColor = m_bottomColor;
+        m_topToColor = new Color(m_topColor.r, m_topColor.g, m_topColor.b, 0);
+        m_bottomToColor = new Color(m_bottomColor.r, m_bottomColor.g, m_bottomColor.b, 0);
         m_duration = duration;
         m_delay = delay;
         m_elapsedTime = 0;
@@ -147,8 +173,8 @@ public class GradientBackground : BillboardSprite
     public override void LateUpdate()
     {
         base.LateUpdate();
-        
-        QuadAnimator backgroundAnimator = this.GetComponent<QuadAnimator>();
+
+        GameObjectAnimator backgroundAnimator = this.GetComponent<GameObjectAnimator>();
         backgroundAnimator.SetScale(new Vector3(m_size.x, m_size.y, 1));
     }
 

@@ -16,13 +16,17 @@ public class ColorThemes
 
     public void Init()
     {
+        int numChapters = LevelManager.NUM_CHAPTERS;
+
         //define the colors of tiles that are common to every theme
-        m_themes = new ColorTheme[2];
+        m_themes = new ColorTheme[numChapters];
 
-        ColorTheme defaultTheme = BuildDefaultTheme();
-
+        ColorTheme defaultTheme = BuildDefaultTheme();        
         m_themes[0] = defaultTheme;
-        m_themes[1] = new ColorTheme(defaultTheme, 25);
+        for (int i = 1; i != numChapters; i++)
+        {
+            m_themes[i] = new ColorTheme(defaultTheme, 25 * i);
+        }
 
         m_currentTheme = m_themes[0];
     }
@@ -33,6 +37,7 @@ public class ColorThemes
         ColorTheme defaultTheme = new ColorTheme();
         defaultTheme.m_backgroundGradientTopColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(241, 126, 121, 255));
         defaultTheme.m_backgroundGradientBottomColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(216, 92, 146, 255));
+        defaultTheme.m_highScoreColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(192, 2, 127, 255));
 
         defaultTheme.m_startTileColors = new TileColors();
         defaultTheme.m_startTileColors.m_tileLeftFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(21, 107, 18, 255));
@@ -72,6 +77,12 @@ public class ColorThemes
         defaultTheme.m_floorSupportColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(77, 9, 30, 255));
 
         defaultTheme.m_trapTileColors = defaultTheme.m_blockedTileColors;
+
+        defaultTheme.m_switchTileColors = new TileColors();
+        defaultTheme.m_switchTileColors.m_tileLeftFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(176, 181, 88, 255));
+        defaultTheme.m_switchTileColors.m_tileRightFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(248, 255, 130, 255));
+        defaultTheme.m_switchTileColors.m_tileTopFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(241, 254, 35, 255));
+        defaultTheme.m_switchTileColors.m_tileContourColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(187, 189, 152, 255));
 
         defaultTheme.ToHSV();
 
@@ -114,6 +125,78 @@ public struct TileColors
         m_tileTopFaceHSV.TranslateHue(deltaHue);
         m_tileContourHSV.TranslateHue(deltaHue);
     }
+
+    public void Darken(float t)
+    {
+        m_tileLeftFaceColor = ColorUtils.DarkenColor(m_tileLeftFaceColor, t);
+        m_tileRightFaceColor = ColorUtils.DarkenColor(m_tileRightFaceColor, t);
+        m_tileTopFaceColor = ColorUtils.DarkenColor(m_tileTopFaceColor, t);
+        m_tileContourColor = ColorUtils.DarkenColor(m_tileContourColor, t);
+
+        ToHSV();
+    }
+    
+    public void Lighten(float t)
+    {
+        m_tileLeftFaceColor = ColorUtils.DarkenColor(m_tileLeftFaceColor, t);
+        m_tileRightFaceColor = ColorUtils.DarkenColor(m_tileRightFaceColor, t);
+        m_tileTopFaceColor = ColorUtils.DarkenColor(m_tileTopFaceColor, t);
+        m_tileContourColor = ColorUtils.DarkenColor(m_tileContourColor, t);
+
+        ToHSV();
+    }
+
+    public void Darken2(float t)
+    {
+        m_tileLeftFaceHSV.SetValue(Mathf.Lerp(m_tileLeftFaceHSV.GetValue(), 0, t));
+        m_tileRightFaceHSV.SetValue(Mathf.Lerp(m_tileLeftFaceHSV.GetValue(), 0, t));
+        m_tileTopFaceHSV.SetValue(Mathf.Lerp(m_tileLeftFaceHSV.GetValue(), 0, t));
+        m_tileContourHSV.SetValue(Mathf.Lerp(m_tileLeftFaceHSV.GetValue(), 0, t));
+
+        ToColor();
+    }
+
+    public void Lighten2(float t)
+    {
+        m_tileLeftFaceHSV.SetValue(Mathf.Lerp(m_tileLeftFaceHSV.GetValue(), 1, t));
+        m_tileRightFaceHSV.SetValue(Mathf.Lerp(m_tileLeftFaceHSV.GetValue(), 1, t));
+        m_tileTopFaceHSV.SetValue(Mathf.Lerp(m_tileLeftFaceHSV.GetValue(), 1, t));
+        m_tileContourHSV.SetValue(Mathf.Lerp(m_tileLeftFaceHSV.GetValue(), 1, t));
+
+        ToColor();
+    }
+
+    public void Add(TileColors colors)
+    {
+        m_tileLeftFaceColor += colors.m_tileLeftFaceColor;
+        m_tileRightFaceColor += colors.m_tileRightFaceColor;
+        m_tileTopFaceColor += colors.m_tileTopFaceColor;
+        m_tileContourColor += colors.m_tileContourColor;
+    }
+
+    public void Fade(float opacity)
+    {
+        m_tileLeftFaceColor = new Color(m_tileLeftFaceColor.r, m_tileLeftFaceColor.g, m_tileLeftFaceColor.b, opacity);
+        m_tileRightFaceColor = new Color(m_tileRightFaceColor.r, m_tileRightFaceColor.g, m_tileRightFaceColor.b, opacity);
+        m_tileTopFaceColor = new Color(m_tileTopFaceColor.r, m_tileTopFaceColor.g, m_tileTopFaceColor.b, opacity);
+        m_tileContourColor = new Color(m_tileContourColor.r, m_tileContourColor.g, m_tileContourColor.b, opacity);
+    }
+
+    public void Substract(TileColors colors)
+    {
+        m_tileLeftFaceColor -= colors.m_tileLeftFaceColor;
+        m_tileRightFaceColor -= colors.m_tileRightFaceColor;
+        m_tileTopFaceColor -= colors.m_tileTopFaceColor;
+        m_tileContourColor -= colors.m_tileContourColor;
+    }
+
+    public void Multiply(float scalar)
+    {
+        m_tileLeftFaceColor *= scalar;
+        m_tileRightFaceColor *= scalar;
+        m_tileTopFaceColor *= scalar;
+        m_tileContourColor *= scalar;
+    }
 }
 
 public class ColorTheme
@@ -121,17 +204,21 @@ public class ColorTheme
     public Color m_backgroundGradientTopColor;
     public Color m_backgroundGradientBottomColor;
     public Color m_floorSupportColor;
+    public Color m_highScoreColor;
     public TileColors m_startTileColors; //colors used to render the start tile
     public TileColors m_finishTileColors; //colors used to render the finish tile
     public TileColors m_selectedTileColors; //colors used to render the tiles selected by the user inside level editor
     public TileColors m_blockedTileColors; //colors used to render the tiles selected by the user inside level editor
     public TileColors m_disabledTileColors; //colors used to render the disabled tiles
     public TileColors m_trapTileColors;
+    public TileColors m_switchTileColors;
+    public TileColors m_triggeredTileColors;
     public TileColors m_defaultTileColors;
 
     public HSVColor m_backgroundGradientTopHSV;
     public HSVColor m_backgroundGradientBottomHSV;
     public HSVColor m_floorSupportHSV;
+    public HSVColor m_highScoreHSV;
 
     public ColorTheme() { }
 
@@ -140,17 +227,21 @@ public class ColorTheme
         m_backgroundGradientTopColor = other.m_backgroundGradientTopColor;
         m_backgroundGradientBottomColor = other.m_backgroundGradientBottomColor;
         m_floorSupportColor = other.m_floorSupportColor;
+        m_highScoreColor = other.m_highScoreColor;
         m_startTileColors = other.m_startTileColors;
         m_finishTileColors = other.m_finishTileColors;
         m_selectedTileColors = other.m_selectedTileColors;
         m_blockedTileColors = other.m_blockedTileColors;
         m_disabledTileColors = other.m_disabledTileColors;
         m_trapTileColors = other.m_trapTileColors;
+        m_switchTileColors = other.m_switchTileColors;
+        m_triggeredTileColors = other.m_triggeredTileColors;
         m_defaultTileColors = other.m_defaultTileColors;
 
         m_backgroundGradientTopHSV = other.m_backgroundGradientTopHSV;
         m_backgroundGradientBottomHSV = other.m_backgroundGradientBottomHSV;
         m_floorSupportHSV = other.m_floorSupportHSV;
+        m_highScoreHSV = other.m_highScoreHSV;
     }
 
     public ColorTheme(ColorTheme other, float deltaHue) : this(other)
@@ -158,6 +249,7 @@ public class ColorTheme
         m_backgroundGradientTopHSV.TranslateHue(deltaHue);
         m_backgroundGradientBottomHSV.TranslateHue(deltaHue);
         m_floorSupportHSV.TranslateHue(deltaHue);
+        m_highScoreHSV.TranslateHue(deltaHue);
 
         m_startTileColors.TranslateHue(deltaHue);
         m_finishTileColors.TranslateHue(deltaHue);
@@ -165,6 +257,8 @@ public class ColorTheme
         m_blockedTileColors.TranslateHue(deltaHue);
         m_disabledTileColors.TranslateHue(deltaHue);
         m_trapTileColors.TranslateHue(deltaHue);
+        m_switchTileColors.TranslateHue(deltaHue);
+        m_triggeredTileColors.TranslateHue(deltaHue);
         m_defaultTileColors.TranslateHue(deltaHue);
 
         ToColor();
@@ -217,6 +311,10 @@ public class ColorTheme
             return m_startTileColors;
         else if (state == Tile.State.TRAP)
             return m_trapTileColors;
+        else if (state == Tile.State.SWITCH)
+            return m_trapTileColors;
+        else if (state == Tile.State.TRIGGERED_BY_SWITCH)
+            return m_trapTileColors;
         else //FINISH
             return m_finishTileColors;
     }
@@ -226,6 +324,7 @@ public class ColorTheme
         m_backgroundGradientTopHSV = new HSVColor(m_backgroundGradientTopColor);
         m_backgroundGradientBottomHSV = new HSVColor(m_backgroundGradientBottomColor);
         m_floorSupportHSV = new HSVColor(m_floorSupportColor);
+        m_highScoreHSV = new HSVColor(m_highScoreColor);
         m_startTileColors.ToHSV();
         m_finishTileColors.ToHSV();
         m_selectedTileColors.ToHSV();
@@ -240,6 +339,7 @@ public class ColorTheme
         m_backgroundGradientTopColor = m_backgroundGradientTopHSV.ToRGBA(1);
         m_backgroundGradientBottomColor = m_backgroundGradientBottomHSV.ToRGBA(1);
         m_floorSupportColor = m_floorSupportHSV.ToRGBA(1);
+        m_highScoreColor = m_highScoreHSV.ToRGBA(1);
 
         m_startTileColors.ToColor();
         m_finishTileColors.ToColor();

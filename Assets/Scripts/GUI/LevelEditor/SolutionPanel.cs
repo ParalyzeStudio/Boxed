@@ -6,9 +6,18 @@ public class SolutionPanel : MonoBehaviour
     public GameObject m_solutionColumn; //one column per solution
     public Image m_arrowImagePfb;
 
-    public void AddSolution(Brick.RollDirection[] solution)
+    public void SetSolution(Brick.RollDirection[] solution)
     {
-        GameObject solutionColumn = (GameObject)Instantiate(m_solutionColumn);
+        //clear any previously displayed solution
+        Transform[] childrenColumns = this.GetComponentsInChildren<Transform>();
+        for (int i = 0; i != childrenColumns.Length; i++)
+        {
+            if (childrenColumns[i] != this.transform)
+                Destroy(childrenColumns[i].gameObject);
+        }
+
+        //create a new one
+        GameObject solutionColumn = Instantiate(m_solutionColumn);
         solutionColumn.transform.SetParent(this.transform, false);
 
         for (int i = 0; i != solution.Length; i++)

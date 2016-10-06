@@ -31,6 +31,17 @@ public class TileRenderer : MonoBehaviour
     //projections of each vertex
     Vector2[] m_vertexProjections;
 
+    //colors of the tile as a TileColors object
+    private TileColors m_tileColors;
+
+    //Color variation
+    bool m_colorVariating;
+    TileColors m_fromColors;
+    TileColors m_toColors;
+    float m_duration;
+    float m_elapsedTime;
+    float m_delay;
+
     public void Init(Tile tile)
     {
         m_tile = tile;
@@ -103,10 +114,11 @@ public class TileRenderer : MonoBehaviour
 
     public void SetColors(TileColors colors)
     {
-        SetLeftFaceColor(colors.m_tileLeftFaceColor);
-        SetRightFaceColor(colors.m_tileRightFaceColor);
-        SetTopFaceColor(colors.m_tileTopFaceColor);
-        SetContourColor(colors.m_tileContourColor);
+        m_tileColors = colors;
+        SetLeftFaceColor(colors.m_tileLeftFaceColor, false);
+        SetRightFaceColor(colors.m_tileRightFaceColor, false);
+        SetTopFaceColor(colors.m_tileTopFaceColor, false);
+        SetContourColor(colors.m_tileContourColor, true);
     }
 
     public void SetLeftFaceColor(Color color, bool bUpdateMeshDirectly = true)
@@ -302,8 +314,50 @@ public class TileRenderer : MonoBehaviour
         return false;
     }
 
+    public void ChangeColorsTo(TileColors toColors, float duration, float delay = 0.0f)
+    {
+        m_colorVariating = true;
+        m_fromColors = m_tileColors;
+        m_toColors = toColors;
+        m_duration = duration;
+        m_delay = delay;
+        m_elapsedTime = 0;
+    }
+
     public void Update()
     {
+        if (m_colorVariating)
+        {
+            float dt = Time.deltaTime;
+
+            bool inDelay = (m_elapsedTime < m_delay);
+            m_elapsedTime += dt;
+            if (m_elapsedTime > m_delay)
+            {
+                if (inDelay) //we were in delay previously
+                    dt = m_elapsedTime - m_delay;
+                float effectiveElapsedTime = m_elapsedTime - m_delay;
+                float t1 = effectiveElapsedTime - dt;
+                float t2 = effectiveElapsedTime;
+
+                //Top color variation
+                TileColors colorsVariation = m_toColors;
+                colorsVariation.Substract(m_fromColors);
+                TileColors deltaColors = colorsVariation;
+                deltaColors.Multiply((t2 - t1) / m_duration);
+
+                m_tileColors.Add(deltaColors);
+
+                if (effectiveElapsedTime > m_duration)
+                {
+                    m_tileColors = m_toColors;
+                    m_colorVariating = false;
+                }
+
+                SetColors(m_tileColors);
+            }
+        }
+
         if (m_tile.m_tileStateDirty)
         {
             UpdateTileHeight(GetTileHeight());

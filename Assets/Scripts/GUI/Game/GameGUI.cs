@@ -16,12 +16,12 @@ public class GameGUI : BaseGUI
     public Text m_targetActionsCount;
 
     //confirm home window
-    public GameObject m_confirmHomeWindowPfb;
+    public ConfirmHomeWindow m_confirmHomeWindowPfb;
+    public ConfirmHomeWindow m_confirmHomeWindow { get; set; }
 
     public void BuildForLevel(Level level)
     {
         m_level = level;
-        base.Init();
         //if (m_overlay == null)
         //    BuildGradientOverlay();
 
@@ -45,9 +45,9 @@ public class GameGUI : BaseGUI
         base.Show();
     }
 
-    public override void Dismiss()
+    public override void Dismiss(bool bDestroyOnFinish = false)
     {
-        base.Dismiss();
+        base.Dismiss(bDestroyOnFinish);
     }
 
     public void BuildSolution()
@@ -105,6 +105,7 @@ public class GameGUI : BaseGUI
     {
         Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
         m_targetActionsCount.text = currentLevel.m_solution.Length.ToString();
+        m_targetActionsCount.color = GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme.m_highScoreColor;
     }
 
     public void UpdateActionsCount()
@@ -132,12 +133,32 @@ public class GameGUI : BaseGUI
 
     public void OnClickHome()
     {
-        GameObject confirmHomeWindow = Instantiate(m_confirmHomeWindowPfb);
-        confirmHomeWindow.transform.SetParent(GameController.GetInstance().GetComponent<GUIManager>().m_canvas.transform, false);
+        m_confirmHomeWindow = Instantiate(m_confirmHomeWindowPfb);
+        m_confirmHomeWindow.transform.SetParent(GameController.GetInstance().GetComponent<GUIManager>().m_canvas.transform, false);
     }
 
     public void OnClickSolution()
     {
         ToggleSolution();
+    }
+
+    public void OnClickRollLeft()
+    {
+        GameController.GetInstance().m_brick.GetComponent<BrickController>().RollLeft();
+    }
+
+    public void OnClickRollRight()
+    {
+        GameController.GetInstance().m_brick.GetComponent<BrickController>().RollRight();
+    }
+
+    public void OnClickRollTop()
+    {
+        GameController.GetInstance().m_brick.GetComponent<BrickController>().RollTop();
+    }
+
+    public void OnClickRollBottom()
+    {
+        GameController.GetInstance().m_brick.GetComponent<BrickController>().RollBottom();
     }
 }

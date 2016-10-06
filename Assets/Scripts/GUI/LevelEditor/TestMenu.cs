@@ -16,6 +16,7 @@ public class TestMenu : MonoBehaviour
 
         //disable the solutions button
         m_displaySolutionsButton.gameObject.SetActive(false);
+        m_testLevelButton.GetComponentInChildren<Text>().text = "TestLevel";
 
         m_testingLevel = false;
         m_solutionsDisplayed = false;
@@ -29,6 +30,8 @@ public class TestMenu : MonoBehaviour
 
             m_displaySolutionsButton.gameObject.SetActive(false);
             m_testLevelButton.GetComponentInChildren<Text>().text = "TestLevel";
+
+            m_parentEditor.ShowMainMenu();
         }
         else
         {
@@ -38,6 +41,8 @@ public class TestMenu : MonoBehaviour
 
             //change the text on the test level button
             m_testLevelButton.GetComponentInChildren<Text>().text = "BackToEditor";
+
+            m_parentEditor.HideMainMenu();
         }
         
         m_parentEditor.OnClickTestLevel(m_testingLevel);

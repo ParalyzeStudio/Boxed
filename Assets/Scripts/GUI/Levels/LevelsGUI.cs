@@ -28,10 +28,9 @@ public class LevelsGUI : BaseGUI
     
     public override void Show()
     {
-        m_chapterNumber = 1;
-        m_chapterNumberText.text = m_chapterNumber.ToString();
+        SetChapterNumber(1);
 
-        m_slotsRendered = false;
+         m_slotsRendered = false;
         m_slotNumbers = GetSlotNumbers();
 
         base.Show();
@@ -61,14 +60,10 @@ public class LevelsGUI : BaseGUI
         {
             LevelSlot slot = Instantiate(m_levelSlotPfb);
             slot.Init(this, i);
-            slot.SetColors(currentTheme.m_defaultTileColors);
 
             Vector3 worldPosition = GetWorldPositionForSlot(m_slotNumbers[i]);
-            //Vector3 screenPosition = GetScreenPositionForSlot(slotNumbers[i]);
-            //Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
             slot.transform.parent = m_slotsHolder.transform;
             slot.transform.position = worldPosition;
-            //Debug.Log("screenPosition:" + screenPosition + " worldPosition:" + worldPosition);
             m_slots[i] = slot;
         }
 
@@ -78,7 +73,7 @@ public class LevelsGUI : BaseGUI
     public void SetChapterNumber(int chapterNumber)
     {
         m_chapterNumber = chapterNumber;
-        m_chapterNumberText.text = chapterNumber.ToString();
+        m_chapterNumberText.text = "Chapter " + chapterNumber.ToString();
 
         if (chapterNumber == 1)
         {
@@ -162,24 +157,27 @@ public class LevelsGUI : BaseGUI
         }
         button.interactable = false;
         Color oldColor = icon.color;
-        icon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 0);
+        icon.color = new Color(oldColor.r, oldColor.g, oldColor.b, 0.4f);
     }
 
     public void OnSlotClick(LevelSlot slot)
     {
-        m_clickedSlot = slot;
+        if (m_clickedSlot == null)
+        {
+            m_clickedSlot = slot;
 
-        Dismiss();
+            Dismiss(true);
 
-        CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
-        callFuncHandler.AddCallFuncInstance(DestroySlots, 0.5f);
-        callFuncHandler.AddCallFuncInstance(DestroyOverlay, 0.5f);
-        callFuncHandler.AddCallFuncInstance(StartLevel, 0.5f);
+            CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
+            callFuncHandler.AddCallFuncInstance(DestroySlots, 0.5f);
+            callFuncHandler.AddCallFuncInstance(StartLevel, 0.5f);
+        }
     }
 
     public void OnClickBack()
     {
-        Dismiss();
+        Dismiss(true);
+        GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(DestroySlots, 0.5f);
         GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(GameController.GetInstance().StartMainMenu, 0.5f);
     }
 
@@ -204,21 +202,33 @@ public class LevelsGUI : BaseGUI
 
     private void OnClickChapterButton()
     {
-        CanvasGroupFade fadeAnimator = m_slotNumbersHolder.GetComponent<CanvasGroupFade>();
-        fadeAnimator.FadeOut();
+        //CanvasGroupFade fadeAnimator = m_slotNumbersHolder.GetComponent<CanvasGroupFade>();
+        //fadeAnimator.FadeOut();
 
-        //Fade in new slots after a certain delay
+        ////Fade in new slots after a certain delay
         CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
-        callFuncHandler.AddCallFuncInstance(fadeAnimator.FadeIn, 0.5f);
+        //callFuncHandler.AddCallFuncInstance(fadeAnimator.FadeIn, 0.5f);
 
         //Theme for new chapter
         GUIManager guiManager = GameController.GetInstance().GetComponent<GUIManager>();
         guiManager.m_themes.m_currentTheme = guiManager.m_themes.Themes[m_chapterNumber - 1];
         ColorTheme theme = guiManager.m_themes.Themes[m_chapterNumber - 1];
-        guiManager.m_background.ChangeColorsTo(theme.m_backgroundGradientTopColor, theme.m_backgroundGradientBottomColor, 0.5f);
+
+        Color overlayTopColor = theme.m_backgroundGradientTopColor;
+        Color overlayBottomColor = theme.m_backgroundGradientBottomColor;
+
+        //background
+        guiManager.m_background.ChangeColorsTo(overlayTopColor, overlayBottomColor, 0.5f);
+
+        //overlay        
+        overlayTopColor.a = 0;
+        overlayBottomColor.a = 0;
+        guiManager.m_overlay.m_topColor = overlayTopColor;
+        guiManager.m_overlay.m_bottomColor = overlayBottomColor;
+        guiManager.m_overlay.InvalidateColors();
 
         //Update levels on each slot
-        callFuncHandler.AddCallFuncInstance(InvalidateLevelsOnSlots, 0.5f);
+        InvalidateLevelsOnSlots();
     }
 
     public void ProcessClickOnSlots(Vector2 clickLocation)

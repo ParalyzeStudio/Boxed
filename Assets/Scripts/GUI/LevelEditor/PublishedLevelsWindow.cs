@@ -69,6 +69,8 @@ public class PublishedLevelsWindow : LevelsListWindow
         if (m_selectedItem.m_level.m_validated)
             m_parentEditor.ShowTestMenu();
 
+        m_parentEditor.m_mainMenu.InvalidateValidatePublishButtons();
+
         //Dismiss the window
         OnClickQuit();
     }

@@ -29,7 +29,7 @@ public class FloorSupportRenderer : MonoBehaviour
         List<Geometry.Edge> frontLeftContour, frontRightContour;
         m_floor.FindVisibleContours(out frontLeftContour, out frontRightContour);
 
-        Color faceColor = GetSupportColor(255);
+        Color faceColor = GetSupportColor();
         BuildFaces(frontLeftContour, faceColor);      
         BuildFaces(frontRightContour, ColorUtils.LightenColor(faceColor, 0.1f));
 
@@ -83,8 +83,8 @@ public class FloorSupportRenderer : MonoBehaviour
         m_colors.AddRange(faceColors);
     }
 
-    private Color GetSupportColor(float opacity)
+    private Color GetSupportColor()
     {
-        return ColorUtils.GetColorFromRGBAVector4(new Vector4(77, 9, 30, opacity));
+        return GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme.m_floorSupportColor;
     }
 }
