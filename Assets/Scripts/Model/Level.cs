@@ -13,6 +13,8 @@ public class Level
     public Floor m_floor;
     public string m_title;
 
+    public Switch[] m_switches;
+
     public bool m_validated; //has the level been validated
     public Brick.RollDirection[] m_solution;
 
@@ -23,6 +25,18 @@ public class Level
         m_floor = floor;
 
         m_validated = false;
+    }
+
+    public Level(Level oldLevel, Switch[] switches)
+    {
+        m_number = oldLevel.m_number;
+        m_floor = oldLevel.m_floor;
+        m_title = oldLevel.m_title;
+        m_validated = oldLevel.m_validated;
+        m_solution = oldLevel.m_solution;
+        m_published = oldLevel.m_published;
+
+        m_switches = switches;
     }
 
     /**

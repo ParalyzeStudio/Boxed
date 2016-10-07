@@ -40,10 +40,16 @@ public class LevelManager : MonoBehaviour
     public Level m_currentLevel { get; set; }
     public LevelData m_currentLevelData { get; set; }
 
-    //public void Start()
-    //{
-    //    RepublishAllLevelsForUpgrade();
-    //}
+    public void Start()
+    {
+        //RepublishAllLevelsForUpgrade();
+        //List<Level> newLevels = GetAllPublishedLevelsFromDisk();
+        //for (int i = 0; i != newLevels.Count; i++)
+        //{
+        //    Level upgradedLevel = new Level(newLevels[i]);
+        //    upgradedLevel.Publish();
+        //}
+    }
 
     //private void RepublishAllLevelsForUpgrade()
     //{
