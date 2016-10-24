@@ -241,7 +241,6 @@ public class GameController : MonoBehaviour
     {
         if (m_victory || m_brick.IsOnFinishTile())
         {
-            Debug.Log("m_victory");
             m_victory = true;
             m_gameStatus = GameStatus.VICTORY;
         }

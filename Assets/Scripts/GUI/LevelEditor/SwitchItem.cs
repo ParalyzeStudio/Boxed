@@ -14,18 +14,18 @@ public class SwitchItem : MonoBehaviour
 
     private SwitchesEditingPanel m_parentPanel;
 
-    public bool m_isUnderConstruction { get; set; }
+    //public bool m_isUnderConstruction { get; set; }
 
-    public void Init(SwitchesEditingPanel parentPanel, int number)
+    public void Init(SwitchesEditingPanel parentPanel, int number, Switch vSwitch)
     {
         m_parentPanel = parentPanel;
         m_number = number;
 
         this.GetComponentInChildren<Text>().text = number.ToString();
 
-        m_isUnderConstruction = true;
+        //m_isUnderConstruction = true;
 
-        m_switch = new Switch();
+        m_switch = vSwitch;
 
         Deselect();
     }
@@ -40,8 +40,12 @@ public class SwitchItem : MonoBehaviour
         Image bg = this.GetComponent<Image>();
         Text numberText = this.GetComponentInChildren<Text>();
 
-        bg.color = m_isUnderConstruction ? ColorUtils.FadeColor(m_backgroundSelectedColor, 0.5f) : m_backgroundSelectedColor;
-        numberText.color = m_isUnderConstruction ? ColorUtils.FadeColor(m_numberTextSelectedColor, 0.5f) : m_numberTextSelectedColor;
+        //bg.color = m_isUnderConstruction ? ColorUtils.FadeColor(m_backgroundSelectedColor, 0.5f) : m_backgroundSelectedColor;
+        //numberText.color = m_isUnderConstruction ? ColorUtils.FadeColor(m_numberTextSelectedColor, 0.5f) : m_numberTextSelectedColor;
+        bg.color = m_backgroundSelectedColor;
+        numberText.color = m_numberTextSelectedColor;
+
+        m_switch.OnSelect();
     }
 
     public void Deselect()
@@ -49,7 +53,11 @@ public class SwitchItem : MonoBehaviour
         Image bg = this.GetComponent<Image>();
         Text numberText = this.GetComponentInChildren<Text>();
 
-        bg.color = m_isUnderConstruction ? ColorUtils.FadeColor(m_backgroundNormalColor, 0.5f) : m_backgroundNormalColor;
-        numberText.color = m_isUnderConstruction ? ColorUtils.FadeColor(m_numberTextNormalColor, 0.5f) : m_numberTextNormalColor;
+        //bg.color = m_isUnderConstruction ? ColorUtils.FadeColor(m_backgroundNormalColor, 0.5f) : m_backgroundNormalColor;
+        //numberText.color = m_isUnderConstruction ? ColorUtils.FadeColor(m_numberTextNormalColor, 0.5f) : m_numberTextNormalColor;
+        bg.color = m_backgroundNormalColor;
+        numberText.color = m_numberTextNormalColor;
+
+        m_switch.OnDeselect();
     }
 }

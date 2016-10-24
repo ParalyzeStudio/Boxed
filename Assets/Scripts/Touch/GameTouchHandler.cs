@@ -90,17 +90,39 @@ public class GameTouchHandler : TouchHandler
             }
             else if (levelEditor.m_editingMode == LevelEditor.EditingMode.SWITCHES_EDITING)
             {
-                SwitchesEditingPanel switchEditingPanel = (SwitchesEditingPanel)levelEditor.m_activeEditingPanel;
-                Switch editedSwitch = switchEditingPanel.m_selectedItem.m_switch;
+                SwitchesEditingPanel switchEditingPanel = (SwitchesEditingPanel)levelEditor.m_activeEditingPanel;                
 
                 if (switchEditingPanel.m_editingSwitch)
                 {
-                    if (raycastTile.CurrentState == Tile.State.NORMAL)
+                    Switch editedSwitch = switchEditingPanel.m_selectedItem.m_switch;
+
+                    if (switchEditingPanel.m_editingSwitchTile)
                     {
-                        if (editedSwitch.m_switchTile != null)
-                            editedSwitch.m_switchTile.CurrentState = Tile.State.NORMAL;
-                        editedSwitch.m_switchTile = raycastTile;
-                        raycastTile.CurrentState = Tile.State.SWITCH;
+                        if (raycastTile.CurrentState == Tile.State.NORMAL)
+                        {
+                            if (editedSwitch.m_switchTile != null)
+                                editedSwitch.m_switchTile.CurrentState = Tile.State.NORMAL;
+                            editedSwitch.m_switchTile = raycastTile;
+                            raycastTile.CurrentState = Tile.State.SWITCH;
+                        }
+                        else if (raycastTile.CurrentState == Tile.State.SWITCH)
+                        {
+                            editedSwitch.m_switchTile = null;
+                            raycastTile.CurrentState = Tile.State.NORMAL;
+                        }
+                    }
+                    else
+                    {
+                        if (raycastTile.CurrentState == Tile.State.NORMAL)
+                        {
+                            editedSwitch.m_triggeredTiles.Add(raycastTile);
+                            raycastTile.CurrentState = Tile.State.TRIGGERED_BY_SWITCH;
+                        }
+                        else if (raycastTile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
+                        {
+                            editedSwitch.m_triggeredTiles.Remove(raycastTile);
+                            raycastTile.CurrentState = Tile.State.NORMAL;
+                        }
                     }
                 }
             }

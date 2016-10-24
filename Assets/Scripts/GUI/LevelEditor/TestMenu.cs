@@ -7,7 +7,7 @@ public class TestMenu : MonoBehaviour
     public Button m_displaySolutionsButton;
     private LevelEditor m_parentEditor;
 
-    private bool m_testingLevel;
+    public bool m_testingLevel { get; set; }
     private bool m_solutionsDisplayed;
 
     public void Init(LevelEditor parentEditor)

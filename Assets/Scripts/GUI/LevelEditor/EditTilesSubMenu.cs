@@ -3,9 +3,9 @@ using UnityEngine.UI;
 
 public class EditTilesSubMenu : LevelEditorMenu
 {
-    public ActionPanel m_tilesEditing;
+    public TileEditingPanel m_tilesEditing;
     public ActionPanel m_checkpointsEditing;
-    public ActionPanel m_switchesEditing;
+    public SwitchesEditingPanel m_switchesEditing;
 
     public void OnClickTiles()
     {
@@ -32,6 +32,7 @@ public class EditTilesSubMenu : LevelEditorMenu
         m_switchesEditing.m_parentMenu = this;
         this.gameObject.SetActive(false);
         m_switchesEditing.gameObject.SetActive(true);
+        m_switchesEditing.Init();
     }
 
     public void OnClickBack()

@@ -121,4 +121,9 @@ public class Tile
     {
         return (this.m_columnIndex == other.m_columnIndex) && (this.m_lineIndex == other.m_lineIndex);
     }
+
+    public override string ToString()
+    {
+        return "l:" + m_lineIndex + " c:" + m_columnIndex + " s:" + m_currentState;
+    }
 }

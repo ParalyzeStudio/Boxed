@@ -33,6 +33,13 @@ public class TileRenderer : MonoBehaviour
 
     //colors of the tile as a TileColors object
     private TileColors m_tileColors;
+    public TileColors TileColors
+    {
+        get
+        {
+            return m_tileColors;
+        }
+    }
 
     //Color variation
     bool m_colorVariating;
@@ -41,6 +48,10 @@ public class TileRenderer : MonoBehaviour
     float m_duration;
     float m_elapsedTime;
     float m_delay;
+
+    //decals
+    private GameObject m_decalObject;
+    public Material m_testDecalMaterial;
 
     public void Init(Tile tile)
     {
@@ -222,6 +233,15 @@ public class TileRenderer : MonoBehaviour
         SetColors(colors);
     }
 
+    public void UpdateTileDecal()
+    {
+        if (m_tile.CurrentState == Tile.State.SWITCH || m_tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
+            AddDecal(null);
+        else
+            RemoveDecal();
+        
+    }
+
     /**
     * Build a bonus element over this tile
     **/
@@ -324,6 +344,63 @@ public class TileRenderer : MonoBehaviour
         m_elapsedTime = 0;
     }
 
+    /**
+    * Add a decal texture on the top face of this tile
+    **/
+    public void AddDecal(Material quadTextureMaterial)
+    {
+        Debug.Log("AddDecal");
+        if (m_decalObject != null)
+            return;
+
+        m_decalObject = new GameObject("Decal");
+        m_decalObject.transform.SetParent(this.transform, false);
+        m_decalObject.transform.localPosition = new Vector3(0, 0.01f, 0); //set the decal right above the tile object
+
+        MeshFilter meshFilter = m_decalObject.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = m_decalObject.AddComponent<MeshRenderer>();
+        meshRenderer.sharedMaterial = m_testDecalMaterial;
+
+        //Build a quad mesh
+        Mesh quadMesh = new Mesh();
+        meshFilter.sharedMesh = quadMesh;
+
+        //vertices are the same as tile's top face vertices
+        Vector3[] vertices = new Vector3[4];
+        vertices[0] = m_vertices[8];
+        vertices[1] = m_vertices[9];
+        vertices[2] = m_vertices[10];
+        vertices[3] = m_vertices[11];
+
+        int[] triangles = new int[] { 0, 2, 1, 0, 3, 2 };
+
+        Vector2[] uv = new Vector2[4];
+        uv[0] = Vector2.zero;
+        uv[1] = new Vector2(1, 0);
+        uv[2] = new Vector2(1, 1);
+        uv[3] = new Vector2(0, 1);
+
+        quadMesh.vertices = vertices;
+        quadMesh.triangles = triangles;
+        quadMesh.uv = uv;
+    }
+
+    public void RemoveDecal()
+    {
+        if (m_decalObject != null)
+            Destroy(m_decalObject);
+    }
+
+    public void LiftUp()
+    {
+
+    }
+
+    public void LiftDown()
+    {
+
+    }
+
     public void Update()
     {
         if (m_colorVariating)
@@ -358,11 +435,23 @@ public class TileRenderer : MonoBehaviour
             }
         }
 
-        if (m_tile.m_tileStateDirty)
+        //do not update rendering of tile when searching for solutions inside a tree
+        bool bUpdateTileRenderingOnStateChange = false;
+        if (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR)
+        {
+            LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+            if (levelEditor.m_isTestMenuShown && levelEditor.m_testMenu.m_testingLevel)
+                bUpdateTileRenderingOnStateChange = true;
+        }
+        else if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
+            bUpdateTileRenderingOnStateChange = true;
+
+        if (m_tile.m_tileStateDirty && bUpdateTileRenderingOnStateChange)
         {
             UpdateTileHeight(GetTileHeight());
             UpdateTilePosition(m_tile.GetLocalPosition());
             UpdateTileColors();
+            UpdateTileDecal();
             m_tile.m_tileStateDirty = false;
         }
 

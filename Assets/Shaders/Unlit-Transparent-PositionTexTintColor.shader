@@ -5,9 +5,9 @@ Properties {
 }
 
 SubShader {
-	Tags{ "Queue" = "Geometry" }
+	Tags{ "Queue" = "Transparent" }
 	
-	ZWrite On
+	ZWrite Off
 	Blend SrcAlpha OneMinusSrcAlpha 
 	
 	Pass {  
@@ -38,7 +38,7 @@ SubShader {
 				v2f OUT;
 				OUT.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
 				OUT.texcoord = TRANSFORM_TEX(IN.texcoord, _MainTex);
-				OUT.color = _TintColor;
+				OUT.color = IN.color * _TintColor;
 				return OUT;
 			}
 			

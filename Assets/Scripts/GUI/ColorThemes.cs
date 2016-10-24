@@ -83,6 +83,10 @@ public class ColorThemes
         defaultTheme.m_switchTileColors.m_tileRightFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(248, 255, 130, 255));
         defaultTheme.m_switchTileColors.m_tileTopFaceColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(241, 254, 35, 255));
         defaultTheme.m_switchTileColors.m_tileContourColor = ColorUtils.GetColorFromRGBAVector4(new Vector4(187, 189, 152, 255));
+        defaultTheme.m_switchTileColors.Darken(0.5f);
+
+        defaultTheme.m_triggeredTileColors = defaultTheme.m_switchTileColors;
+        defaultTheme.m_triggeredTileColors.Lighten(0.5f);
 
         defaultTheme.ToHSV();
 
@@ -138,10 +142,10 @@ public struct TileColors
     
     public void Lighten(float t)
     {
-        m_tileLeftFaceColor = ColorUtils.DarkenColor(m_tileLeftFaceColor, t);
-        m_tileRightFaceColor = ColorUtils.DarkenColor(m_tileRightFaceColor, t);
-        m_tileTopFaceColor = ColorUtils.DarkenColor(m_tileTopFaceColor, t);
-        m_tileContourColor = ColorUtils.DarkenColor(m_tileContourColor, t);
+        m_tileLeftFaceColor = ColorUtils.LightenColor(m_tileLeftFaceColor, t);
+        m_tileRightFaceColor = ColorUtils.LightenColor(m_tileRightFaceColor, t);
+        m_tileTopFaceColor = ColorUtils.LightenColor(m_tileTopFaceColor, t);
+        m_tileContourColor = ColorUtils.LightenColor(m_tileContourColor, t);
 
         ToHSV();
     }
@@ -312,9 +316,9 @@ public class ColorTheme
         else if (state == Tile.State.TRAP)
             return m_trapTileColors;
         else if (state == Tile.State.SWITCH)
-            return m_trapTileColors;
+            return m_switchTileColors;
         else if (state == Tile.State.TRIGGERED_BY_SWITCH)
-            return m_trapTileColors;
+            return m_triggeredTileColors;
         else //FINISH
             return m_finishTileColors;
     }

@@ -65,7 +65,7 @@ public class Level
         Tile startTile = m_floor.GetStartTile();
         Tile finishTile = m_floor.GetFinishTile();
 
-        //First check if start tile and finish tiles have been set
+        //First check if start and finish tiles have been set
         if (startTile == null || finishTile == null)
         {
             validationData.m_success = false;
@@ -110,40 +110,6 @@ public class Level
         return validationData;
     }
 
-    /**
-    * Programmatically solve this level by testing every possible movement of the brick
-    * Define a number of maximum movements a brick is allowed to do for a given path
-    **/
-    //public SolutionNode[] Solve(int maxMovements)
-    //{
-    //    List<Permutation> permutations = FindBonusPermutations();
-
-    //    if (permutations == null) //no bonus, solve the level between start and finish tiles
-    //    {
-    //        SolutionTree solutionTree = new SolutionTree(this);
-    //        SolutionNode[][] solutions = solutionTree.SearchForSolutions();
-    //        return (solutions != null) ? solutions[0] : null;
-    //    }
-    //    else
-    //    {
-    //        int minSolutionLength = int.MaxValue; //we store here the minimum length of a solution we found
-    //        SolutionNode[] minSolution = null; //solution with the above length
-
-    //        //Solve the level taking one bonus permutation after another
-    //        for (int i = 0; i != permutations.Count; i++)
-    //        {
-    //            SolutionNode[] solution = ExtractSolutionForPermutation(permutations[i], minSolutionLength);
-    //            if (solution != null)
-    //            {
-    //                minSolution = solution;
-    //                minSolutionLength = minSolution.Length;
-    //            }
-    //        }
-
-    //        return minSolution;
-    //    }
-    //}
-
     public SolutionNode[] Solve(int maxMovements)
     {
         int treeHeight = 2;
@@ -172,128 +138,144 @@ public class Level
             return null;
     }
 
-    private SolutionNode[] ExtractSolutionForPermutation(Permutation permutation, int maxSolutionLength)
+    //private SolutionNode[] ExtractSolutionForPermutation(Permutation permutation, int maxSolutionLength)
+    //{
+    //    List<Tile> bonusTiles = this.m_floor.GetBonusTiles();
+    //    List<SolutionNode> solution = new List<SolutionNode>();
+
+    //    int solutionLength = 0; //the length of the solution for this permutation
+
+    //    Tile[] subpathStartTiles = new Tile[2];
+    //    Tile subPathFinishTile;
+    //    int subpathsCount = permutation.Count + 1;
+    //    int p = 0;
+    //    while (p < subpathsCount)
+    //    {
+    //        if (p == 0)
+    //        {
+    //            subpathStartTiles[0] = this.m_floor.GetStartTile();
+    //            subpathStartTiles[1] = null;
+    //            subPathFinishTile = bonusTiles[permutation[0]];
+    //        }
+    //        else if (p == subpathsCount - 1)
+    //        {
+    //            subPathFinishTile = this.m_floor.GetFinishTile();
+    //        }
+    //        else
+    //        {
+    //            subPathFinishTile = bonusTiles[permutation[p]];
+    //        }
+
+    //        SolutionTree solutionTree = new SolutionTree(100, subpathStartTiles, subPathFinishTile, (p == subpathsCount - 1));
+    //        SolutionNode[][] subpathSolutions = solutionTree.SearchForSolutions();
+
+    //        if (subpathSolutions != null)
+    //        {
+    //            SolutionNode[] subpathSolution = subpathSolutions[0];
+
+    //            solutionLength += subpathSolution.Length;
+    //            if (solutionLength > maxSolutionLength)
+    //            {
+    //                return null;
+    //            }
+    //            else
+    //            {
+    //                for (int m = 0; m != subpathSolution.Length; m++)
+    //                {
+    //                    SolutionNode node = subpathSolution[m];
+    //                }
+
+    //                solution.AddRange(subpathSolution);
+
+    //                if (p < subpathsCount - 1)
+    //                    subpathStartTiles = subpathSolution[subpathSolution.Length - 1].m_coveredTiles; //set the start tiles for next subpath
+    //            }
+    //        }
+    //        else
+    //            return null;
+
+    //        p++;
+    //    }
+
+    //    return solution.ToArray();
+    //}
+
+    /**
+    * Return the switch for a given tile
+    **/
+    public Switch GetSwitchForTile(Tile tile)
     {
-        List<Tile> bonusTiles = this.m_floor.GetBonusTiles();
-        List<SolutionNode> solution = new List<SolutionNode>();
-
-        int solutionLength = 0; //the length of the solution for this permutation
-
-        Tile[] subpathStartTiles = new Tile[2];
-        Tile subPathFinishTile;
-        int subpathsCount = permutation.Count + 1;
-        int p = 0;
-        while (p < subpathsCount)
+        for (int i = 0; i != m_switches.Length; i++)
         {
-            if (p == 0)
+            if (m_switches[i].m_switchTile == tile)
             {
-                subpathStartTiles[0] = this.m_floor.GetStartTile();
-                subpathStartTiles[1] = null;
-                subPathFinishTile = bonusTiles[permutation[0]];
+                return m_switches[i];
             }
-            else if (p == subpathsCount - 1)
-            {
-                subPathFinishTile = this.m_floor.GetFinishTile();
-            }
-            else
-            {
-                subPathFinishTile = bonusTiles[permutation[p]];
-            }
-
-            SolutionTree solutionTree = new SolutionTree(100, subpathStartTiles, subPathFinishTile, (p == subpathsCount - 1));
-            SolutionNode[][] subpathSolutions = solutionTree.SearchForSolutions();
-
-            if (subpathSolutions != null)
-            {
-                SolutionNode[] subpathSolution = subpathSolutions[0];
-
-                solutionLength += subpathSolution.Length;
-                if (solutionLength > maxSolutionLength)
-                {
-                    return null;
-                }
-                else
-                {
-                    for (int m = 0; m != subpathSolution.Length; m++)
-                    {
-                        SolutionNode node = subpathSolution[m];
-                    }
-
-                    solution.AddRange(subpathSolution);
-
-                    if (p < subpathsCount - 1)
-                        subpathStartTiles = subpathSolution[subpathSolution.Length - 1].m_coveredTiles; //set the start tiles for next subpath
-                }
-            }
-            else
-                return null;
-
-            p++;
         }
 
-        return solution.ToArray();
+        return null;
     }
 
     /**
     * Find all permutations between bonuses
     * The number of permutations is !bonusesCount
     **/
-    private List<Permutation> FindBonusPermutations()
-    {
-        return FindPermutationsInInterval(m_floor.GetBonusTiles().Count - 1);
-    }
+    //private List<Permutation> FindBonusPermutations()
+    //{
+    //    return FindPermutationsInInterval(m_floor.GetBonusTiles().Count - 1);
+    //}
 
     /**
     * Find all permutations for the interval [0-N]
     **/
-    private List<Permutation> FindPermutationsInInterval(int N)
-    {
-        if (N < 0)
-            return null;
+    //private List<Permutation> FindPermutationsInInterval(int N)
+    //{
+    //    if (N < 0)
+    //        return null;
 
-        //to compute the factorial function, as the number of bonuses wont exceed 3, just use a simple loop, no need for a complex and efficient algorithm
-        int permutationsCount = 1;
-        int i = 2;
-        while (i <= N)
-        {
-            permutationsCount *= i;
-            i++;
-        }
+    //    //to compute the factorial function, as the number of bonuses wont exceed 3, just use a simple loop, no need for a complex and efficient algorithm
+    //    int permutationsCount = 1;
+    //    int i = 2;
+    //    while (i <= N)
+    //    {
+    //        permutationsCount *= i;
+    //        i++;
+    //    }
 
-        List<Permutation> permutations = new List<Permutation>(permutationsCount);
+    //    List<Permutation> permutations = new List<Permutation>(permutationsCount);
 
-        if (N == 0)
-            permutations.Add(new Permutation { 0 });
-        else
-        {
-            List<Permutation> lPermutations = FindPermutationsInInterval(N - 1);
+    //    if (N == 0)
+    //        permutations.Add(new Permutation { 0 });
+    //    else
+    //    {
+    //        List<Permutation> lPermutations = FindPermutationsInInterval(N - 1);
 
-            int j = 0;
-            while (j <= N)
-            {
-                //First copy the permutations
-                List<Permutation> copiedPermutations = new List<Permutation>();
-                for (int p = 0; p != lPermutations.Count; p++)
-                {
-                    copiedPermutations.Add(new Permutation(lPermutations[p]));
-                }
+    //        int j = 0;
+    //        while (j <= N)
+    //        {
+    //            //First copy the permutations
+    //            List<Permutation> copiedPermutations = new List<Permutation>();
+    //            for (int p = 0; p != lPermutations.Count; p++)
+    //            {
+    //                copiedPermutations.Add(new Permutation(lPermutations[p]));
+    //            }
 
-                InsertInPermutationsAtIndex(j, N, copiedPermutations);
-                permutations.AddRange(copiedPermutations);
-                j++;
-            }
-        }
+    //            InsertInPermutationsAtIndex(j, N, copiedPermutations);
+    //            permutations.AddRange(copiedPermutations);
+    //            j++;
+    //        }
+    //    }
 
-        return permutations;
-    }
+    //    return permutations;
+    //}
 
-    private void InsertInPermutationsAtIndex(int index, int item, List<Permutation> permutations)
-    {
-        for (int i = 0; i != permutations.Count; i++)
-        {
-            permutations[i].Insert(index, item);
-        }
-    }
+    //private void InsertInPermutationsAtIndex(int index, int item, List<Permutation> permutations)
+    //{
+    //    for (int i = 0; i != permutations.Count; i++)
+    //    {
+    //        permutations[i].Insert(index, item);
+    //    }
+    //}
 
     /**
     * Tells if one or more of the bonuses on the floor are not reachable and return them

@@ -262,6 +262,8 @@ public class Floor
                 {
                     Tile replacedTile = m_tiles[GetTileIndexForColumnLine(i + minColumnIndex - 2, j + minLineIndex - 2)];
                     tile = new Tile(i, j, replacedTile.CurrentState, replacedTile.AttachedBonus);
+
+                    ReplaceTileOnSwitches(replacedTile, tile);
                 }
 
                 int newTileIndex = i * newFloorHeight + j;
@@ -297,11 +299,28 @@ public class Floor
                 Tile replacedTile = m_tiles[(i - minColumnIndex) * m_gridHeight + (j - minLineIndex)];
 
                 int tileIndex = i * floorSize + j;
-                floor.m_tiles[tileIndex] = new Tile(i, j, replacedTile.CurrentState, replacedTile.AttachedBonus);
+                Tile newTile = new Tile(i, j, replacedTile.CurrentState, replacedTile.AttachedBonus);
+                floor.m_tiles[tileIndex] = newTile;
+
+                ReplaceTileOnSwitches(replacedTile, newTile);
             }
         }
 
         return floor;
+    }
+
+    private void ReplaceTileOnSwitches(Tile oldTile, Tile newTile)
+    {
+        Level level = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI).m_editedLevel;
+
+        if (level.m_switches != null)
+        {
+            for (int i = 0; i != level.m_switches.Length; i++)
+            {
+                Switch vSwitch = level.m_switches[i];
+                vSwitch.ReplaceTile(oldTile, newTile);
+            }
+        }
     }
 
     /**
@@ -326,7 +345,11 @@ public class Floor
         for (int i = 0; i != m_tiles.Length; i++)
         {
             Tile tile = m_tiles[i];
-            if (tile.CurrentState == Tile.State.NORMAL || tile.CurrentState == Tile.State.START || tile.CurrentState == Tile.State.FINISH)
+            if (tile.CurrentState == Tile.State.NORMAL || 
+                tile.CurrentState == Tile.State.START || 
+                tile.CurrentState == Tile.State.FINISH ||
+                tile.CurrentState == Tile.State.SWITCH ||
+                tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
                 continue;
 
             if (tile.m_columnIndex > 0 && tile.m_columnIndex < this.m_gridWidth - 1 && tile.m_lineIndex > 0 && tile.m_lineIndex < this.m_gridHeight - 1)

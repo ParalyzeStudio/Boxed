@@ -21,6 +21,8 @@ public class LevelEditor : BaseGUI
     public ActionPanel m_activeEditingPanel { get; set; }
     public Level m_editedLevel { get; set; }
 
+    public bool m_isTestMenuShown { get; set; }
+
     public enum EditingMode
     {
         NONE = 0,
@@ -56,6 +58,8 @@ public class LevelEditor : BaseGUI
         }
         else
         {
+            m_editedLevel = level;
+
             Floor unclampedFloor = level.m_floor.Unclamp(FLOOR_DEFAULT_SIZE_FOR_EDITING);
             level.m_floor = unclampedFloor;
             GameController.GetInstance().RenderFloor(unclampedFloor);
@@ -63,9 +67,7 @@ public class LevelEditor : BaseGUI
             //if (level.m_validated)
             //    m_mainMenu.ToggleValidatePublishButtons(false);
             //else
-            //    m_mainMenu.ToggleValidatePublishButtons(true);
-
-            m_editedLevel = level;
+            //    m_mainMenu.ToggleValidatePublishButtons(true);            
         }        
     }
 
@@ -122,12 +124,14 @@ public class LevelEditor : BaseGUI
     **/
     public void ShowTestMenu()
     {
+        m_isTestMenuShown = true;
         m_testMenu.Init(this);
         m_testMenu.gameObject.SetActive(true);
     }
 
     public void DismissTestMenu()
     {
+        m_isTestMenuShown = false;
         m_testMenu.gameObject.SetActive(false);
     }
 

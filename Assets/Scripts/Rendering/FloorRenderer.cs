@@ -51,6 +51,7 @@ public class FloorRenderer : MonoBehaviour
             tileRenderer.Init(tile);
 
             tileRenderer.UpdateTileColors();
+            tileRenderer.UpdateTileDecal();
 
             //set correct positions for tile and its support
             tileRenderer.transform.localPosition = tile.GetLocalPosition();

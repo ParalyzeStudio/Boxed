@@ -411,18 +411,43 @@ public class Brick
 
 
         //Capture bonuses
-        if (m_coveredTiles[0].AttachedBonus != null)
-        {
-            TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_coveredTiles[0]);
-            tileRenderer.OnCaptureBonus();
+        if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
+        {         
+            if (m_coveredTiles[0].AttachedBonus != null)
+            {
+                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_coveredTiles[0]);
+                tileRenderer.OnCaptureBonus();
+            }
+
+            if (m_coveredTiles[1] != null && m_coveredTiles[1].AttachedBonus != null)
+            {
+                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_coveredTiles[1]);
+                tileRenderer.OnCaptureBonus();
+            }
         }
 
-        if (m_coveredTiles[1] != null && m_coveredTiles[1].AttachedBonus != null)
-        {
-            TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_coveredTiles[1]);
-            tileRenderer.OnCaptureBonus();
-        }
+        //switches
+        Level level;
+        if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
+            level = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
+        else
+            level = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI).m_editedLevel;
 
+        if (CoveredTiles[0] != null && CoveredTiles[0].CurrentState == Tile.State.SWITCH)
+        {
+            Switch vSwitch = level.GetSwitchForTile(CoveredTiles[0]);
+            vSwitch.Toggle();
+        }
+        else
+        {
+            if (CoveredTiles[1] != null && CoveredTiles[1].CurrentState == Tile.State.SWITCH)
+            {
+                Switch vSwitch = level.GetSwitchForTile(CoveredTiles[1]);
+                vSwitch.Toggle();
+            }
+        }
+        
+        //reset the tile state to IDLE
         m_state = Brick.BrickState.IDLE;
 
         //Change the state of new covered tiles
