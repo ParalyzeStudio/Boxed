@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class LevelEditor : BaseGUI
 {
-    public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 35;
+    public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 20;
 
     //public LevelEditorMenuSwitcher m_levelEditorMenuSwitcherPfb;
     public SaveLoadLevelWindow m_saveLoadLevelWindowPfb;
@@ -22,6 +22,8 @@ public class LevelEditor : BaseGUI
     public Level m_editedLevel { get; set; }
 
     public bool m_isTestMenuShown { get; set; }
+
+    public bool m_computingSolution { get;set;}
 
     public enum EditingMode
     {
@@ -171,5 +173,22 @@ public class LevelEditor : BaseGUI
     public void DismissSolutions()
     {
         m_solutionPanel.gameObject.SetActive(false);
+    }
+
+    /**
+    * Called when the thread that is computing solutions for a level has ended
+    **/
+    public void OnFinishValidatingLevel(Level.ValidationData output)
+    {
+        DisplayLevelValidationOutput(output);
+
+        //remove the validate button and make the Test level button active
+        if (output.m_success)
+        {
+            m_mainMenu.InvalidateValidatePublishButtons();
+            ShowTestMenu();
+        }
+
+        m_computingSolution = false;
     }
 }

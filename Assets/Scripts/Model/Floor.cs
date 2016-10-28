@@ -61,6 +61,17 @@ public class Floor
         return columnIndex * m_gridHeight + lineIndex;
     }
 
+    public int GetTileIndex(Tile tile)
+    {
+        return tile.m_columnIndex * m_gridHeight + tile.m_lineIndex;
+    }
+
+    public void InsertTile(Tile tile)
+    {
+        int tileIndex = GetTileIndex(tile);
+        m_tiles[tileIndex] = tile;
+    }
+
     public Tile GetCenterTile()
     {
         int index = GetTileIndexForColumnLine(m_gridWidth / 2, m_gridHeight / 2);
@@ -137,6 +148,18 @@ public class Floor
 
         m_bonusTiles = bonusTiles; //cache value
         return bonusTiles;
+    }
+
+    public List<SwitchTile> GetSwitchTiles()
+    {
+        List<SwitchTile> switchTiles = new List<SwitchTile>();
+        for (int i = 0; i != m_tiles.Length; i++)
+        {
+            if (m_tiles[i] is SwitchTile)
+                switchTiles.Add((SwitchTile)m_tiles[i]);
+        }
+
+        return switchTiles;
     }
 
     public void ClearBonusTilesCachedValue()
@@ -261,9 +284,13 @@ public class Floor
                 else
                 {
                     Tile replacedTile = m_tiles[GetTileIndexForColumnLine(i + minColumnIndex - 2, j + minLineIndex - 2)];
-                    tile = new Tile(i, j, replacedTile.CurrentState, replacedTile.AttachedBonus);
-
-                    ReplaceTileOnSwitches(replacedTile, tile);
+                    if (replacedTile.CurrentState == Tile.State.SWITCH)
+                    {
+                        SwitchTile switchReplacedTile = (SwitchTile)replacedTile;
+                        tile = new SwitchTile(i, j, switchReplacedTile.AttachedBonus, switchReplacedTile.m_triggeredTiles);
+                    }
+                    else
+                        tile = new Tile(i, j, replacedTile.CurrentState, replacedTile.AttachedBonus);
                 }
 
                 int newTileIndex = i * newFloorHeight + j;
@@ -297,30 +324,21 @@ public class Floor
             for (int j = minLineIndex; j != maxLineIndex; j++)
             {
                 Tile replacedTile = m_tiles[(i - minColumnIndex) * m_gridHeight + (j - minLineIndex)];
+                Tile tile;
+                if (replacedTile.CurrentState == Tile.State.SWITCH)
+                {
+                    SwitchTile switchReplacedTile = (SwitchTile)replacedTile;
+                    tile = new SwitchTile(i, j, switchReplacedTile.AttachedBonus, switchReplacedTile.m_triggeredTiles);
+                }
+                else
+                    tile = new Tile(i, j, replacedTile.CurrentState, replacedTile.AttachedBonus);
 
                 int tileIndex = i * floorSize + j;
-                Tile newTile = new Tile(i, j, replacedTile.CurrentState, replacedTile.AttachedBonus);
-                floor.m_tiles[tileIndex] = newTile;
-
-                ReplaceTileOnSwitches(replacedTile, newTile);
+                floor.m_tiles[tileIndex] = tile;
             }
         }
 
         return floor;
-    }
-
-    private void ReplaceTileOnSwitches(Tile oldTile, Tile newTile)
-    {
-        Level level = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI).m_editedLevel;
-
-        if (level.m_switches != null)
-        {
-            for (int i = 0; i != level.m_switches.Length; i++)
-            {
-                Switch vSwitch = level.m_switches[i];
-                vSwitch.ReplaceTile(oldTile, newTile);
-            }
-        }
     }
 
     /**

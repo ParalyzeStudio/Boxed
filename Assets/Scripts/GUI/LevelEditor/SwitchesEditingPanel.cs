@@ -24,13 +24,14 @@ public class SwitchesEditingPanel : ActionPanel
     public void Init()
     {
         ClearSwitchItems();
-
-        Switch[] switches = m_parentMenu.m_parentEditor.m_editedLevel.m_switches;
+        
+        List<SwitchTile> switches = m_parentMenu.m_parentEditor.m_editedLevel.m_floor.GetSwitchTiles();
         if (switches != null)
         {
-            for (int i = 0; i != switches.Length; i++)
+            for (int i = 0; i != switches.Count; i++)
             {
-                AddSwitchItem(switches[i]);
+                SwitchItem item = AddSwitchItem();
+                item.m_switchTile = switches[i];
             }
         }
 
@@ -39,7 +40,7 @@ public class SwitchesEditingPanel : ActionPanel
         m_switchEditButtons.gameObject.SetActive(false);
     }
 
-    public void OnSwitchClick(SwitchItem item)
+    public void OnSwitchItemClick(SwitchItem item)
     {
         if (m_selectedItem == item)
             return;
@@ -57,7 +58,7 @@ public class SwitchesEditingPanel : ActionPanel
 
     public void OnClickAdd()
     {
-        AddSwitchItem(new Switch());
+        AddSwitchItem();
     }
 
     private void ClearSwitchItems()
@@ -72,16 +73,18 @@ public class SwitchesEditingPanel : ActionPanel
         }
     }
 
-    private void AddSwitchItem(Switch vSwitch)
+    private SwitchItem AddSwitchItem()
     {
         if (m_switches == null)
             m_switches = new List<SwitchItem>();
 
         SwitchItem newItem = Instantiate(m_switchItemPfb);
-        newItem.Init(this, m_switches.Count + 1, vSwitch);
+        newItem.Init(this, m_switches.Count + 1);
         m_switches.Add(newItem);
 
         newItem.transform.SetParent(m_switchList.transform, false);
+
+        return newItem;
     }
 
     public void OnClickEdit()
@@ -96,12 +99,21 @@ public class SwitchesEditingPanel : ActionPanel
         InvalidateSwitchEditingButtons();
 
         //toggle
-        m_switchToggle.isOn = m_selectedItem.m_switch.m_isOn;
+        if (m_selectedItem.m_switchTile == null)
+        {
+            m_switchToggle.isOn = true;
+            DisableToggle();
+        }
+        else
+        {
+            EnableToggle();
+            m_switchToggle.isOn = m_selectedItem.m_switchTile.m_isOn;
+        }
     }
 
     public void OnClickRemove()
     {
-        m_selectedItem.m_switch.OnRemove();
+        m_selectedItem.m_switchTile.OnRemove();
 
         for (int i = 0; i != m_switches.Count; i++)
         {
@@ -117,18 +129,6 @@ public class SwitchesEditingPanel : ActionPanel
 
     public override void OnClickValidate()
     {
-        if (m_switches != null)
-        {
-            //copy switches to the edited level
-            Switch[] switches = new Switch[m_switches.Count];
-            for (int i = 0; i != switches.Length; i++)
-            {
-                switches[i] = m_switches[i].m_switch;
-            }
-
-            m_parentMenu.m_parentEditor.m_editedLevel.m_switches = switches;
-        }
-
         if (m_selectedItem != null)
         {
             m_selectedItem.Deselect();
@@ -140,7 +140,7 @@ public class SwitchesEditingPanel : ActionPanel
 
     public void OnToggleSwitchState(Toggle toggle)
     {
-        m_selectedItem.m_switch.SetOnOff(toggle.isOn);
+        m_selectedItem.m_switchTile.SetOnOff(toggle.isOn);
     }
 
     public void OnClickEditSwitch()
@@ -194,6 +194,16 @@ public class SwitchesEditingPanel : ActionPanel
 
         bg.color = ColorUtils.FadeColor(bg.color, 1f);
         text.color = ColorUtils.FadeColor(text.color, 1f);
+    }
+
+    private void EnableToggle()
+    {
+        m_switchToggle.interactable = true;
+    }
+
+    private void DisableToggle()
+    {
+        m_switchToggle.interactable = false;
     }
 
     public void Update()

@@ -38,15 +38,8 @@ public class LevelEditorMainMenu : LevelEditorMenu
 
     public void OnClickValidateLevel()
     {
-        Level.ValidationData output = m_parentEditor.m_editedLevel.Validate(45);
-        m_parentEditor.DisplayLevelValidationOutput(output);
-
-        //remove the validate button and make the Test level button active
-        if (output.m_success)
-        {
-            InvalidateValidatePublishButtons();
-            m_parentEditor.ShowTestMenu();
-        }
+        m_parentEditor.m_computingSolution = true;
+        m_parentEditor.m_editedLevel.Validate();
     }
 
     public void OnClickPublishLevel()

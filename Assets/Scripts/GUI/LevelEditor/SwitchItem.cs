@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class SwitchItem : MonoBehaviour
 {
-    public Switch m_switch { get; set; }
+    public SwitchTile m_switchTile { get; set; }
 
     public Color m_backgroundNormalColor;
     public Color m_backgroundSelectedColor;
@@ -14,25 +14,19 @@ public class SwitchItem : MonoBehaviour
 
     private SwitchesEditingPanel m_parentPanel;
 
-    //public bool m_isUnderConstruction { get; set; }
-
-    public void Init(SwitchesEditingPanel parentPanel, int number, Switch vSwitch)
+    public void Init(SwitchesEditingPanel parentPanel, int number)
     {
         m_parentPanel = parentPanel;
         m_number = number;
 
         this.GetComponentInChildren<Text>().text = number.ToString();
 
-        //m_isUnderConstruction = true;
-
-        m_switch = vSwitch;
-
         Deselect();
     }
 
     public void OnClick()
     {
-        m_parentPanel.OnSwitchClick(this);
+        m_parentPanel.OnSwitchItemClick(this);
     }
 
     public void Select()
@@ -45,7 +39,8 @@ public class SwitchItem : MonoBehaviour
         bg.color = m_backgroundSelectedColor;
         numberText.color = m_numberTextSelectedColor;
 
-        m_switch.OnSelect();
+        if (m_switchTile != null)
+            m_switchTile.OnSelect();
     }
 
     public void Deselect()
@@ -58,6 +53,7 @@ public class SwitchItem : MonoBehaviour
         bg.color = m_backgroundNormalColor;
         numberText.color = m_numberTextNormalColor;
 
-        m_switch.OnDeselect();
+        if (m_switchTile != null)
+            m_switchTile.OnDeselect();
     }
 }

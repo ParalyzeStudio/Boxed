@@ -3,8 +3,9 @@ using UnityEngine;
 
 public class SolutionTree
 {
-    //maximum height (or depth) of the tree, i.e the maximum number of nodes allowed along a path
-    public int m_maximumHeight { get; set; }
+    private Level m_levelToSolve;
+        
+    public int m_maximumHeight { get; set; }//maximum height (or depth) of the tree, i.e the maximum number of nodes allowed along a path
     public bool m_maximumHeightReached { get; set; } //did we reach a leaf node of this tree
 
     private List<SolutionNode> m_successNodes;
@@ -24,6 +25,11 @@ public class SolutionTree
     private long m_processedNodesCount;
     private long m_validNodesCount;
 
+    //store here globally some variables to be able to use threads with delegates of type void functionName(void)
+    private int m_filters;
+    public SolutionNode[][] m_solutions { get; set; }
+    private Level.ValidationData m_validationData;
+
     public SolutionTree(int height, Tile[] startTiles, Tile targetTile, bool oneCoveredTileOnly = true)
     {
         m_maximumHeight = height;
@@ -38,11 +44,12 @@ public class SolutionTree
         m_validNodesCount = 0;
     }
 
-    public SolutionTree(int height, Level levelToSolve) : this( height,
+    public SolutionTree(int height, Level levelToSolve) : this(height,
                                                           null,
                                                           levelToSolve.m_floor.GetFinishTile(),
                                                           true)
     {
+        m_levelToSolve = levelToSolve;
         m_startTiles = new Tile[2];
         m_startTiles[0] = levelToSolve.m_floor.GetStartTile();
         m_startTiles[1] = null;
@@ -85,24 +92,44 @@ public class SolutionTree
     //    return ExtractSuccessPaths(bFilters);
     //}
 
-    public SolutionNode[][] SearchForSolutions(int bFilters = SHORTEST_SOLUTION)
+    public void SearchForSolutions(Level.ValidationData validationData, int bFilters = SHORTEST_SOLUTION)
+    {
+        m_filters = bFilters;
+        m_validationData = validationData;
+
+        //QueuedThreadedJobsManager threadManager = GameController.GetInstance().GetComponent<QueuedThreadedJobsManager>();
+        //ThreadedJob job = new ThreadedJob(RunSolutionSearchingThread, null, OnFinishComputingSolutions);
+        //threadManager.AddJob(job);
+
+        RunSolutionSearchingThread();
+        OnFinishComputingSolutions();
+    }
+
+    private void RunSolutionSearchingThread()
     {
         //Construct 1 brick that will serve as a pawn moving across the tree exploring paths
-        Brick b = new Brick();
-        b.PlaceOnTiles(m_startTiles);
+        m_pawn = new Brick();
+        m_pawn.PlaceOnTiles(m_startTiles);
 
         //construct a root node with arbitrary direction (does not matter there)
         m_currentNode = new SolutionNode(Brick.RollDirection.LEFT, null, 0);
 
-        while (!(m_stopWhenTreeIsSolved && m_isSolved))
+        int stopIdx = 100;
+        while (!(m_stopWhenTreeIsSolved && m_isSolved) && stopIdx > 0)
         {
+            stopIdx--;
+
             if (!MovePawn())
                 break;
         }
-        
 
         //now search for paths that are marked as successful and return them
-        return ExtractSuccessPaths(bFilters);
+        m_solutions = ExtractSuccessPaths(m_filters);
+    }
+
+    public void OnFinishComputingSolutions()
+    {
+        m_levelToSolve.OnFinishComputingSolutionsForTree(this, m_validationData);
     }
 
     public void AddSuccessNode(SolutionNode node)
@@ -162,11 +189,11 @@ public class SolutionTree
     **/
     private SolutionNode[] ExtractPathFromNode(SolutionNode node)
     {
-        int pathLength = node.m_distanceFromRoot + 1;
+        int pathLength = node.m_distanceFromRoot;
 
         SolutionNode[] path = new SolutionNode[pathLength];
 
-        while (node != null)
+        while (node.m_parentNode != null) //do not take into account the root node
         {
             path[pathLength - 1] = node;
             pathLength--;
@@ -236,7 +263,9 @@ public class SolutionTree
         for (int i = 0; i != m_currentNode.m_remainingMoves.Length; i++)
         {
             if (m_currentNode.m_remainingMoves[i])
+            {
                 return m_currentNode.GetDirectionForRemainingForwardMove(i);
+            }
         }
 
         return Brick.RollDirection.NONE;
@@ -249,16 +278,21 @@ public class SolutionTree
         else if (direction == Brick.RollDirection.TOP)
             m_currentNode.m_remainingMoves[1] = false;
         else if (direction == Brick.RollDirection.RIGHT)
-            m_currentNode.m_remainingMoves[1] = false;
+            m_currentNode.m_remainingMoves[2] = false;
         else if (direction == Brick.RollDirection.BOTTOM)
-            m_currentNode.m_remainingMoves[1] = false;
+            m_currentNode.m_remainingMoves[3] = false;
+                
+        int nextNodeDistanceFromRoot = m_currentNode.m_distanceFromRoot + 1;
+        SolutionNode nextNode = new SolutionNode(direction, m_currentNode, nextNodeDistanceFromRoot);
+        if (nextNodeDistanceFromRoot == m_maximumHeight - 1) //leaf node
+            nextNode.SetAsLeaf();
 
         SolutionNode previousNode = m_currentNode;
-        SolutionNode nextNode = new SolutionNode(direction, m_currentNode, m_currentNode.m_distanceFromRoot + 1);
         m_currentNode = nextNode;
-        
-        if (!PerformRolling(direction)) //dead node, revert the m_currentNode to the previous node
+
+        if (!PerformRolling(direction)) //dead node, revert the m_currentNode to the previous node and reset the state of the pawn to IDLE
         {
+            m_pawn.m_state = Brick.BrickState.IDLE;
             m_currentNode = previousNode;
         }
     }
@@ -279,6 +313,7 @@ public class SolutionTree
             oppDirection = Brick.RollDirection.TOP;
 
         PerformRolling(oppDirection);
+        m_currentNode = m_currentNode.m_parentNode;
     }
     
     /**
@@ -377,6 +412,14 @@ public class SolutionNode
         //m_coveredTiles = new Tile[2];
         //m_coveredTiles[0] = brick.CoveredTiles[0];
         //m_coveredTiles[1] = brick.CoveredTiles[1];
+    }
+
+    public void SetAsLeaf()
+    {
+        for (int i = 0; i != m_remainingMoves.Length; i++)
+        {
+            m_remainingMoves[i] = false;
+        }
     }
 
     //public void Process()

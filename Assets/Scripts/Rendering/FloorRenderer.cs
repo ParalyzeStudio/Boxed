@@ -75,6 +75,13 @@ public class FloorRenderer : MonoBehaviour
         return m_tileRenderers[m_floorData.GetTileIndexForColumnLine(tile.m_columnIndex, tile.m_lineIndex)];
     }
 
+    public void ReplaceTileOnRenderer(Tile oldTile, Tile newTile)
+    {
+        TileRenderer renderer = GetRendererForTile(oldTile);
+        renderer.m_tile = newTile;
+        renderer.Invalidate();
+    }
+
     /**
     * Bake tiles in one single mesh for performance
     **/

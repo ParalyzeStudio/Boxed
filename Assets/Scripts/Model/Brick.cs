@@ -242,44 +242,48 @@ public class Brick
         {
             //set the state of the brick to ROLLING
             m_state = BrickState.ROLLING;
+
+            //replace the old covered tiles by new ones
+            m_coveredTiles = newCoveredTiles;
+
+            //Determine which of the 4 adjacent faces the rollToFace is equal to        
+            int adjacentFaceIdx = -1;
+            for (int i = 0; i != currentFace.m_adjacentsFaces.Length; i++)
+            {
+                BrickFace adjacentFace = m_faces[currentFace.m_adjacentsFaces[i]];
+                if (adjacentFace.m_index == rollToFace.m_index)
+                {
+                    adjacentFaceIdx = i;
+                    break;
+                }
+            }
+
+            rotationEdge = currentFace.GetAdjacentFaceSharedEdge(adjacentFaceIdx);
+            Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
+
+            Quaternion brickRotation = Quaternion.AngleAxis(90, rotationAxis);
+            m_rotation *= brickRotation;
+
+            //set the new index for the face touching the floor
+            m_downFaceIndex = rollToFace.m_index;
         }
-        if (rollResult == RollResult.NO_TILE_TO_ROLL) //there is no tile on which we can land, just interrupt the rolling action
+        else if (rollResult == RollResult.NO_TILE_TO_ROLL) //there is no tile on which we can land, just interrupt the rolling action
         {
             m_state = BrickState.IDLE;
             rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
             return;
         }
         else if (rollResult == RollResult.FALL)
-            m_state = BrickState.FALLING;
-        else if (rollResult == RollResult.NONE) //return immediately so the covered tiles are not updated
         {
+            m_state = BrickState.FALLING;
             rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
             return;
         }
-
-        //replace the old covered tiles by new ones
-        m_coveredTiles = newCoveredTiles;        
-
-        //Determine which of the 4 adjacent faces the rollToFace is equal to        
-        int adjacentFaceIdx = -1;
-        for (int i = 0; i != currentFace.m_adjacentsFaces.Length; i++)
+        else //maintain the brick in IDLE state
         {
-            BrickFace adjacentFace = m_faces[currentFace.m_adjacentsFaces[i]];
-            if (adjacentFace.m_index == rollToFace.m_index)
-            {
-                adjacentFaceIdx = i;
-                break;
-            }
-        }
-
-        rotationEdge = currentFace.GetAdjacentFaceSharedEdge(adjacentFaceIdx);
-        Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
-
-        Quaternion brickRotation = Quaternion.AngleAxis(90, rotationAxis);
-        m_rotation *= brickRotation;
-
-        //set the new index for the face touching the floor
-        m_downFaceIndex = rollToFace.m_index;
+            rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
+            return;
+        }        
     }
 
     public static Vector3 GetVector3DirectionForRollingDirection(Brick.RollDirection rollDirection)
@@ -365,7 +369,7 @@ public class Brick
                         if (nextTile.CurrentState == Tile.State.BLOCKED)
                             return RollResult.NONE;
                         else if (nextTile.CurrentState == Tile.State.DISABLED)
-                            rollResult = RollResult.FALL;
+                            return RollResult.FALL;
 
                         newCoveredTiles[0] = nextTile;
                         newCoveredTiles[1] = null;
@@ -383,7 +387,7 @@ public class Brick
                     if (nextTile1.CurrentState == Tile.State.BLOCKED || nextTile2.CurrentState == Tile.State.BLOCKED)
                         return RollResult.NONE;
                     else if (nextTile1.CurrentState == Tile.State.DISABLED || nextTile2.CurrentState == Tile.State.DISABLED)
-                        rollResult = RollResult.FALL;
+                        return RollResult.FALL;
 
                     newCoveredTiles[0] = nextTile1;
                     newCoveredTiles[1] = nextTile2;
@@ -409,41 +413,16 @@ public class Brick
         if (m_state == BrickState.FALLING)
             return;
 
-
-        //Capture bonuses
-        if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
-        {         
-            if (m_coveredTiles[0].AttachedBonus != null)
-            {
-                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_coveredTiles[0]);
-                tileRenderer.OnCaptureBonus();
-            }
-
-            if (m_coveredTiles[1] != null && m_coveredTiles[1].AttachedBonus != null)
-            {
-                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_coveredTiles[1]);
-                tileRenderer.OnCaptureBonus();
-            }
-        }
-
         //switches
-        Level level;
-        if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
-            level = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
-        else
-            level = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI).m_editedLevel;
-
         if (CoveredTiles[0] != null && CoveredTiles[0].CurrentState == Tile.State.SWITCH)
         {
-            Switch vSwitch = level.GetSwitchForTile(CoveredTiles[0]);
-            vSwitch.Toggle();
+            ((SwitchTile) CoveredTiles[0]).Toggle();
         }
         else
         {
             if (CoveredTiles[1] != null && CoveredTiles[1].CurrentState == Tile.State.SWITCH)
             {
-                Switch vSwitch = level.GetSwitchForTile(CoveredTiles[1]);
-                vSwitch.Toggle();
+                ((SwitchTile)CoveredTiles[1]).Toggle();
             }
         }
         

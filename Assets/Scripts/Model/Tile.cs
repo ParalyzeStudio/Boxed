@@ -65,7 +65,12 @@ public class Tile
         m_columnIndex = columnIndex;
         m_currentState = state;
         m_attachedBonus = bonus;
-    }    
+    }
+
+    public Tile(SwitchTile switchTile) : this(switchTile.m_columnIndex, switchTile.m_lineIndex, Tile.State.NORMAL, switchTile.AttachedBonus)
+    {
+
+    }
 
     /**
     * Get the local position of the tile depending on its column/line values

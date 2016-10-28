@@ -401,6 +401,14 @@ public class TileRenderer : MonoBehaviour
 
     }
 
+    public void Invalidate()
+    {
+        UpdateTileHeight(GetTileHeight());
+        UpdateTilePosition(m_tile.GetLocalPosition());
+        UpdateTileColors();
+        UpdateTileDecal();
+    }
+
     public void Update()
     {
         if (m_colorVariating)
@@ -436,22 +444,21 @@ public class TileRenderer : MonoBehaviour
         }
 
         //do not update rendering of tile when searching for solutions inside a tree
-        bool bUpdateTileRenderingOnStateChange = false;
-        if (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR)
-        {
-            LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
-            if (levelEditor.m_isTestMenuShown && levelEditor.m_testMenu.m_testingLevel)
-                bUpdateTileRenderingOnStateChange = true;
-        }
-        else if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
-            bUpdateTileRenderingOnStateChange = true;
+        //bool bUpdateTileRenderingOnStateChange = false;
 
-        if (m_tile.m_tileStateDirty && bUpdateTileRenderingOnStateChange)
+        //if (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR)
+        //{
+        //    LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+        //    if (levelEditor.m_isTestMenuShown && levelEditor.m_testMenu.m_testingLevel)
+        //        bUpdateTileRenderingOnStateChange = true;
+        //}
+        //else if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
+        //    bUpdateTileRenderingOnStateChange = true;
+
+        LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+        if (m_tile.m_tileStateDirty && !levelEditor.m_computingSolution)
         {
-            UpdateTileHeight(GetTileHeight());
-            UpdateTilePosition(m_tile.GetLocalPosition());
-            UpdateTileColors();
-            UpdateTileDecal();
+            Invalidate();
             m_tile.m_tileStateDirty = false;
         }
 

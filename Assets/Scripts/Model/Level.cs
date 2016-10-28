@@ -2,9 +2,6 @@
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Collections.Generic;
-
-using Permutation = System.Collections.Generic.List<int>;
 
 [Serializable]
 public class Level
@@ -13,12 +10,14 @@ public class Level
     public Floor m_floor;
     public string m_title;
 
-    public Switch[] m_switches;
-
     public bool m_validated; //has the level been validated
     public Brick.RollDirection[] m_solution;
 
     public bool m_published; //has the level been published
+
+    private const int MAX_SOLUTION_TREE_HEIGHT = 3;
+
+    private static System.Diagnostics.Stopwatch s_stopwatch;
 
     public Level(Floor floor)
     {
@@ -27,7 +26,7 @@ public class Level
         m_validated = false;
     }
 
-    public Level(Level oldLevel, Switch[] switches)
+    public Level(Level oldLevel)
     {
         m_number = oldLevel.m_number;
         m_floor = oldLevel.m_floor;
@@ -35,8 +34,6 @@ public class Level
         m_validated = oldLevel.m_validated;
         m_solution = oldLevel.m_solution;
         m_published = oldLevel.m_published;
-
-        m_switches = switches;
     }
 
     /**
@@ -58,7 +55,7 @@ public class Level
     /**
     * Call this method to validate a level that has been created inside the level editor
     **/
-    public ValidationData Validate(int maxMovements)
+    public void Validate()
     {
         ValidationData validationData = new ValidationData();
 
@@ -72,7 +69,8 @@ public class Level
             validationData.m_startTileSet = (startTile != null);
             validationData.m_finishTileSet = (finishTile != null);
 
-            return validationData;
+            LevelEditor levelEditor = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI);
+            levelEditor.OnFinishValidatingLevel(validationData);
         }
         else
         {
@@ -81,61 +79,107 @@ public class Level
         }
 
         //Now check if there is at least one valid path from start tile to finish tile
-        System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-        sw.Start();
+        s_stopwatch = new System.Diagnostics.Stopwatch();
+        s_stopwatch.Start();
 
-        SolutionNode[] solution = Solve(maxMovements);
+        Solve(validationData);
 
-        sw.Stop();
-        Debug.Log("Level solved in " + sw.ElapsedMilliseconds + " ms");
 
-        if (solution == null) //no solution
+        s_stopwatch.Stop();
+        Debug.Log("elapsed:" + s_stopwatch.ElapsedMilliseconds);
+    }
+
+    public void Solve(ValidationData validationData)
+    {
+        int treeHeight = 2;
+
+        SolveTree(treeHeight, validationData);
+
+
+
+
+
+        //SolutionNode[][] solutions;
+        //do
+        //{
+        //    Debug.Log("solving tree with height:" + treeHeight);
+        //    SolveTree(treeHeight);
+        //    //SolutionTree solutionTree = new SolutionTree(treeHeight, this);
+
+
+        //    //QueuedThreadedJobsManager threadManager = GameController.GetInstance().GetComponent<QueuedThreadedJobsManager>();
+
+
+        //    //solutions = solutionTree.SearchForSolutions();
+
+        //    //if (solutions == null)
+        //    //{
+        //    //    //check if we failed to reach at least one leaf node of this tree
+        //    //    //if this is the case, no need to search for solutions on a bigger tree as we won't go any further than we have already reached
+        //    //    if (!solutionTree.m_maximumHeightReached)
+        //    //        break;
+        //    //}
+
+        //    treeHeight++;
+        //}
+        //while (solutions == null && treeHeight < SOLUTION_MAX_MOVEMENTS);
+
+        //if (solutions != null)
+        //    return solutions[0];
+        //else
+        //    return null;
+    }
+
+    private void SolveTree(int treeHeight, ValidationData validationData)
+    {
+        SolutionTree solutionTree = new SolutionTree(treeHeight, this);
+        solutionTree.SearchForSolutions(validationData);
+    }
+
+    public void OnFinishComputingSolutionsForTree(SolutionTree tree, ValidationData validationData)
+    {
+        if (tree.m_solutions == null)
+        {
+            //check if we failed to reach at least one leaf node of this tree
+            //if this is the case, no need to search for solutions on a bigger tree as we won't go any further than we have already reached
+            if (tree.m_maximumHeightReached)
+            {
+                //TODO run a new job on a bigger tree
+                int nextTreeHeight = tree.m_maximumHeight + 1;
+                if (nextTreeHeight <= MAX_SOLUTION_TREE_HEIGHT)
+                    SolveTree(nextTreeHeight, validationData);
+                else
+                    OnFinishSolvingLevel(null, validationData);
+            }
+            else
+                OnFinishSolvingLevel(null, validationData);
+        }
+        else
+            OnFinishSolvingLevel(tree.m_solutions[0], validationData);
+    }
+
+    private void OnFinishSolvingLevel(SolutionNode[] shortestSolution, ValidationData validationData)
+    {
+        s_stopwatch.Stop();
+        Debug.Log("Level solved in " + s_stopwatch.ElapsedMilliseconds + " ms");
+
+        if (shortestSolution == null) //no solution
         {
             validationData.m_success = false;
             validationData.m_solution = null;
-            return validationData;
+            m_validated = false;
         }
         else
         {
             validationData.m_success = true;
             validationData.m_bonusesAreReachable = true;
-            validationData.m_solution = solution;
+            validationData.m_solution = shortestSolution;
+            m_validated = true;
+            CopySolutionToLevel(validationData.m_solution);
         }
 
-        validationData.m_success = true;
-        m_validated = true;
-
-        CopySolutionToLevel(validationData.m_solution);
-
-        return validationData;
-    }
-
-    public SolutionNode[] Solve(int maxMovements)
-    {
-        int treeHeight = 2;
-        SolutionNode[][] solutions;
-        do
-        {
-            Debug.Log("solving tree with height:" + treeHeight);
-            SolutionTree solutionTree = new SolutionTree(treeHeight, this);
-            solutions = solutionTree.SearchForSolutions();
-
-            if (solutions == null)
-            {
-                //check if we failed to reach at least one leaf node of this tree
-                //if this is the case, no need to search for solutions on a bigger tree as we won't go any further than we have already reached
-                if (!solutionTree.m_maximumHeightReached)
-                    break;
-            }
-
-            treeHeight++;
-        }
-        while (solutions == null && treeHeight < maxMovements);
-
-        if (solutions != null)
-            return solutions[0];
-        else
-            return null;
+        LevelEditor levelEditor = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI);
+        levelEditor.OnFinishValidatingLevel(validationData);
     }
 
     //private SolutionNode[] ExtractSolutionForPermutation(Permutation permutation, int maxSolutionLength)
@@ -199,22 +243,6 @@ public class Level
 
     //    return solution.ToArray();
     //}
-
-    /**
-    * Return the switch for a given tile
-    **/
-    public Switch GetSwitchForTile(Tile tile)
-    {
-        for (int i = 0; i != m_switches.Length; i++)
-        {
-            if (m_switches[i].m_switchTile == tile)
-            {
-                return m_switches[i];
-            }
-        }
-
-        return null;
-    }
 
     /**
     * Find all permutations between bonuses

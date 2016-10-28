@@ -29,7 +29,7 @@ public class GameController : MonoBehaviour
     {
         //cache levels
         LevelManager levelManager = this.GetComponent<LevelManager>();
-        levelManager.CacheLevels();
+        //levelManager.CacheLevels();
 
         //init the camera
         GameObject.FindGameObjectWithTag("MainCamera").GetComponent<IsometricCameraController>().Init();

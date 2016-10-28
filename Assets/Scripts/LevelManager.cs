@@ -43,21 +43,22 @@ public class LevelManager : MonoBehaviour
     public void Start()
     {
         //RepublishAllLevelsForUpgrade();
-        //List<Level> newLevels = GetAllPublishedLevelsFromDisk();
-        //for (int i = 0; i != newLevels.Count; i++)
-        //{
-        //    Level upgradedLevel = new Level(newLevels[i]);
-        //    upgradedLevel.Publish();
-        //}
     }
 
     //private void RepublishAllLevelsForUpgrade()
     //{
-    //    List<Level> oldLevels = GetAllPublishedLevelsFromDisk();
-    //    for (int i = 0; i != oldLevels.Count; i++)
+    //    List<Level> oldPublishedLevels = GetAllPublishedLevelsFromDisk();
+    //    for (int i = 0; i != oldPublishedLevels.Count; i++)
     //    {
-    //        Level upgradedLevel = new Level(oldLevels[i], null);
+    //        Level upgradedLevel = new Level(oldPublishedLevels[i]);
     //        upgradedLevel.Publish();
+    //    }
+
+    //    List<Level> oldEditedLevels = GetAllEditedLevelsFromDisk();
+    //    for (int i = 0; i != oldEditedLevels.Count; i++)
+    //    {
+    //        Level upgradedLevel = new Level(oldEditedLevels[i]);
+    //        upgradedLevel.Save();
     //    }
     //}
 

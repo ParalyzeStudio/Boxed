@@ -337,7 +337,23 @@ public class BrickRenderer : MonoBehaviour
     public void OnFinishRolling()
     {
         m_brick.OnFinishRolling();
-        
+
+        //Capture bonuses
+        if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
+        {
+            if (m_brick.CoveredTiles[0].AttachedBonus != null)
+            {
+                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_brick.CoveredTiles[0]);
+                tileRenderer.OnCaptureBonus();
+            }
+
+            if (m_brick.CoveredTiles[1] != null && m_brick.CoveredTiles[1].AttachedBonus != null)
+            {
+                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_brick.CoveredTiles[1]);
+                tileRenderer.OnCaptureBonus();
+            }
+        }
+
         if (m_brick.GetCoveredTilesCount() == 1)
         {
             if (m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP)
