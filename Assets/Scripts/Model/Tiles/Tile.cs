@@ -67,7 +67,7 @@ public class Tile
         m_attachedBonus = bonus;
     }
 
-    public Tile(SwitchTile switchTile) : this(switchTile.m_columnIndex, switchTile.m_lineIndex, Tile.State.NORMAL, switchTile.AttachedBonus)
+    public Tile(Tile other) : this(other.m_columnIndex, other.m_lineIndex, other.m_currentState, other.AttachedBonus)
     {
 
     }
@@ -77,7 +77,19 @@ public class Tile
     **/
     public Vector3 GetLocalPosition()
     {
-        float tilePositionY = (CurrentState == State.BLOCKED) ? 0.5f * TILE_DEFAULT_HEIGHT : 0;
+        float tilePositionY;
+        if (CurrentState == State.BLOCKED)
+            tilePositionY = 0.5f * TILE_DEFAULT_HEIGHT;
+        else if (CurrentState == State.TRIGGERED_BY_SWITCH)
+        {
+            if (((TriggeredTile)this).m_isLiftUp)
+                tilePositionY = 0.5f * TILE_DEFAULT_HEIGHT;
+            else
+                tilePositionY = 0;
+        }
+        else
+            tilePositionY = 0;
+
         return new Vector3(m_columnIndex * m_size, tilePositionY, m_lineIndex * m_size);
     }
 
@@ -129,6 +141,6 @@ public class Tile
 
     public override string ToString()
     {
-        return "l:" + m_lineIndex + " c:" + m_columnIndex + " s:" + m_currentState;
+        return "l:" + m_lineIndex + " c:" + m_columnIndex + (m_currentState == State.DISABLED ? "" : " s:" + m_currentState);
     }
 }

@@ -217,7 +217,7 @@ public class TileRenderer : MonoBehaviour
 
     public void UpdateTileHeight(float height)
     {
-        BuildFaces(GetTileHeight()); //rebuild the tile
+        this.transform.localScale = new Vector3(1, GetTileHeight() / Tile.TILE_DEFAULT_HEIGHT, 1);
     }
 
     public void UpdateTilePosition(Vector3 position)
@@ -238,8 +238,7 @@ public class TileRenderer : MonoBehaviour
         if (m_tile.CurrentState == Tile.State.SWITCH || m_tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
             AddDecal(null);
         else
-            RemoveDecal();
-        
+            RemoveDecal();        
     }
 
     /**
@@ -283,6 +282,12 @@ public class TileRenderer : MonoBehaviour
         float tileHeight = Tile.TILE_DEFAULT_HEIGHT;
         if (m_tile.CurrentState == Tile.State.BLOCKED)
             tileHeight *= 2;
+        else if (m_tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
+        {
+            TriggeredTile tile = (TriggeredTile)m_tile;
+            if (tile.m_isLiftUp)
+                tileHeight *= 2;
+        }
 
         return tileHeight;
     }
@@ -349,13 +354,13 @@ public class TileRenderer : MonoBehaviour
     **/
     public void AddDecal(Material quadTextureMaterial)
     {
-        Debug.Log("AddDecal");
         if (m_decalObject != null)
             return;
 
         m_decalObject = new GameObject("Decal");
-        m_decalObject.transform.SetParent(this.transform, false);
-        m_decalObject.transform.localPosition = new Vector3(0, 0.01f, 0); //set the decal right above the tile object
+        //m_decalObject.transform.SetParent(this.transform, false);
+        m_decalObject.transform.parent = this.transform;
+        m_decalObject.transform.localPosition = new Vector3(0, 0.001f, 0); //set the decal right above the tile object
 
         MeshFilter meshFilter = m_decalObject.AddComponent<MeshFilter>();
         MeshRenderer meshRenderer = m_decalObject.AddComponent<MeshRenderer>();
@@ -455,7 +460,7 @@ public class TileRenderer : MonoBehaviour
         //else if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
         //    bUpdateTileRenderingOnStateChange = true;
 
-        LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+        LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI; 
         if (m_tile.m_tileStateDirty && !levelEditor.m_computingSolution)
         {
             Invalidate();

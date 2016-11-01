@@ -100,51 +100,47 @@ public class GameTouchHandler : TouchHandler
                     {
                         if (raycastTile.CurrentState == Tile.State.NORMAL)
                         {
-                            //remove the previous switch tile and replace it with a normal tile
-                            if (editedSwitchItem.m_switchTile != null)
-                            {
-                                Tile normalTile = new Tile(editedSwitchItem.m_switchTile);
-                                levelEditor.m_editedLevel.m_floor.InsertTile(normalTile);
-
-                                //invalidate the tile on the renderer
-                                GameController.GetInstance().m_floor.ReplaceTileOnRenderer(editedSwitchItem.m_switchTile, normalTile);
-                            }
-
-                            Debug.Log("raycastTile:" + levelEditor.m_editedLevel.m_floor.GetTileIndex(raycastTile));
-
-                            //build a new tile and put it in the floor
                             SwitchTile switchTile = new SwitchTile(raycastTile, null);
-                            levelEditor.m_editedLevel.m_floor.InsertTile(switchTile);
-                            editedSwitchItem.m_switchTile = switchTile;
+                            editedSwitchItem.SetSwitchTile(switchTile);
 
-                            //invalidate the tile on the renderer
-                            GameController.GetInstance().m_floor.ReplaceTileOnRenderer(raycastTile, switchTile);
+
+                            ////remove the previous switch tile and replace it with a normal tile
+                            //if (editedSwitchItem.SwitchTile != null)
+                            //{
+                            //    Tile normalTile = new Tile(editedSwitchItem.SwitchTile);
+                            //    normalTile.CurrentState = Tile.State.NORMAL;
+                            //    levelEditor.m_editedLevel.m_floor.InsertTile(normalTile);
+
+                            //    //invalidate the tile on the renderer
+                            //    GameController.GetInstance().m_floor.ReplaceTileOnRenderer(editedSwitchItem.SwitchTile, normalTile);
+                            //}
+
+                            //Debug.Log("raycastTile:" + levelEditor.m_editedLevel.m_floor.GetTileIndex(raycastTile));
+
+                            ////build a new tile and put it in the floor
+                            //SwitchTile switchTile = new SwitchTile(raycastTile, null);
+                            //levelEditor.m_editedLevel.m_floor.InsertTile(switchTile);
+                            //editedSwitchItem.SetSwitchTile(switchTile);
+
+                            ////invalidate the tile on the renderer
+                            //GameController.GetInstance().m_floor.ReplaceTileOnRenderer(raycastTile, switchTile);
                         }
                         else if (raycastTile.CurrentState == Tile.State.SWITCH)
                         {
-                            SwitchTile switchTile = (SwitchTile)raycastTile;
-
-                            editedSwitchItem.m_switchTile = null;
-
-                            //remove the switch tile and replace it with a normal tile
-                            Tile normalTile = new Tile(switchTile);
-                            levelEditor.m_editedLevel.m_floor.InsertTile(normalTile);
-
-                            //invalidate the tile on the renderer
-                            GameController.GetInstance().m_floor.ReplaceTileOnRenderer(switchTile, normalTile);
+                            editedSwitchItem.SetSwitchTile(null);
                         }
                     }
                     else //editing tile that are triggered by the switch tile
                     {
+                        Debug.Log("raycast");
                         if (raycastTile.CurrentState == Tile.State.NORMAL)
                         {
-                            editedSwitchItem.m_switchTile.m_triggeredTiles.Add(raycastTile);
-                            raycastTile.CurrentState = Tile.State.TRIGGERED_BY_SWITCH;
+                            TriggeredTile triggeredTile = new TriggeredTile(raycastTile);
+                            editedSwitchItem.AddTriggeredTile(triggeredTile);
                         }
                         else if (raycastTile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
                         {
-                            editedSwitchItem.m_switchTile.m_triggeredTiles.Remove(raycastTile);
-                            raycastTile.CurrentState = Tile.State.NORMAL;
+                            editedSwitchItem.RemoveTriggeredTile((TriggeredTile) raycastTile);
                         }
                     }
                 }

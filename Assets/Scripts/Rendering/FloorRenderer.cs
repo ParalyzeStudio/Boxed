@@ -72,12 +72,17 @@ public class FloorRenderer : MonoBehaviour
 
     public TileRenderer GetRendererForTile(Tile tile)
     {
-        return m_tileRenderers[m_floorData.GetTileIndexForColumnLine(tile.m_columnIndex, tile.m_lineIndex)];
+        return GetRendererForTileColumnLine(tile.m_columnIndex, tile.m_lineIndex);
     }
 
-    public void ReplaceTileOnRenderer(Tile oldTile, Tile newTile)
+    public TileRenderer GetRendererForTileColumnLine(int column, int line)
     {
-        TileRenderer renderer = GetRendererForTile(oldTile);
+        return m_tileRenderers[m_floorData.GetTileIndexForColumnLine(column, line)];
+    }
+
+    public void ReplaceTileOnRenderer(Tile newTile)
+    {
+        TileRenderer renderer = GetRendererForTileColumnLine(newTile.m_columnIndex, newTile.m_lineIndex);
         renderer.m_tile = newTile;
         renderer.Invalidate();
     }

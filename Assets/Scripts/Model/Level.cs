@@ -76,17 +76,17 @@ public class Level
         {
             validationData.m_startTileSet = true;
             validationData.m_finishTileSet = true;
+
+            //Now check if there is at least one valid path from start tile to finish tile
+            s_stopwatch = new System.Diagnostics.Stopwatch();
+            s_stopwatch.Start();
+
+            Solve(validationData);
+
+
+            s_stopwatch.Stop();
+            Debug.Log("elapsed:" + s_stopwatch.ElapsedMilliseconds);
         }
-
-        //Now check if there is at least one valid path from start tile to finish tile
-        s_stopwatch = new System.Diagnostics.Stopwatch();
-        s_stopwatch.Start();
-
-        Solve(validationData);
-
-
-        s_stopwatch.Stop();
-        Debug.Log("elapsed:" + s_stopwatch.ElapsedMilliseconds);
     }
 
     public void Solve(ValidationData validationData)
@@ -144,7 +144,6 @@ public class Level
             //if this is the case, no need to search for solutions on a bigger tree as we won't go any further than we have already reached
             if (tree.m_maximumHeightReached)
             {
-                //TODO run a new job on a bigger tree
                 int nextTreeHeight = tree.m_maximumHeight + 1;
                 if (nextTreeHeight <= MAX_SOLUTION_TREE_HEIGHT)
                     SolveTree(nextTreeHeight, validationData);
@@ -341,11 +340,20 @@ public class Level
 
     public bool Save()
     {
-        m_floor = m_floor.Clamp(); //clamp floor before saving
-        m_floor.ClearCachedValues(); //remove cached values
+        //m_floor = m_floor.Clamp(); //clamp floor before saving
+        //m_floor.ClearCachedValues(); //remove cached values
+
+        Floor clampedFloor = m_floor.Clamp(); //clamp floor before saving
+        clampedFloor.ClearCachedValues(); //remove cached values
+
+        Floor originalFloor = m_floor;
+        m_floor = clampedFloor;
 
         string editedLevelsFolderPath = Application.persistentDataPath + "/Levels/EditedLevels";
-        return SaveToFile(editedLevelsFolderPath);
+        bool levelSaved = SaveToFile(editedLevelsFolderPath);
+
+        m_floor = originalFloor;
+        return levelSaved;
     }
 
     public bool Publish()

@@ -16,10 +16,12 @@ public class SwitchesEditingPanel : ActionPanel
     public Button m_editItemButton;
     public Toggle m_switchToggle;
     public Button m_editSwitchButton;
+    public Toggle m_triggeredTileStateToggle;
     public Button m_editTilesButton;
 
     public bool m_editingSwitch { get; set; }
     public bool m_editingSwitchTile { get; set;}
+    public bool m_triggeredTileLiftUpState { get; set; }
 
     public void Init()
     {
@@ -31,13 +33,16 @@ public class SwitchesEditingPanel : ActionPanel
             for (int i = 0; i != switches.Count; i++)
             {
                 SwitchItem item = AddSwitchItem();
-                item.m_switchTile = switches[i];
+                item.SetSwitchTile(switches[i]);
             }
         }
 
         m_switchList.gameObject.SetActive(true);
         m_switchListButtons.gameObject.SetActive(true);
         m_switchEditButtons.gameObject.SetActive(false);
+
+        m_switchToggle.isOn = true;
+        m_triggeredTileStateToggle.isOn = true;
     }
 
     public void OnSwitchItemClick(SwitchItem item)
@@ -99,21 +104,20 @@ public class SwitchesEditingPanel : ActionPanel
         InvalidateSwitchEditingButtons();
 
         //toggle
-        if (m_selectedItem.m_switchTile == null)
+        if (m_selectedItem.SwitchTile == null)
         {
             m_switchToggle.isOn = true;
-            DisableToggle();
         }
         else
         {
-            EnableToggle();
-            m_switchToggle.isOn = m_selectedItem.m_switchTile.m_isOn;
+            m_switchToggle.isOn = m_selectedItem.SwitchTile.m_isOn;
         }
     }
 
     public void OnClickRemove()
     {
-        m_selectedItem.m_switchTile.OnRemove();
+        if (m_selectedItem.SwitchTile != null)
+            m_selectedItem.Remove();
 
         for (int i = 0; i != m_switches.Count; i++)
         {
@@ -138,9 +142,14 @@ public class SwitchesEditingPanel : ActionPanel
         base.OnClickValidate();
     }
 
-    public void OnToggleSwitchState(Toggle toggle)
+    public void OnToggleTestSwitch(Toggle toggle)
     {
-        m_selectedItem.m_switchTile.SetOnOff(toggle.isOn);
+        m_selectedItem.ToggleTiles();
+    }
+
+    public void OnToggleTriggeredTileState(Toggle toggle)
+    {
+        m_triggeredTileLiftUpState = toggle.isOn;
     }
 
     public void OnClickEditSwitch()
@@ -157,6 +166,8 @@ public class SwitchesEditingPanel : ActionPanel
 
     public void OnClickValidateSwitchEditing()
     {
+        m_selectedItem.SaveSwitchTile();
+
         m_switchList.gameObject.SetActive(true);
         m_switchListButtons.gameObject.SetActive(true);
         m_switchEditButtons.gameObject.SetActive(false);
@@ -196,16 +207,6 @@ public class SwitchesEditingPanel : ActionPanel
         text.color = ColorUtils.FadeColor(text.color, 1f);
     }
 
-    private void EnableToggle()
-    {
-        m_switchToggle.interactable = true;
-    }
-
-    private void DisableToggle()
-    {
-        m_switchToggle.interactable = false;
-    }
-
     public void Update()
     {
         if (m_selectedItem == null)
@@ -217,6 +218,14 @@ public class SwitchesEditingPanel : ActionPanel
         {
             m_removeItemButton.gameObject.SetActive(true);
             m_editItemButton.gameObject.SetActive(true);
+        }
+
+        if (m_editingSwitch)
+        {
+            if (m_selectedItem.SwitchTile == null)
+                m_switchToggle.interactable = false;
+            else
+                m_switchToggle.interactable = true;
         }
     }
 }
