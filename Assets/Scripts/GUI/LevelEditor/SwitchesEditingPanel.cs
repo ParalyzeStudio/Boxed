@@ -42,7 +42,8 @@ public class SwitchesEditingPanel : ActionPanel
         m_switchEditButtons.gameObject.SetActive(false);
 
         m_switchToggle.isOn = true;
-        m_triggeredTileStateToggle.isOn = true;
+        m_triggeredTileStateToggle.isOn = false;
+        m_triggeredTileLiftUpState = false;
     }
 
     public void OnSwitchItemClick(SwitchItem item)

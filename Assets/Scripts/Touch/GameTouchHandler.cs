@@ -132,7 +132,6 @@ public class GameTouchHandler : TouchHandler
                     }
                     else //editing tile that are triggered by the switch tile
                     {
-                        Debug.Log("raycast");
                         if (raycastTile.CurrentState == Tile.State.NORMAL)
                         {
                             TriggeredTile triggeredTile = new TriggeredTile(raycastTile);

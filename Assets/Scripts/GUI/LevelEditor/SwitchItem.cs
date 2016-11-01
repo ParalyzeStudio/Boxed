@@ -13,7 +13,7 @@ public class SwitchItem : MonoBehaviour
         }
     }
 
-    private List<TriggeredTile> m_triggeredTiles;
+    public List<TriggeredTile> m_triggeredTiles { get; set; }
 
     public Color m_backgroundNormalColor;
     public Color m_backgroundSelectedColor;
@@ -28,8 +28,7 @@ public class SwitchItem : MonoBehaviour
     {
         m_parentPanel = parentPanel;
         m_number = number;
-        if (m_triggeredTiles == null)
-            m_triggeredTiles = new List<TriggeredTile>();
+        m_triggeredTiles = new List<TriggeredTile>();
 
         this.GetComponentInChildren<Text>().text = number.ToString();
 
@@ -142,7 +141,6 @@ public class SwitchItem : MonoBehaviour
         GameController.GetInstance().m_floor.ReplaceTileOnRenderer(tile);
 
         m_triggeredTiles.Add(tile);
-        Debug.Log("m_parentPanel.m_triggeredTileLiftUpState:" + m_parentPanel.m_triggeredTileLiftUpState);
         tile.m_isLiftUp = m_parentPanel.m_triggeredTileLiftUpState;
         tile.m_tileStateDirty = true;
     }
