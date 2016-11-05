@@ -15,7 +15,7 @@ public class Level
 
     public bool m_published; //has the level been published
 
-    private const int MAX_SOLUTION_TREE_HEIGHT = 3;
+    private const int MAX_SOLUTION_TREE_HEIGHT = 6;
 
     private static System.Diagnostics.Stopwatch s_stopwatch;
 
@@ -26,14 +26,26 @@ public class Level
         m_validated = false;
     }
 
-    public Level(Level oldLevel)
+    //public Level(Level oldLevel)
+    //{
+    //    m_number = oldLevel.m_number;
+    //    m_floor = oldLevel.m_floor;
+    //    m_title = oldLevel.m_title;
+    //    m_validated = oldLevel.m_validated;
+    //    m_solution = oldLevel.m_solution;
+    //    m_published = oldLevel.m_published;
+    //}
+
+    public Level(Level other)
     {
-        m_number = oldLevel.m_number;
-        m_floor = oldLevel.m_floor;
-        m_title = oldLevel.m_title;
-        m_validated = oldLevel.m_validated;
-        m_solution = oldLevel.m_solution;
-        m_published = oldLevel.m_published;
+        m_number = other.m_number;
+        m_title = other.m_title;
+        m_validated = other.m_validated;
+        m_published = other.m_published;
+        m_solution = other.m_solution;
+
+        //deep copy floor tiles
+        m_floor = new Floor(other.m_floor);
     }
 
     /**
@@ -132,12 +144,37 @@ public class Level
 
     private void SolveTree(int treeHeight, ValidationData validationData)
     {
-        SolutionTree solutionTree = new SolutionTree(treeHeight, this);
+        Debug.Log(">>>>>>>Solving tree with height " + treeHeight);
+        
+        //for (int i = 0; i != m_floor.Tiles.Length; i++)
+        //{
+        //    Tile tile = m_floor.Tiles[i];
+        //    if (tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
+        //    {
+        //        Debug.Log("isliftup:" + ((TriggeredTile)tile).m_isLiftUp);
+        //    }
+        //}
+        //bool duplicateIsOn = ((SwitchTile)GameController.GetInstance().m_floor.m_floorData.Tiles[66]).m_isOn;
+        //Floor editedLevelFloor = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI).m_editedLevel.m_floor;
+        //bool editedIsOn = ((SwitchTile)editedLevelFloor.Tiles[66]).m_isOn;
+        //bool thisIsOn = ((SwitchTile)m_floor.Tiles[66]).m_isOn;
+        //Debug.Log(duplicateIsOn + "-" + editedIsOn + "-" + thisIsOn);
+
+
+        Level duplicateLevelForSolving = new Level(this);
+        GameController.GetInstance().m_floor.m_floorData = duplicateLevelForSolving.m_floor; //replace temporarily the global floor instance
+        SolutionTree solutionTree = new SolutionTree(treeHeight, duplicateLevelForSolving); //perform the algorithm on a copied tree to not modify the original state of the floor
         solutionTree.SearchForSolutions(validationData);
     }
 
     public void OnFinishComputingSolutionsForTree(SolutionTree tree, ValidationData validationData)
     {
+        //bool duplicateIsOn = ((SwitchTile)GameController.GetInstance().m_floor.m_floorData.Tiles[66]).m_isOn;
+        //Floor editedLevelFloor = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI).m_editedLevel.m_floor;
+        //bool editedIsOn = ((SwitchTile)editedLevelFloor.Tiles[66]).m_isOn;
+        //bool thisIsOn = ((SwitchTile)m_floor.Tiles[66]).m_isOn;
+        //Debug.Log(duplicateIsOn + "-" + editedIsOn + "-" + thisIsOn);
+
         if (tree.m_solutions == null)
         {
             //check if we failed to reach at least one leaf node of this tree
@@ -160,7 +197,11 @@ public class Level
     private void OnFinishSolvingLevel(SolutionNode[] shortestSolution, ValidationData validationData)
     {
         s_stopwatch.Stop();
-        Debug.Log("Level solved in " + s_stopwatch.ElapsedMilliseconds + " ms");
+
+        //revert back to the correct global floor instance
+        LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+        Level editedLevel = levelEditor.m_editedLevel;
+        GameController.GetInstance().m_floor.m_floorData = editedLevel.m_floor;
 
         if (shortestSolution == null) //no solution
         {
@@ -174,10 +215,9 @@ public class Level
             validationData.m_bonusesAreReachable = true;
             validationData.m_solution = shortestSolution;
             m_validated = true;
-            CopySolutionToLevel(validationData.m_solution);
+            editedLevel.CopySolution(validationData.m_solution);
         }
-
-        LevelEditor levelEditor = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI);
+        
         levelEditor.OnFinishValidatingLevel(validationData);
     }
 
@@ -328,7 +368,7 @@ public class Level
     /**
     * Transform the nodes solutions into sequence of rolling movements and copy them to this level
     **/
-    public void CopySolutionToLevel(SolutionNode[] solution)
+    public void CopySolution(SolutionNode[] solution)
     {
         m_solution = new Brick.RollDirection[solution.Length];
 
@@ -344,7 +384,6 @@ public class Level
         //m_floor.ClearCachedValues(); //remove cached values
 
         Floor clampedFloor = m_floor.Clamp(); //clamp floor before saving
-        clampedFloor.ClearCachedValues(); //remove cached values
 
         Floor originalFloor = m_floor;
         m_floor = clampedFloor;
@@ -361,7 +400,6 @@ public class Level
         m_published = true;
 
         m_floor = m_floor.Clamp(); //clamp floor before saving
-        m_floor.ClearCachedValues(); //remove cached values
 
         //Create a new LevelData file
         LevelData levelData = new LevelData(this.m_number);

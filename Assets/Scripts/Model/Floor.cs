@@ -35,6 +35,48 @@ public class Floor
             m_tiles = tiles;
     }
 
+    public Floor(Floor other)
+    {
+        m_gridWidth = other.m_gridWidth;
+        m_gridHeight = other.m_gridHeight;
+
+        //deep copy tiles
+        m_tiles = new Tile[m_gridWidth * m_gridHeight];
+        for (int i = 0; i != other.m_tiles.Length; i++)
+        {
+            Tile tile = other.m_tiles[i];
+            if (tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH) //do not deal with trigerred tiles there but preferably inside the Tile.State.SWITCH statement
+                continue;
+            if (tile.CurrentState == Tile.State.SWITCH)
+            {
+                SwitchTile switchTile = new SwitchTile((SwitchTile)tile);
+
+                for (int p = 0; p != switchTile.m_triggeredTiles.Count; p++)
+                {
+                    TriggeredTile triggeredTile = switchTile.m_triggeredTiles[p];
+                    int triggeredTileIndex = GetTileIndex(triggeredTile);
+                    m_tiles[triggeredTileIndex] = triggeredTile;
+                }
+
+                //for (int p = 0; p != switchTile.m_triggeredTiles.Count; p++)
+                //{
+                //    TriggeredTile triggeredTile = switchTile.m_triggeredTiles[p];
+                //    int triggeredTileIndex = GetTileIndex(triggeredTile);
+                //    TriggeredTile copiedTriggeredTile = new TriggeredTile(triggeredTile);
+                //    //copy it both to floor and switch tiles referenced triggered tiles
+                //    m_tiles[triggeredTileIndex] = copiedTriggeredTile;
+                //    switchTile.m_triggeredTiles[p] = copiedTriggeredTile;
+                //}
+
+                m_tiles[i] = switchTile;
+            }
+            else
+            {
+                m_tiles[i] = new Tile(other.m_tiles[i]);
+            }
+        }
+    }
+
     /**
     * Build a squared grid
     **/
@@ -80,14 +122,10 @@ public class Floor
     
     public Tile GetStartTile()
     {
-        if (m_startTile != null) //use the cached value
-            return m_startTile;
-
         for (int i = 0; i != m_tiles.Length; i++)
         {
             if (m_tiles[i].CurrentState == Tile.State.START)
             {
-                m_startTile = m_tiles[i];
                 return m_tiles[i];
             }               
         }
@@ -97,29 +135,15 @@ public class Floor
 
     public Tile GetFinishTile()
     {
-        if (m_finishTile != null) //use the cached value
-            return m_finishTile;
-
         for (int i = 0; i != m_tiles.Length; i++)
         {
             if (m_tiles[i].CurrentState == Tile.State.FINISH)
             {
-                m_finishTile = m_tiles[i];
                 return m_tiles[i];
             }
         }
 
         return null;
-    }
-
-    public void SetStartTile(Tile tile)
-    {
-        m_startTile = tile;
-    }
-
-    public void SetFinishTile(Tile tile)
-    {
-        m_finishTile = tile;
     }
 
     //public List<Bonus> GetBonuses()
@@ -136,9 +160,6 @@ public class Floor
 
     public List<Tile> GetBonusTiles()
     {
-        if (m_bonusTiles != null)
-            return m_bonusTiles;
-
         List<Tile> bonusTiles = new List<Tile>();
         for (int i = 0; i != m_tiles.Length; i++)
         {
@@ -146,7 +167,6 @@ public class Floor
                 bonusTiles.Add(m_tiles[i]);
         }
 
-        m_bonusTiles = bonusTiles; //cache value
         return bonusTiles;
     }
 
@@ -160,11 +180,6 @@ public class Floor
         }
 
         return switchTiles;
-    }
-
-    public void ClearBonusTilesCachedValue()
-    {
-        m_bonusTiles = null;
     }
     
     /**
@@ -271,6 +286,7 @@ public class Floor
 
         Tile[] newTiles = new Tile[newFloorWidth * newFloorHeight];
 
+        List<SwitchTile> clampedSwitchTiles = new List<SwitchTile>();
         for (int i = 0; i != newFloorWidth; i++)
         {
             for (int j = 0; j != newFloorHeight; j++)
@@ -289,6 +305,7 @@ public class Floor
                         tile = new SwitchTile((SwitchTile)replacedTile);
                         tile.m_columnIndex = i;
                         tile.m_lineIndex = j;
+                        clampedSwitchTiles.Add((SwitchTile)tile);
                     }
                     else if (replacedTile.CurrentState != Tile.State.TRIGGERED_BY_SWITCH)
                     {
@@ -304,15 +321,15 @@ public class Floor
         }
 
         //replace each triggered tile
-        List<SwitchTile> switchTiles = GetSwitchTiles();
-        for (int p = 0; p != switchTiles.Count; p++)
+        for (int p = 0; p != clampedSwitchTiles.Count; p++)
         {
-            SwitchTile switchTile = switchTiles[p];
+            SwitchTile switchTile = clampedSwitchTiles[p];
             for (int q = 0; q != switchTile.m_triggeredTiles.Count; q++)
             {
                 TriggeredTile newTriggeredTile = new TriggeredTile(switchTile.m_triggeredTiles[q]);
-                newTriggeredTile.m_columnIndex += minColumnIndex;
-                newTriggeredTile.m_lineIndex += minLineIndex;
+                newTriggeredTile.m_columnIndex -= (minColumnIndex - 2);
+                newTriggeredTile.m_lineIndex -= (minLineIndex - 2);
+                switchTile.m_triggeredTiles[q] = newTriggeredTile;
 
                 newTiles[newTriggeredTile.m_columnIndex * newFloorHeight + newTriggeredTile.m_lineIndex] = newTriggeredTile;
             }
@@ -339,6 +356,7 @@ public class Floor
         int minLineIndex = (floorSize - m_gridHeight) / 2;
         int maxLineIndex = minLineIndex + m_gridHeight;
 
+        List<SwitchTile> unclampedSwitchTiles = new List<SwitchTile>();
         for (int i = minColumnIndex; i != maxColumnIndex; i++)
         {
             for (int j = minLineIndex; j != maxLineIndex; j++)
@@ -350,12 +368,15 @@ public class Floor
                     tile = new SwitchTile((SwitchTile)replacedTile);
                     tile.m_columnIndex = i;
                     tile.m_lineIndex = j;
+                    unclampedSwitchTiles.Add((SwitchTile)tile);
+
+                    Debug.Log("SwitchTile c:" + i + " l:" + j);
                 }
                 else if (replacedTile.CurrentState != Tile.State.TRIGGERED_BY_SWITCH)
                 {
-                        tile = new Tile(replacedTile);
-                        tile.m_columnIndex = i;
-                        tile.m_lineIndex = j;
+                    tile = new Tile(replacedTile);
+                    tile.m_columnIndex = i;
+                    tile.m_lineIndex = j;
                 }
 
                 floor.m_tiles[i * floorSize + j] = tile;
@@ -363,15 +384,17 @@ public class Floor
         }
 
         //replace each triggered tile
-        List<SwitchTile> switchTiles = GetSwitchTiles();
-        for (int p = 0; p != switchTiles.Count; p++)
+        for (int p = 0; p != unclampedSwitchTiles.Count; p++)
         {
-            SwitchTile switchTile = switchTiles[p];
+            SwitchTile switchTile = unclampedSwitchTiles[p];
             for (int q = 0; q != switchTile.m_triggeredTiles.Count; q++)
             {
                 TriggeredTile newTriggeredTile = new TriggeredTile(switchTile.m_triggeredTiles[q]);
                 newTriggeredTile.m_columnIndex += minColumnIndex;
                 newTriggeredTile.m_lineIndex += minLineIndex;
+                switchTile.m_triggeredTiles[q] = newTriggeredTile;
+
+                Debug.Log("TriggeredTile c:" + newTriggeredTile.m_columnIndex + " l:" + newTriggeredTile.m_lineIndex);
 
                 floor.m_tiles[newTriggeredTile.m_columnIndex * floorSize + newTriggeredTile.m_lineIndex] = newTriggeredTile;
             }
@@ -432,16 +455,6 @@ public class Floor
                 }
             }
         }
-    }
-
-    /**
-    * Clear the cached values
-    **/
-    public void ClearCachedValues()
-    {
-        m_startTile = null;
-        m_finishTile = null;
-        m_bonusTiles = null;
     }
 
     /**

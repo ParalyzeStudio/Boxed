@@ -112,6 +112,7 @@ public class SwitchesEditingPanel : ActionPanel
         else
         {
             m_switchToggle.isOn = m_selectedItem.SwitchTile.m_isOn;
+            m_selectedItem.m_triggeredTiles = m_selectedItem.SwitchTile.m_triggeredTiles;
         }
     }
 

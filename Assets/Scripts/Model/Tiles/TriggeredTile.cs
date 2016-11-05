@@ -1,5 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
 
+[Serializable]
 public class TriggeredTile : Tile
 {
     public bool m_isLiftUp;
@@ -12,5 +13,10 @@ public class TriggeredTile : Tile
     public TriggeredTile(Tile tile) : this(tile.m_columnIndex, tile.m_lineIndex, tile.AttachedBonus)
     {
 
+    }
+
+    public TriggeredTile(TriggeredTile other) : this((Tile)other)
+    {
+        m_isLiftUp = other.m_isLiftUp;
     }
 }

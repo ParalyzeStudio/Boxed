@@ -114,7 +114,7 @@ public class SolutionTree
         //construct a root node with arbitrary direction (does not matter there)
         m_currentNode = new SolutionNode(Brick.RollDirection.LEFT, null, 0);
 
-        int stopIdx = 100;
+        int stopIdx = 10000;
         while (!(m_stopWhenTreeIsSolved && m_isSolved) && stopIdx > 0)
         {
             stopIdx--;
@@ -246,9 +246,13 @@ public class SolutionTree
         else
         {
             if (m_currentNode.m_parentNode == null) //root node, we finished traversing the tree
+            {
+                //Debug.Log("Cannot move anymore");
                 return false;
+            }
             else
             {
+                //Debug.Log("Moving pawn BACKWARD");
                 MovePawnBackward();
                 return true;
             }
@@ -312,7 +316,22 @@ public class SolutionTree
         else if (currentNodeDirection == Brick.RollDirection.BOTTOM)
             oppDirection = Brick.RollDirection.TOP;
 
+        //rollback actions
+        if (m_pawn.CoveredTiles[0] != null && m_pawn.CoveredTiles[0].CurrentState == Tile.State.SWITCH)
+        {
+            ((SwitchTile) m_pawn.CoveredTiles[0]).Toggle();
+        }
+        else
+        {
+            if (m_pawn.CoveredTiles[1] != null && m_pawn.CoveredTiles[1].CurrentState == Tile.State.SWITCH)
+            {
+                ((SwitchTile)m_pawn.CoveredTiles[1]).Toggle();
+            }
+        }
+
+        //backward rolling operation is automatically successful
         PerformRolling(oppDirection);
+
         m_currentNode = m_currentNode.m_parentNode;
     }
     
@@ -341,6 +360,8 @@ public class SolutionTree
             if (m_oneCoveredTileOnly)
             {
                 if (m_pawn.GetCoveredTilesCount() == 1 && m_pawn.CoveredTiles[0] == m_targetTile)
+                    Debug.Log("FINISH");
+                if (m_pawn.GetCoveredTilesCount() == 1 && m_pawn.CoveredTiles[0].CurrentState == Tile.State.FINISH)
                     targetTileHasBeenReached = true;
             }
             else
@@ -354,6 +375,7 @@ public class SolutionTree
                 //we want to check if this path contains all bonuses
                 if (PathContainsAllBonuses(m_currentNode))
                 {
+                    Debug.Log("addsuccessnode");
                     AddSuccessNode(m_currentNode);
                     m_isSolved = true;
                     m_maximumHeight = m_currentNode.m_distanceFromRoot + 1;

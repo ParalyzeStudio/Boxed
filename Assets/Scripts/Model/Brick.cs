@@ -321,12 +321,17 @@ public class Brick
                 if (nextTile1.CurrentState == Tile.State.BLOCKED)
                     return RollResult.NONE;
 
+                if (nextTile1.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile1).m_isLiftUp)
+                    return RollResult.NONE;
+
                 Tile nextTile2 = floor.GetNextTileForDirection(nextTile1, rollDirection);
                 if (nextTile2 != null)
                 {
                     if (nextTile2.CurrentState == Tile.State.DISABLED)
                         rollResult = RollResult.FALL;
                     else if (nextTile2.CurrentState == Tile.State.BLOCKED)
+                        return RollResult.NONE;
+                    else if (nextTile2.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile2).m_isLiftUp)
                         return RollResult.NONE;
 
                     newCoveredTiles[0] = nextTile1;
@@ -355,6 +360,8 @@ public class Brick
                         {
                             if (nextTile.CurrentState == Tile.State.BLOCKED)
                                 return RollResult.NONE;
+                            else if (nextTile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile).m_isLiftUp)
+                                return RollResult.NONE;
                             else if (nextTile.CurrentState == Tile.State.DISABLED)
                                 rollResult = RollResult.FALL;
 
@@ -367,6 +374,8 @@ public class Brick
                     else
                     {
                         if (nextTile.CurrentState == Tile.State.BLOCKED)
+                            return RollResult.NONE;
+                        else if (nextTile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile).m_isLiftUp)
                             return RollResult.NONE;
                         else if (nextTile.CurrentState == Tile.State.DISABLED)
                             return RollResult.FALL;
@@ -385,6 +394,10 @@ public class Brick
                 if (nextTile1 != null && nextTile2 != null)
                 {
                     if (nextTile1.CurrentState == Tile.State.BLOCKED || nextTile2.CurrentState == Tile.State.BLOCKED)
+                        return RollResult.NONE;
+                    else if (nextTile1.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile1).m_isLiftUp
+                             ||
+                             nextTile2.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile2).m_isLiftUp)
                         return RollResult.NONE;
                     else if (nextTile1.CurrentState == Tile.State.DISABLED || nextTile2.CurrentState == Tile.State.DISABLED)
                         return RollResult.FALL;

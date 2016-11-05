@@ -60,12 +60,10 @@ public class GameTouchHandler : TouchHandler
                     if (levelStartTile == null) //there is no other tile that has been marked as start tile
                     {
                         raycastTile.CurrentState = Tile.State.START;
-                        levelEditor.m_editedLevel.m_floor.SetStartTile(raycastTile);
                     }
                     else if (levelFinishTile == null) //there is no other tile that has been marked as finish tile
                     {
                         raycastTile.CurrentState = Tile.State.FINISH;
-                        levelEditor.m_editedLevel.m_floor.SetFinishTile(raycastTile);
                     }
                 }
                 else if (raycastTile.CurrentState == Tile.State.START)
@@ -73,19 +71,15 @@ public class GameTouchHandler : TouchHandler
                     if (levelFinishTile == null)
                     {
                         raycastTile.CurrentState = Tile.State.FINISH;
-                        levelEditor.m_editedLevel.m_floor.SetFinishTile(raycastTile);
-                        levelEditor.m_editedLevel.m_floor.SetStartTile(null);
                     }
                     else
                     {
                         raycastTile.CurrentState = Tile.State.NORMAL;
-                        levelEditor.m_editedLevel.m_floor.SetStartTile(null);
                     }
                 }
                 else if (raycastTile.CurrentState == Tile.State.FINISH)
                 {
                     raycastTile.CurrentState = Tile.State.NORMAL;
-                    levelEditor.m_editedLevel.m_floor.SetFinishTile(null);
                 }
             }
             else if (levelEditor.m_editingMode == LevelEditor.EditingMode.SWITCHES_EDITING)

@@ -56,15 +56,23 @@ public class TileRenderer : MonoBehaviour
     public void Init(Tile tile)
     {
         m_tile = tile;
-
-        float tileHeight = GetTileHeight();
-        BuildFaces(tileHeight);
+        
+        BuildFaces();
 
         m_colorsArrayDirty = false;
         m_verticesArrayDirty = false;
 
         //Assign a vertex-color unlit shader to this tile object
         this.GetComponent<MeshRenderer>().material = m_tileMaterial;
+
+        Invalidate();
+
+
+        //TODO remove this
+        if (m_tile.CurrentState == Tile.State.DISABLED)
+        {
+            this.transform.localScale = Vector3.zero;
+        }
 
         if (tile.AttachedBonus != null)
             BuildBonusObject();
@@ -74,7 +82,7 @@ public class TileRenderer : MonoBehaviour
     * Build faces for this tile. The top face can have a contour on it, just set bDrawContourOnTopFace to true in this case and set a contourThicknessRatio
     * between 0 and 1, 0 meaning zero-thickness (no contour) and 1 meaning 0.5f * tile.m_size thickness
     **/
-    protected void BuildFaces(float height, float contourThicknessRatio = TILE_DEFAULT_CONTOUR_THICKNESS)
+    protected void BuildFaces(float height = Tile.TILE_DEFAULT_HEIGHT, float contourThicknessRatio = TILE_DEFAULT_CONTOUR_THICKNESS)
     {
         //build only two faces as the 3 other wont be visible
         m_vertices = new Vector3[20];
@@ -361,6 +369,7 @@ public class TileRenderer : MonoBehaviour
         //m_decalObject.transform.SetParent(this.transform, false);
         m_decalObject.transform.parent = this.transform;
         m_decalObject.transform.localPosition = new Vector3(0, 0.001f, 0); //set the decal right above the tile object
+        m_decalObject.transform.localScale = Vector3.one;
 
         MeshFilter meshFilter = m_decalObject.AddComponent<MeshFilter>();
         MeshRenderer meshRenderer = m_decalObject.AddComponent<MeshRenderer>();
@@ -378,6 +387,8 @@ public class TileRenderer : MonoBehaviour
         vertices[3] = m_vertices[11];
 
         int[] triangles = new int[] { 0, 2, 1, 0, 3, 2 };
+
+        Debug.Log("vertices[0].y):" + vertices[0].y);
 
         Vector2[] uv = new Vector2[4];
         uv[0] = Vector2.zero;

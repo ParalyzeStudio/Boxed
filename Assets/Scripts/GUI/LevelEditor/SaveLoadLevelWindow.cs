@@ -108,8 +108,6 @@ public class SaveLoadLevelWindow : LevelsListWindow
             m_selectedItem.InvalidateContent();
             //m_saveSuccessMessage.gameObject.SetActive(true);
             editedLevel.Save();
-            
-            m_selectedItem.InvalidateContent();
         }
         else
         {

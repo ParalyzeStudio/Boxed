@@ -87,13 +87,22 @@ public class FloorRenderer : MonoBehaviour
         renderer.Invalidate();
     }
 
+    public void Invalidate()
+    {
+        for (int i = 0; i != m_tileRenderers.Length; i++)
+        {
+            m_tileRenderers[i].m_tile = m_floorData.Tiles[i];
+            m_tileRenderers[i].Invalidate();
+        }
+    }
+
     /**
     * Bake tiles in one single mesh for performance
     **/
     public void BakeTiles()
     {
 
-    }
+    }    
 
     public GameController GetGameController()
     {

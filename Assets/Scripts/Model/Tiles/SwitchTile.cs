@@ -17,12 +17,6 @@ public class SwitchTile : Tile
     {
         if (triggeredTiles != null)
             m_triggeredTiles = triggeredTiles;
-
-        m_isOn = false;
-        for (int i = 0; i != m_triggeredTiles.Count; i++)
-        {
-            m_triggeredTiles[i].CurrentState = Tile.State.BLOCKED;
-        }
     }
 
     public SwitchTile(Tile tile, List<TriggeredTile> triggeredTiles) : this(tile.m_columnIndex, tile.m_lineIndex, tile.AttachedBonus, triggeredTiles)
@@ -31,9 +25,30 @@ public class SwitchTile : Tile
             triggeredTiles = new List<TriggeredTile>();
     }
 
-    public SwitchTile(SwitchTile other) : this(other, other.m_triggeredTiles)
+    public SwitchTile(SwitchTile other) : this(other, null)
     {
+        m_isOn = other.m_isOn;
 
+        if (other.m_triggeredTiles != null)
+        {
+            m_triggeredTiles = new List<TriggeredTile>(other.m_triggeredTiles.Count);
+            for (int p = 0; p != other.m_triggeredTiles.Count; p++)
+            {
+                TriggeredTile copiedTriggeredTile = new TriggeredTile(other.m_triggeredTiles[p]);
+                m_triggeredTiles.Add(copiedTriggeredTile);
+            }
+        }
+
+        ////deep copy triggered tiles
+        //for (int p = 0; p != other.m_triggeredTiles.Count; p++)
+        //{
+        //    TriggeredTile triggeredTile = other.m_triggeredTiles[p];
+        //    //int triggeredTileIndex = GetTileIndex(triggeredTile);
+        //    TriggeredTile copiedTriggeredTile = new TriggeredTile(triggeredTile);
+        //    //copy it both to floor and switch tiles referenced triggered tiles
+        //    //m_tiles[triggeredTileIndex] = copiedTriggeredTile;
+        //    m_triggeredTiles[p] = copiedTriggeredTile;
+        //}
     }
 
     public void SetOnOff(bool bSetOn)
@@ -51,35 +66,6 @@ public class SwitchTile : Tile
     public void Toggle()
     {
         SetOnOff(!m_isOn);
-    }
-
-    public bool ReplaceTriggerTile(TriggeredTile oldTile, TriggeredTile newTile)
-    {
-        for (int i = 0; i != m_triggeredTiles.Count; i++)
-        {
-            if (m_triggeredTiles[i] == oldTile)
-            {
-                m_triggeredTiles[i] = newTile;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public bool ReplaceTriggerTile(TriggeredTile newTile)
-    {
-        for (int i = 0; i != m_triggeredTiles.Count; i++)
-        {
-            Tile triggeredTile = m_triggeredTiles[i];
-            if (triggeredTile.m_columnIndex == newTile.m_columnIndex && triggeredTile.m_lineIndex == newTile.m_lineIndex)
-            {
-                m_triggeredTiles[i] = newTile;
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public void OnSelect()
