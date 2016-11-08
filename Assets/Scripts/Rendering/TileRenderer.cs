@@ -67,13 +67,6 @@ public class TileRenderer : MonoBehaviour
 
         Invalidate();
 
-
-        //TODO remove this
-        if (m_tile.CurrentState == Tile.State.DISABLED)
-        {
-            this.transform.localScale = Vector3.zero;
-        }
-
         if (tile.AttachedBonus != null)
             BuildBonusObject();
     }

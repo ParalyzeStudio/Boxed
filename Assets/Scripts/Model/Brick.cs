@@ -20,14 +20,70 @@ public class Brick
         }
     }
 
-    private Tile[] m_coveredTiles; //the tiles that are covered by this brick (max 2)
-    public Tile[] CoveredTiles
+    public CoveredTiles m_coveredTiles { get; set; } //the tiles that are covered by this brick (max 2)
+    public class CoveredTiles
     {
-        get
+        private Tile[] m_tiles;
+
+        public CoveredTiles()
         {
-            return m_coveredTiles;
+            m_tiles = new Tile[2];
+        }
+
+        public CoveredTiles(Tile[] tiles) : this()
+        {
+            SetTiles(tiles[0], tiles[1]);
+        }
+
+        public CoveredTiles(Tile tile1, Tile tile2) : this()
+        {
+            SetTiles(tile1, tile2);
+        }
+
+        public Tile GetFirstTile()
+        {
+            return m_tiles[0];
+        }
+
+        public Tile GetSecondTile()
+        {
+            return m_tiles[1];
+        }
+
+        public void SetTiles(Tile tile1, Tile tile2)
+        {
+            m_tiles[0] = tile1;
+            m_tiles[1] = tile2;
+        }
+
+        public int GetCount()
+        {
+            return (m_tiles[1] == null) ? 1 : 2;
+        }
+
+        public bool ContainsBonus()
+        {
+            return m_tiles[0].AttachedBonus != null || (m_tiles[1] != null && m_tiles[1].AttachedBonus != null);
+        }
+
+        public bool ShareSameTiles(CoveredTiles other)
+        {
+            if (GetCount() != other.GetCount())
+                return false;
+
+            if (GetCount() == 1)
+                return m_tiles[0] == other.m_tiles[0];
+            else
+                return m_tiles[0] == other.m_tiles[0] && m_tiles[1] == other.m_tiles[1] || m_tiles[0] == other.m_tiles[1] && m_tiles[1] == other.m_tiles[0];
         }
     }
+    //public Tile[] CoveredTiles
+    //{
+    //    get
+    //    {
+    //        return m_coveredTiles;
+    //    }
+    //}
 
     /**
     * A face of the brick d-c
@@ -110,6 +166,9 @@ public class Brick
 
     public Quaternion m_rotation { get; set; }
 
+    private CoveredTiles[] m_rolledOnTiles; //tiles the brick has rolled on
+    private int m_rolledOnTilesLastIndex;
+ 
     /**
     * Build a rectangular cuboid that will serve as our main object in the scene.
     * To handle lighting correctly, our cuboid will need 24 vertices (instead of 8) so light is interpolated correctly so one face has one single color.
@@ -143,6 +202,9 @@ public class Brick
         m_state = BrickState.IDLE;
 
         m_rotation = Quaternion.identity;
+
+        m_rolledOnTiles = new CoveredTiles[64]; //the maximum length depends on the maximum height of the solution tree (set arbitrarily a big enough number)
+        m_rolledOnTilesLastIndex = 0;
     }
 
     /**
@@ -160,17 +222,17 @@ public class Brick
 
     public void PlaceOnTiles(Tile[] tiles)
     {
-        m_coveredTiles = tiles;
+        m_coveredTiles = new CoveredTiles(tiles);
 
         //set initial rotation of the brick and the index of the face touching the ground depending on the number of covered tiles
-        if (tiles[1] == null) //only one tile covered
+        if (m_coveredTiles.GetCount() == 1) //only one tile covered
         {
             m_rotation = Quaternion.identity;
             m_downFaceIndex = 0;
         }
         else //two tiles covered
         {            
-            Vector3 brickDirection = tiles[1].GetLocalPosition() - tiles[0].GetLocalPosition();
+            Vector3 brickDirection = m_coveredTiles.GetSecondTile().GetLocalPosition() - m_coveredTiles.GetFirstTile().GetLocalPosition();
 
             if (brickDirection == Vector3.left)
                 m_downFaceIndex = 5;
@@ -236,7 +298,8 @@ public class Brick
         BrickFace currentFace = m_faces[m_downFaceIndex];
         BrickFace rollToFace = m_faces[rollToFaceIdx];
 
-        Tile[] newCoveredTiles = new Tile[2];
+        //Tile[] newCoveredTiles = new Tile[2];
+        CoveredTiles newCoveredTiles = new CoveredTiles();
         rollResult = CanRoll(currentFace, rollToFace, rollDirection, out newCoveredTiles);
         if (rollResult == RollResult.VALID)
         {
@@ -302,18 +365,18 @@ public class Brick
     * Determine if the rolling movement from currentFace to rollToFace of the brick is possible
     * Also set the new covered tiles if movement is declared possible
     **/
-    public RollResult CanRoll(BrickFace currentFace, BrickFace rollToFace, RollDirection rollDirection, out Tile[] newCoveredTiles)
+    public RollResult CanRoll(BrickFace currentFace, BrickFace rollToFace, RollDirection rollDirection, out CoveredTiles newCoveredTiles)
     {
         Floor floor = GameController.GetInstance().m_floor.m_floorData;
 
-        newCoveredTiles = new Tile[2];
+        newCoveredTiles = new CoveredTiles();
 
         //Determine if rolling movement is legit (i.e brick will not fall off the floor) and mark the new covered tiles
         RollResult rollResult = RollResult.VALID;
         if (currentFace.GetAreaInTileUnits() == 1)
         {
             //find the next 2 tiles in the rolling direction
-            Tile coveredTile = m_coveredTiles[0];
+            Tile coveredTile = m_coveredTiles.GetFirstTile();
             Tile nextTile1 = floor.GetNextTileForDirection(coveredTile, rollDirection);            
 
             if (nextTile1 != null)
@@ -334,8 +397,7 @@ public class Brick
                     else if (nextTile2.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile2).m_isLiftUp)
                         return RollResult.NONE;
 
-                    newCoveredTiles[0] = nextTile1;
-                    newCoveredTiles[1] = nextTile2;
+                    newCoveredTiles.SetTiles(nextTile1, nextTile2);
                 }
                 else
                     rollResult = RollResult.NO_TILE_TO_ROLL;
@@ -348,8 +410,8 @@ public class Brick
             if (rollToFace.GetAreaInTileUnits() == 1)
             {
                 //find the tile next to m_coveredTile[0] or m_coveredTile[1] in the rolling direction
-                Tile coveredTile1 = m_coveredTiles[0];
-                Tile coveredTile2 = m_coveredTiles[1];
+                Tile coveredTile1 = m_coveredTiles.GetFirstTile();
+                Tile coveredTile2 = m_coveredTiles.GetSecondTile();
                 Tile nextTile = floor.GetNextTileForDirection(coveredTile1, rollDirection);
                 if (nextTile != null)
                 {
@@ -365,8 +427,7 @@ public class Brick
                             else if (nextTile.CurrentState == Tile.State.DISABLED)
                                 rollResult = RollResult.FALL;
 
-                            newCoveredTiles[0] = nextTile;
-                            newCoveredTiles[1] = null;
+                            newCoveredTiles.SetTiles(nextTile, null);
                         }
                         else
                             rollResult = RollResult.NO_TILE_TO_ROLL;
@@ -380,8 +441,7 @@ public class Brick
                         else if (nextTile.CurrentState == Tile.State.DISABLED)
                             return RollResult.FALL;
 
-                        newCoveredTiles[0] = nextTile;
-                        newCoveredTiles[1] = null;
+                        newCoveredTiles.SetTiles(nextTile, null);
                     }
                 }
                 else
@@ -389,8 +449,8 @@ public class Brick
             }
             else
             {
-                Tile nextTile1 = floor.GetNextTileForDirection(m_coveredTiles[0], rollDirection);
-                Tile nextTile2 = floor.GetNextTileForDirection(m_coveredTiles[1], rollDirection);
+                Tile nextTile1 = floor.GetNextTileForDirection(m_coveredTiles.GetFirstTile(), rollDirection);
+                Tile nextTile2 = floor.GetNextTileForDirection(m_coveredTiles.GetSecondTile(), rollDirection);
                 if (nextTile1 != null && nextTile2 != null)
                 {
                     if (nextTile1.CurrentState == Tile.State.BLOCKED || nextTile2.CurrentState == Tile.State.BLOCKED)
@@ -402,8 +462,7 @@ public class Brick
                     else if (nextTile1.CurrentState == Tile.State.DISABLED || nextTile2.CurrentState == Tile.State.DISABLED)
                         return RollResult.FALL;
 
-                    newCoveredTiles[0] = nextTile1;
-                    newCoveredTiles[1] = nextTile2;
+                    newCoveredTiles.SetTiles(nextTile1, nextTile2);
                 }
                 else
                     rollResult = RollResult.NO_TILE_TO_ROLL;
@@ -413,29 +472,21 @@ public class Brick
         return rollResult;
     }
 
-    /**
-    * Return the number of tiles covered by the brick (1 or 2)
-    **/
-    public int GetCoveredTilesCount()
-    {
-        return (m_coveredTiles[1] == null) ? 1 : 2;
-    }
-
     public void OnFinishRolling()
     {
         if (m_state == BrickState.FALLING)
             return;
 
         //switches
-        if (CoveredTiles[0] != null && CoveredTiles[0].CurrentState == Tile.State.SWITCH)
+        if (m_coveredTiles.GetFirstTile() != null && m_coveredTiles.GetFirstTile().CurrentState == Tile.State.SWITCH)
         {
-            ((SwitchTile) CoveredTiles[0]).Toggle();
+            ((SwitchTile)m_coveredTiles.GetFirstTile()).Toggle();
         }
         else
         {
-            if (CoveredTiles[1] != null && CoveredTiles[1].CurrentState == Tile.State.SWITCH)
+            if (m_coveredTiles.GetSecondTile() != null && m_coveredTiles.GetSecondTile().CurrentState == Tile.State.SWITCH)
             {
-                ((SwitchTile)CoveredTiles[1]).Toggle();
+                ((SwitchTile)m_coveredTiles.GetSecondTile()).Toggle();
             }
         }
         
@@ -447,5 +498,84 @@ public class Brick
         //    m_coveredTiles[0].CurrentState = Tile.State.SELECTED;
         //if (m_coveredTiles[1] != null && m_coveredTiles[1].CurrentState == Tile.State.DISABLED)
         //    m_coveredTiles[1].CurrentState = Tile.State.SELECTED;
+    }
+
+    public void AddCurrentCoveredTilesToRolledOnTiles()
+    {
+        m_rolledOnTiles[m_rolledOnTilesLastIndex++] = m_coveredTiles;
+    }
+
+    public void RemoveLastRolledOnTiles()
+    {
+        m_rolledOnTiles[--m_rolledOnTilesLastIndex] = null;
+    }
+
+    /**
+    * To optimize the algorithm we can skip paths that contain cycles in it.
+    * There is an exception to this rule, as we are allowed to cycle if we rolled on a tile that adds something to the gameplay (bonus, switch...)
+    * So we need to check if the covered tiles inside a cycle contains such a tile
+    **/
+    public bool IsCycling(int distanceFromRoot)
+    {
+        if (distanceFromRoot < 2)
+            return false;
+
+        int index = distanceFromRoot;
+        CoveredTiles coveredTiles = m_rolledOnTiles[index];
+        
+        int minDistanceForCycling = 2; //we need at least to move the brick twice to obtain a minimum cycle
+        bool bCycleContainsBonuses = false;
+        while (index >= 0)
+        {
+            if (minDistanceForCycling > 0)
+            {
+                minDistanceForCycling--;
+                index--;
+                continue;
+            }
+
+            CoveredTiles tiles = m_rolledOnTiles[index];
+
+            if (!bCycleContainsBonuses && tiles.ContainsBonus()) //no need to check if this node contains a bonus if we already checked it positively before
+                bCycleContainsBonuses = true;
+
+            bool bCycling = coveredTiles.ShareSameTiles(tiles);
+            if (bCycling)
+            {
+                //check if it contains bonus. If not we consider that the cycle is useless and the path containing this cycle can be removed
+                return !bCycleContainsBonuses;
+            }
+
+            index--;
+        }
+
+        return false;
+
+        //SolutionNode node = this.m_parentNode;
+        //int minDistanceForCycling = 1; //we need at least to move the brick twice to obtain a minimum cycle
+        //bool bCycleContainsBonuses = false;
+        //while (node != null)
+        //{
+        //    if (minDistanceForCycling > 0)
+        //    {
+        //        minDistanceForCycling--;
+        //        node = node.m_parentNode;
+        //        continue;
+        //    }
+
+        //    if (!bCycleContainsBonuses && node.ContainsBonus()) //no need to check if this node contains a bonus if we already checked it positively before
+        //        bCycleContainsBonuses = true;
+
+        //    bool bCycling = this.CoversSameTiles(node);
+        //    if (bCycling)
+        //    {
+        //        //check if it contains bonus. If not we consider that the cycle is useless and the path containing this cycle can be removed
+        //        return !bCycleContainsBonuses;
+        //    }
+
+        //    node = node.m_parentNode;
+        //}
+
+        //return false;
     }
 }

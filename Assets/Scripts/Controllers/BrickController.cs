@@ -18,14 +18,14 @@ public class BrickController : MonoBehaviour
     public void ProcessTouch(Vector2 touchPlaneProjection)
     {
         //we do not process touch on covered tiles
-        Tile[] brickCoveredTiles = m_brickRenderer.m_brick.CoveredTiles;
-        if (brickCoveredTiles[0].ContainsXZPoint(touchPlaneProjection))
+        Brick.CoveredTiles brickCoveredTiles = m_brickRenderer.m_brick.m_coveredTiles;
+        if (brickCoveredTiles.GetFirstTile().ContainsXZPoint(touchPlaneProjection))
         {
             return;
         }
-        if (brickCoveredTiles[1] != null)
+        if (brickCoveredTiles.GetSecondTile() != null)
         {
-            if (brickCoveredTiles[1].ContainsXZPoint(touchPlaneProjection))
+            if (brickCoveredTiles.GetSecondTile().ContainsXZPoint(touchPlaneProjection))
                 return;
         }
 
@@ -43,10 +43,10 @@ public class BrickController : MonoBehaviour
 
         //find the minimal dot product between the vector joining the brick and the touchPlaneProjection point and each of the four direction vectors
         Vector2 brickGroundPosition;
-        if (brickCoveredTiles[1] == null)
-            brickGroundPosition = Geometry.RemoveYComponent(brickCoveredTiles[0].GetWorldPosition());
+        if (brickCoveredTiles.GetSecondTile() == null)
+            brickGroundPosition = Geometry.RemoveYComponent(brickCoveredTiles.GetFirstTile().GetWorldPosition());
         else
-            brickGroundPosition = 0.5f * (Geometry.RemoveYComponent(brickCoveredTiles[0].GetWorldPosition()) + Geometry.RemoveYComponent(brickCoveredTiles[1].GetWorldPosition()));
+            brickGroundPosition = 0.5f * (Geometry.RemoveYComponent(brickCoveredTiles.GetFirstTile().GetWorldPosition()) + Geometry.RemoveYComponent(brickCoveredTiles.GetSecondTile().GetWorldPosition()));
         
         Vector2 touchVector = touchPlaneProjection - brickGroundPosition;
 

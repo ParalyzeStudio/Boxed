@@ -128,13 +128,13 @@ public class BrickRenderer : MonoBehaviour
             {
                 CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
 
-                Tile[] coveredTiles = m_brick.CoveredTiles;
+                Brick.CoveredTiles coveredTiles = m_brick.m_coveredTiles;
                 float normalRotationAngle = 0;
                 bool bPrefall = false;
 
-                if (coveredTiles[1] != null) //2 tiles are covered
+                if (coveredTiles.GetCount() == 2) //2 tiles are covered
                 {
-                    if (coveredTiles[0].CurrentState == Tile.State.DISABLED && coveredTiles[1].CurrentState == Tile.State.DISABLED) //brick fell on two disabled tiles
+                    if (coveredTiles.GetFirstTile().CurrentState == Tile.State.DISABLED && coveredTiles.GetSecondTile().CurrentState == Tile.State.DISABLED) //brick fell on two disabled tiles
                     {
                         m_fallRotationEdge = rotationEdge;
                         m_fallDirection = Brick.GetVector3DirectionForRollingDirection(rollDirection);
@@ -142,19 +142,19 @@ public class BrickRenderer : MonoBehaviour
                         normalRotationAngle = 135;
                         bPrefall = false;
                     }
-                    else if (coveredTiles[0].CurrentState == Tile.State.NORMAL || coveredTiles[0].CurrentState == Tile.State.START || coveredTiles[0].CurrentState == Tile.State.FINISH) //first tile is normal and second one is disabled
+                    else if (coveredTiles.GetFirstTile().CurrentState == Tile.State.NORMAL || coveredTiles.GetFirstTile().CurrentState == Tile.State.START || coveredTiles.GetFirstTile().CurrentState == Tile.State.FINISH) //first tile is normal and second one is disabled
                     {
                         normalRotationAngle = 90;
-                        m_fallDirection = coveredTiles[1].GetWorldPosition() - coveredTiles[0].GetWorldPosition();
-                        m_fallRotationEdge = Floor.GetCommonEdgeForConsecutiveTiles(coveredTiles[0], coveredTiles[1]);
+                        m_fallDirection = coveredTiles.GetSecondTile().GetWorldPosition() - coveredTiles.GetFirstTile().GetWorldPosition();
+                        m_fallRotationEdge = Floor.GetCommonEdgeForConsecutiveTiles(coveredTiles.GetFirstTile(), coveredTiles.GetSecondTile());
                         m_transformRotationEdgeToLocal = true;
                         bPrefall = true;
                     }
                     else /*if (coveredTiles[1].CurrentState == Tile.State.NORMAL)*/ //second tile is normal and first one is disabled
                     {
                         normalRotationAngle = 90;
-                        m_fallDirection = coveredTiles[0].GetWorldPosition() - coveredTiles[1].GetWorldPosition();
-                        m_fallRotationEdge = Floor.GetCommonEdgeForConsecutiveTiles(coveredTiles[1], coveredTiles[0]);
+                        m_fallDirection = coveredTiles.GetFirstTile().GetWorldPosition() - coveredTiles.GetSecondTile().GetWorldPosition();
+                        m_fallRotationEdge = Floor.GetCommonEdgeForConsecutiveTiles(coveredTiles.GetSecondTile(), coveredTiles.GetFirstTile());
                         m_transformRotationEdgeToLocal = true;
                         bPrefall = true;
                     }
@@ -232,41 +232,41 @@ public class BrickRenderer : MonoBehaviour
 
     private void Explode()
     {
-        if (m_brick.CoveredTiles[1] == null)
-        {
-            //destroy the brick
-            Destroy(this.gameObject);
+        //if (m_brick.m_coveredTiles.GetCount() == 1)
+        //{
+        //    //destroy the brick
+        //    Destroy(this.gameObject);
 
-            Vector3 tilePosition = m_brick.CoveredTiles[0].GetXZWorldPosition();
+        //    Vector3 tilePosition = m_brick.m_coveredTiles.GetFirstTile().GetXZWorldPosition();
 
-            //make the two cubes explode
-            SplitCubeAtPosition(tilePosition + new Vector3(0, 0.5f, 0));
-            SplitCubeAtPosition(tilePosition + new Vector3(0, 1.5f, 0));            
-        }
-        else
-        {
-            if (m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP && m_brick.CoveredTiles[1].CurrentState == Tile.State.TRAP)
-            {
-                Vector3 tile0Position = m_brick.CoveredTiles[0].GetXZWorldPosition();
-                SplitCubeAtPosition(tile0Position + new Vector3(0, 0.5f, 0));
-                Vector3 tile1Position = m_brick.CoveredTiles[1].GetXZWorldPosition();
-                SplitCubeAtPosition(tile1Position + new Vector3(0, 0.5f, 0));
-            }
-            else
-            {
-                //destroy the brick
-                Destroy(this.gameObject);
+        //    //make the two cubes explode
+        //    SplitCubeAtPosition(tilePosition + new Vector3(0, 0.5f, 0));
+        //    SplitCubeAtPosition(tilePosition + new Vector3(0, 1.5f, 0));
+        //}
+        //else
+        //{
+        //    if (m_brick.m_coveredTiles.GetFirstTile().CurrentState == Tile.State.TRAP && m_brick.m_coveredTiles.GetSecondTile().CurrentState == Tile.State.TRAP)
+        //    {
+        //        Vector3 tile0Position = m_brick.m_coveredTiles.GetFirstTile().GetXZWorldPosition();
+        //        SplitCubeAtPosition(tile0Position + new Vector3(0, 0.5f, 0));
+        //        Vector3 tile1Position = m_brick.m_coveredTiles.GetSecondTile().GetXZWorldPosition();
+        //        SplitCubeAtPosition(tile1Position + new Vector3(0, 0.5f, 0));
+        //    }
+        //    else
+        //    {
+        //        //destroy the brick
+        //        Destroy(this.gameObject);
 
-                Tile trapTile = m_brick.CoveredTiles[m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP ? 0 : 1];
-                Tile normalTile = m_brick.CoveredTiles[m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP ? 1 : 0];
-                Vector3 trappedTilePosition = trapTile.GetXZWorldPosition();
-                Vector3 normalTilePosition = normalTile.GetXZWorldPosition();
+        //        Tile trapTile = m_brick.m_coveredTiles[m_brick.m_coveredTiles.GetFirstTile().CurrentState == Tile.State.TRAP ? 0 : 1];
+        //        Tile normalTile = m_brick.CoveredTiles[m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP ? 1 : 0];
+        //        Vector3 trappedTilePosition = trapTile.GetXZWorldPosition();
+        //        Vector3 normalTilePosition = normalTile.GetXZWorldPosition();
 
-                Debug.Log(trappedTilePosition);
-                SplitCubeAtPosition(trappedTilePosition + new Vector3(0, 0.5f, 0));
-                CreateCubeAtPosition(normalTilePosition + new Vector3(0, 0.5f, 0));
-            }
-        }
+        //        Debug.Log(trappedTilePosition);
+        //        SplitCubeAtPosition(trappedTilePosition + new Vector3(0, 0.5f, 0));
+        //        CreateCubeAtPosition(normalTilePosition + new Vector3(0, 0.5f, 0));
+        //    }
+        //}
     }
 
     private void CreateCubeAtPosition(Vector3 position)
@@ -341,27 +341,27 @@ public class BrickRenderer : MonoBehaviour
         //Capture bonuses
         if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
         {
-            if (m_brick.CoveredTiles[0].AttachedBonus != null)
+            if (m_brick.m_coveredTiles.GetFirstTile().AttachedBonus != null)
             {
-                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_brick.CoveredTiles[0]);
+                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_brick.m_coveredTiles.GetFirstTile());
                 tileRenderer.OnCaptureBonus();
             }
 
-            if (m_brick.CoveredTiles[1] != null && m_brick.CoveredTiles[1].AttachedBonus != null)
+            if (m_brick.m_coveredTiles.GetSecondTile() != null && m_brick.m_coveredTiles.GetSecondTile().AttachedBonus != null)
             {
-                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_brick.CoveredTiles[1]);
+                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_brick.m_coveredTiles.GetSecondTile());
                 tileRenderer.OnCaptureBonus();
             }
         }
 
-        if (m_brick.GetCoveredTilesCount() == 1)
+        if (m_brick.m_coveredTiles.GetCount() == 1)
         {
-            if (m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP)
+            if (m_brick.m_coveredTiles.GetFirstTile().CurrentState == Tile.State.TRAP)
                 Explode();
         }
         else
         {
-            if (m_brick.CoveredTiles[0].CurrentState == Tile.State.TRAP || m_brick.CoveredTiles[1].CurrentState == Tile.State.TRAP)
+            if (m_brick.m_coveredTiles.GetFirstTile().CurrentState == Tile.State.TRAP || m_brick.m_coveredTiles.GetSecondTile().CurrentState == Tile.State.TRAP)
                 Explode();
         }
     }
@@ -371,7 +371,7 @@ public class BrickRenderer : MonoBehaviour
     **/
     public bool IsOnFinishTile()
     {
-        return (m_brick.GetCoveredTilesCount() == 1) && (m_brick.CoveredTiles[0].CurrentState == Tile.State.FINISH);
+        return (m_brick.m_coveredTiles.GetCount() == 1) && (m_brick.m_coveredTiles.GetFirstTile().CurrentState == Tile.State.FINISH);
     }
 
     /**

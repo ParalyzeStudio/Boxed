@@ -111,10 +111,12 @@ public class SolutionTree
         m_pawn = new Brick();
         m_pawn.PlaceOnTiles(m_startTiles);
 
+        m_pawn.AddCurrentCoveredTilesToRolledOnTiles();
+
         //construct a root node with arbitrary direction (does not matter there)
         m_currentNode = new SolutionNode(Brick.RollDirection.LEFT, null, 0);
 
-        int stopIdx = 10000;
+        int stopIdx = 1000000;
         while (!(m_stopWhenTreeIsSolved && m_isSolved) && stopIdx > 0)
         {
             stopIdx--;
@@ -122,6 +124,9 @@ public class SolutionTree
             if (!MovePawn())
                 break;
         }
+
+        if (stopIdx <= 0)
+            Debug.Log("STOP IDX REACHED");
 
         //now search for paths that are marked as successful and return them
         m_solutions = ExtractSuccessPaths(m_filters);
@@ -294,10 +299,60 @@ public class SolutionTree
         SolutionNode previousNode = m_currentNode;
         m_currentNode = nextNode;
 
+        //if (m_pawn.IsCycling())
+        //{
+
+        //}
+
+
         if (!PerformRolling(direction)) //dead node, revert the m_currentNode to the previous node and reset the state of the pawn to IDLE
         {
+            //Debug.Log("FAILED MOVING PAWN FORWARD in direction " + direction);
+
             m_pawn.m_state = Brick.BrickState.IDLE;
             m_currentNode = previousNode;
+        }
+        else
+        {
+            //Debug.Log("MOVED PAWN FORWARD with success in direction " + direction);
+
+            //add the covered tiles to the pawn list
+            m_pawn.AddCurrentCoveredTilesToRolledOnTiles();
+
+            if (m_pawn.IsCycling(m_currentNode.m_distanceFromRoot))
+            {
+                //Debug.Log("CYCLING");
+                m_currentNode.SetAsLeaf();
+            }
+
+            //if (m_currentNode.m_distanceFromRoot == 9 &&
+            //    m_currentNode.m_direction == Brick.RollDirection.TOP &&
+            //    m_pawn.GetCoveredTilesCount() == 1 && m_pawn.CoveredTiles[0].m_columnIndex == 9 && m_pawn.CoveredTiles[0].m_lineIndex == 9)
+            //    Debug.Log("STOP");
+
+            //bool bCorrectDistance = (m_currentNode.m_distanceFromRoot == 4);
+            //bool bCorrectDirection = (m_currentNode.m_direction == Brick.RollDirection.TOP);
+            //bool bCorrectCoveredTiles = (m_pawn.m_coveredTiles.GetCount() == 1 && m_pawn.m_coveredTiles.GetFirstTile().m_columnIndex == 8 && m_pawn.m_coveredTiles.GetFirstTile().m_lineIndex == 6);
+            //bool bCorrectCoveredTiles = (
+            //                            m_pawn.GetCoveredTilesCount() == 2 
+            //                            &&
+            //                            (
+            //                            (
+            //                            m_pawn.CoveredTiles[0].m_columnIndex == 8 && m_pawn.CoveredTiles[0].m_lineIndex == 9 
+            //                            &&
+            //                            m_pawn.CoveredTiles[1].m_columnIndex == 7 && m_pawn.CoveredTiles[1].m_lineIndex == 9
+            //                            )
+            //                            ||
+            //                            (
+            //                            m_pawn.CoveredTiles[0].m_columnIndex == 7 && m_pawn.CoveredTiles[0].m_lineIndex == 9
+            //                            &&
+            //                            m_pawn.CoveredTiles[1].m_columnIndex == 8 && m_pawn.CoveredTiles[1].m_lineIndex == 9
+            //                            )
+            //                            )
+            //                            );
+
+            //if (bCorrectDistance && bCorrectDirection && bCorrectCoveredTiles)
+            //    Debug.Log("distance:" + m_currentNode.m_distanceFromRoot + " pawn.CoveredTiles[0] col:" + m_pawn.CoveredTiles[0].m_columnIndex + " line:" + m_pawn.CoveredTiles[0].m_lineIndex);
         }
     }
 
@@ -316,16 +371,21 @@ public class SolutionTree
         else if (currentNodeDirection == Brick.RollDirection.BOTTOM)
             oppDirection = Brick.RollDirection.TOP;
 
+
+
+        //Debug.Log("MOVED PAWN BACKWARD in direction " + oppDirection);
+
+
         //rollback actions
-        if (m_pawn.CoveredTiles[0] != null && m_pawn.CoveredTiles[0].CurrentState == Tile.State.SWITCH)
+        if (m_pawn.m_coveredTiles.GetFirstTile() != null && m_pawn.m_coveredTiles.GetFirstTile().CurrentState == Tile.State.SWITCH)
         {
-            ((SwitchTile) m_pawn.CoveredTiles[0]).Toggle();
+            ((SwitchTile) m_pawn.m_coveredTiles.GetFirstTile()).Toggle();
         }
         else
         {
-            if (m_pawn.CoveredTiles[1] != null && m_pawn.CoveredTiles[1].CurrentState == Tile.State.SWITCH)
+            if (m_pawn.m_coveredTiles.GetSecondTile() != null && m_pawn.m_coveredTiles.GetSecondTile().CurrentState == Tile.State.SWITCH)
             {
-                ((SwitchTile)m_pawn.CoveredTiles[1]).Toggle();
+                ((SwitchTile)m_pawn.m_coveredTiles.GetSecondTile()).Toggle();
             }
         }
 
@@ -333,6 +393,8 @@ public class SolutionTree
         PerformRolling(oppDirection);
 
         m_currentNode = m_currentNode.m_parentNode;
+
+        m_pawn.RemoveLastRolledOnTiles();
     }
     
     /**
@@ -359,14 +421,12 @@ public class SolutionTree
             bool targetTileHasBeenReached = false;
             if (m_oneCoveredTileOnly)
             {
-                if (m_pawn.GetCoveredTilesCount() == 1 && m_pawn.CoveredTiles[0] == m_targetTile)
-                    Debug.Log("FINISH");
-                if (m_pawn.GetCoveredTilesCount() == 1 && m_pawn.CoveredTiles[0].CurrentState == Tile.State.FINISH)
+                if (m_pawn.m_coveredTiles.GetCount() == 1 && m_pawn.m_coveredTiles.GetFirstTile().CurrentState == Tile.State.FINISH)
                     targetTileHasBeenReached = true;
             }
             else
             {
-                if ((m_pawn.CoveredTiles[0] == m_targetTile || m_pawn.CoveredTiles[1] == m_targetTile))
+                if ((m_pawn.m_coveredTiles.GetFirstTile() == m_targetTile || m_pawn.m_coveredTiles.GetSecondTile() == m_targetTile))
                     targetTileHasBeenReached = true;
             }
 
@@ -388,10 +448,6 @@ public class SolutionTree
                 {
                     m_maximumHeightReached = true;
                 }
-
-                //is the current path cycling?
-                //if (IsCycling())
-                //    return;
             }
 
             return true;
@@ -413,10 +469,12 @@ public class SolutionNode
     public SolutionNode m_parentNode; //store the parent node to so we can navigate inside the tree along a path from bottom to top
     public int m_distanceFromRoot; //the distance from root of this node, must be between 0 and (parentTree.MaximumHeight - 1)
     public bool[] m_remainingMoves; //child nodes that have been visited or not in this order [LEFT, TOP, RIGHT, BOTTOM]
-    //public Brick m_brick; //a brick object that will simulate the rolling operation
-    //public Tile[] m_coveredTiles; //as a brick object can be reused across several nodes, store here the tiles that are covered before the brick rolled
+                                    //public Brick m_brick; //a brick object that will simulate the rolling operation
+                                    //public Tile[] m_coveredTiles; //as a brick object can be reused across several nodes, store here the tiles that are covered before the brick rolled
 
     //public SolutionTree m_parentTree;
+
+    private bool m_leaf;
 
     public SolutionNode(/*SolutionTree parentTree, */Brick.RollDirection direction, SolutionNode parentNode, int distanceFromRoot /*, Brick brick*/)
     {
@@ -430,6 +488,8 @@ public class SolutionNode
             m_remainingMoves[i] = true;
         }
 
+        m_leaf = false;
+
         //m_brick = brick;
         //m_coveredTiles = new Tile[2];
         //m_coveredTiles[0] = brick.CoveredTiles[0];
@@ -438,6 +498,7 @@ public class SolutionNode
 
     public void SetAsLeaf()
     {
+        m_leaf = true;
         for (int i = 0; i != m_remainingMoves.Length; i++)
         {
             m_remainingMoves[i] = false;
@@ -605,7 +666,7 @@ public class SolutionNode
     //            return !bCycleContainsBonuses;
     //        }
 
-    //        node = node.m_parentNode;            
+    //        node = node.m_parentNode;
     //    }
 
     //    return false;

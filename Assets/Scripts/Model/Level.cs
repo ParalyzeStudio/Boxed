@@ -15,7 +15,7 @@ public class Level
 
     public bool m_published; //has the level been published
 
-    private const int MAX_SOLUTION_TREE_HEIGHT = 6;
+    private const int MAX_SOLUTION_TREE_HEIGHT = 25;
 
     private static System.Diagnostics.Stopwatch s_stopwatch;
 
