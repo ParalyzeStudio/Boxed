@@ -268,16 +268,19 @@ public class GameController : MonoBehaviour
 
     private void CheckForVictoryDefeat()
     {
-        if (m_victory || m_brickRenderer.IsOnFinishTile())
-        {
-            m_victory = true;
-            m_gameStatus = GameStatus.VICTORY;
-        }
-
         if (m_defeat || m_brickRenderer.IsFalling())
         {
+            Debug.Log("DEFEAT");
             m_defeat = true;
             m_gameStatus = GameStatus.DEFEAT;
+        }
+        else
+        {
+            if (m_victory || m_brickRenderer.IsOnFinishTile())
+            {
+                m_victory = true;
+                m_gameStatus = GameStatus.VICTORY;
+            }
         }
     }
 
@@ -312,7 +315,6 @@ public class GameController : MonoBehaviour
             }
             else if (m_gameStatus == GameStatus.DEFEAT)
             {
-                Debug.Log("defeat");
                 m_gameStatus = GameStatus.IDLE;
 
                 GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);

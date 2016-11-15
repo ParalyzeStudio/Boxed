@@ -338,6 +338,9 @@ public class BrickRenderer : MonoBehaviour
     {
         m_brick.OnFinishRolling();
 
+        if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.DEFEAT || GameController.GetInstance().m_gameStatus == GameController.GameStatus.IDLE)
+            return;
+
         //Capture bonuses
         if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
         {

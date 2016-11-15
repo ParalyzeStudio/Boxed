@@ -360,10 +360,11 @@ public class Brick
         //Tile[] newCoveredTiles = new Tile[2];
         CoveredTiles newCoveredTiles = new CoveredTiles();
         rollResult = CanRoll(currentFace, rollToFace, rollDirection, out newCoveredTiles);
-        if (rollResult == RollResult.VALID)
+        if (rollResult == RollResult.VALID || rollResult == RollResult.FALL)
         {
             //set the state of the brick to ROLLING
-            m_state = BrickState.ROLLING;
+            //m_state = BrickState.ROLLING;
+            m_state = (rollResult == RollResult.VALID) ? BrickState.ROLLING : BrickState.FALLING;
 
             //replace the old covered tiles by new ones
             m_coveredTiles = newCoveredTiles;
@@ -395,12 +396,12 @@ public class Brick
             rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
             return;
         }
-        else if (rollResult == RollResult.FALL)
-        {
-            m_state = BrickState.FALLING;
-            rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
-            return;
-        }
+        //else if (rollResult == RollResult.FALL)
+        //{
+        //    m_state = BrickState.FALLING;
+        //    //rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
+        //    return;
+        //}
         else //maintain the brick in IDLE state
         {
             rotationEdge = new Geometry.Edge(Vector3.zero, Vector3.zero);
