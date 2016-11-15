@@ -19,8 +19,11 @@ public class SwitchTile : Tile
             m_triggeredTiles = triggeredTiles;
     }
 
-    public SwitchTile(Tile tile, List<TriggeredTile> triggeredTiles) : this(tile.m_columnIndex, tile.m_lineIndex, tile.AttachedBonus, triggeredTiles)
+    public SwitchTile(Tile tile, List<TriggeredTile> triggeredTiles) : this(tile.m_columnIndex, tile.m_lineIndex, null, triggeredTiles)
     {
+        if (tile.AttachedBonus != null)
+            AttachedBonus = new Bonus(tile.AttachedBonus);
+
         if (triggeredTiles == null)
             triggeredTiles = new List<TriggeredTile>();
     }
@@ -71,10 +74,11 @@ public class SwitchTile : Tile
     public void OnSelect()
     {
         //change the color of the switch tile to show that it is selected
-        TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(this);
-        TileColors colors = tileRenderer.TileColors;
-        colors.Darken(0.5f);
-        tileRenderer.SetColors(colors);
+        TileRenderer tileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(this);
+        ColorTheme currentTheme = GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme;
+        Color switchTileColor = currentTheme.m_switchTileColor;
+        Color selectedColor = ColorUtils.LightenColor(switchTileColor, 0.25f);
+        tileRenderer.SetTileColor(selectedColor);
 
 
         //if (m_triggeredTiles != null)
@@ -94,13 +98,11 @@ public class SwitchTile : Tile
 
     public void OnRemove()
     {
-        Debug.Log("onRemove");
-        //CurrentState = Tile.State.NORMAL; //TODO replace the tile with a normal one
         Tile normalTile = new Tile(this);
         Level editedLevel = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI).m_editedLevel;
         editedLevel.m_floor.InsertTile(normalTile);
 
-        GameController.GetInstance().m_floor.ReplaceTileOnRenderer(normalTile);
+        GameController.GetInstance().m_floorRenderer.ReplaceTileOnRenderer(normalTile);
 
         if (m_triggeredTiles != null)
         {

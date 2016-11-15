@@ -67,9 +67,10 @@ public class Tile
         m_attachedBonus = bonus;
     }
 
-    public Tile(Tile other) : this(other.m_columnIndex, other.m_lineIndex, other.m_currentState, other.AttachedBonus)
+    public Tile(Tile other) : this(other.m_columnIndex, other.m_lineIndex, other.m_currentState, null)
     {
-
+        if (other.AttachedBonus != null)
+            m_attachedBonus = new Bonus(other.AttachedBonus);
     }
 
     /**
@@ -98,7 +99,7 @@ public class Tile
     **/
     public Vector3 GetWorldPosition()
     {
-        Vector3 parentFloorPosition = GameController.GetInstance().m_floor.transform.position;
+        Vector3 parentFloorPosition = GameController.GetInstance().m_floorRenderer.transform.position;
         return parentFloorPosition + GetLocalPosition();
     }
 

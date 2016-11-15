@@ -50,8 +50,8 @@ public class FloorRenderer : MonoBehaviour
             tileRenderer.transform.parent = m_tilesHolder.transform;
             tileRenderer.Init(tile);
 
-            tileRenderer.UpdateTileColors();
-            tileRenderer.UpdateTileDecal();
+            //tileRenderer.UpdateTileColor();
+            //tileRenderer.UpdateTileDecal();
 
             //set correct positions for tile and its support
             tileRenderer.transform.localPosition = tile.GetLocalPosition();

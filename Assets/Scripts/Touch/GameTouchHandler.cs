@@ -140,22 +140,22 @@ public class GameTouchHandler : TouchHandler
             }
             else if (levelEditor.m_editingMode == LevelEditor.EditingMode.BONUSES_EDITING)
             {
-                if (raycastTile.CurrentState == Tile.State.NORMAL)
-                {
+                //if (raycastTile.CurrentState == Tile.State.NORMAL)
+                //    {
                     if (raycastTile.AttachedBonus != null)
                     {
-                        FloorRenderer floorRenderer = GameController.GetInstance().m_floor;
+                        FloorRenderer floorRenderer = GameController.GetInstance().m_floorRenderer;
                         floorRenderer.GetRendererForTile(raycastTile).DestroyBonusObject();
                         raycastTile.AttachedBonus = null;
                     }
                     else
                     {
                         Bonus bonus = new Bonus(); //for the moment set an empty object as a bonus
-                        FloorRenderer floorRenderer = GameController.GetInstance().m_floor;
+                        FloorRenderer floorRenderer = GameController.GetInstance().m_floorRenderer;
                         floorRenderer.GetRendererForTile(raycastTile).BuildBonusObject();
                         raycastTile.AttachedBonus = bonus;
                     }
-                }
+                //}
             }
         }
         else if (gameMode == GameController.GameMode.LEVELS)
@@ -208,7 +208,7 @@ public class GameTouchHandler : TouchHandler
                 //also destroy any attached bonus to this tile
                 if (raycastTile.AttachedBonus != null)
                 {
-                    TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(raycastTile);
+                    TileRenderer tileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(raycastTile);
                     tileRenderer.DestroyBonusObject();
                     raycastTile.AttachedBonus = null;
                 }
@@ -226,7 +226,7 @@ public class GameTouchHandler : TouchHandler
             Vector2 xzRaycastPoint = Geometry.RemoveYComponent(raycastPoint);
 
             //Find the tile which contain the intersection point
-            Floor floor = GameController.GetInstance().m_floor.m_floorData;
+            Floor floor = GameController.GetInstance().m_floorRenderer.m_floorData;
             for (int i = 0; i != floor.Tiles.Length; i++)
             {
                 Tile tile = floor.Tiles[i];
@@ -245,7 +245,7 @@ public class GameTouchHandler : TouchHandler
         //Build a ray starting from camera near clip plane mouse world space position
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         float rayDistance;
-        Vector3 planePosition = GameController.GetInstance().m_floor.transform.position + new Vector3(0, 0.5f * Tile.TILE_DEFAULT_HEIGHT, 0);
+        Vector3 planePosition = GameController.GetInstance().m_floorRenderer.transform.position + new Vector3(0, 0.5f * Tile.TILE_DEFAULT_HEIGHT, 0);
         Plane floorPlane = new Plane(Vector3.up, planePosition);
 
         if (floorPlane.Raycast(ray, out rayDistance))

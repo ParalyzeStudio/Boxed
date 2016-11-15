@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class LevelEditor : BaseGUI
 {
-    public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 15;
+    public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 20;
 
     //public LevelEditorMenuSwitcher m_levelEditorMenuSwitcherPfb;
     public SaveLoadLevelWindow m_saveLoadLevelWindowPfb;
@@ -185,6 +185,7 @@ public class LevelEditor : BaseGUI
         //remove the validate button and make the Test level button active
         if (output.m_success)
         {
+            m_editedLevel.m_validated = true;
             m_mainMenu.InvalidateValidatePublishButtons();
             ShowTestMenu();
         }

@@ -51,7 +51,7 @@ public class BrickRenderer : MonoBehaviour
             {
                 normals[i * 4 + p] = m_brick.Faces[i].m_normal;
             }
-        }       
+        }
 
         Mesh brickMesh = new Mesh();
         brickMesh.name = "BrickMesh";
@@ -343,13 +343,13 @@ public class BrickRenderer : MonoBehaviour
         {
             if (m_brick.m_coveredTiles.GetFirstTile().AttachedBonus != null)
             {
-                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_brick.m_coveredTiles.GetFirstTile());
+                TileRenderer tileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(m_brick.m_coveredTiles.GetFirstTile());
                 tileRenderer.OnCaptureBonus();
             }
 
             if (m_brick.m_coveredTiles.GetSecondTile() != null && m_brick.m_coveredTiles.GetSecondTile().AttachedBonus != null)
             {
-                TileRenderer tileRenderer = GameController.GetInstance().m_floor.GetRendererForTile(m_brick.m_coveredTiles.GetSecondTile());
+                TileRenderer tileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(m_brick.m_coveredTiles.GetSecondTile());
                 tileRenderer.OnCaptureBonus();
             }
         }

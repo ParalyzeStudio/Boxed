@@ -66,6 +66,16 @@ public class Brick
             return m_tiles[0].AttachedBonus != null || (m_tiles[1] != null && m_tiles[1].AttachedBonus != null);
         }
 
+        public bool ContainsBonus(Bonus bonus)
+        {
+            if (m_tiles[0].AttachedBonus != null && m_tiles[0].AttachedBonus == bonus)
+                return true;
+            else if (m_tiles[1] != null && m_tiles[1].AttachedBonus != null && m_tiles[1].AttachedBonus == bonus)
+                return true;
+
+            return false;
+        }
+
         public bool ShareSameTiles(CoveredTiles other)
         {
             if (GetCount() != other.GetCount())
@@ -76,14 +86,61 @@ public class Brick
             else
                 return m_tiles[0] == other.m_tiles[0] && m_tiles[1] == other.m_tiles[1] || m_tiles[0] == other.m_tiles[1] && m_tiles[1] == other.m_tiles[0];
         }
+
+        public CoveredTiles GetNextCoveredTilesForDirection(Floor floor, Brick.RollDirection direction)
+        {
+            CoveredTiles nextCoveredTiles = new CoveredTiles();
+
+            if (GetCount() == 1)
+            {
+                //find the next 2 tiles in the rolling direction
+                Tile coveredTile = GetFirstTile();
+                Tile nextTile1 = floor.GetNextTileForDirection(coveredTile, direction);
+
+                if (nextTile1 != null)
+                {
+                    Tile nextTile2 = floor.GetNextTileForDirection(nextTile1, direction);
+                    if (nextTile2 != null)
+                        nextCoveredTiles.SetTiles(nextTile1, nextTile2);
+                    else
+                        return null;
+                }
+                else
+                    return null;
+            }
+            else
+            {
+                Tile coveredTile1 = GetFirstTile();
+                Tile coveredTile2 = GetSecondTile();
+
+                Tile nextTile = floor.GetNextTileForDirection(coveredTile1, direction);
+                if (nextTile != null)
+                {
+                    if (nextTile == coveredTile2)
+                    {
+                        nextTile = floor.GetNextTileForDirection(coveredTile2, direction);
+                        nextCoveredTiles.SetTiles(nextTile, null);
+                    }
+                    else
+                    {
+                        Tile nextTile2 = floor.GetNextTileForDirection(coveredTile2, direction);
+                        if (nextTile2 == coveredTile1)
+                        {
+                            nextCoveredTiles.SetTiles(nextTile, null);
+                        }
+                        else
+                        {
+                            nextCoveredTiles.SetTiles(nextTile, nextTile2);
+                        }
+                    }
+                }
+                else
+                    return null;
+            }
+
+            return nextCoveredTiles;
+        }
     }
-    //public Tile[] CoveredTiles
-    //{
-    //    get
-    //    {
-    //        return m_coveredTiles;
-    //    }
-    //}
 
     /**
     * A face of the brick d-c
@@ -168,7 +225,9 @@ public class Brick
 
     private CoveredTiles[] m_rolledOnTiles; //tiles the brick has rolled on
     private int m_rolledOnTilesLastIndex;
- 
+
+    public const float BRICK_BASIS_DIMENSION = 1; //the dimension of the square that serves as the basis of the brick, its height is twice this length
+
     /**
     * Build a rectangular cuboid that will serve as our main object in the scene.
     * To handle lighting correctly, our cuboid will need 24 vertices (instead of 8) so light is interpolated correctly so one face has one single color.
@@ -178,13 +237,13 @@ public class Brick
     {
         m_vertices = new Vector3[8];
         m_vertices[0] = new Vector3(0, 0, 0);
-        m_vertices[1] = new Vector3(1, 0, 0);
-        m_vertices[2] = new Vector3(1, 0, 1);
-        m_vertices[3] = new Vector3(0, 0, 1);
-        m_vertices[4] = new Vector3(0, 2, 0);
-        m_vertices[5] = new Vector3(1, 2, 0);
-        m_vertices[6] = new Vector3(1, 2, 1);
-        m_vertices[7] = new Vector3(0, 2, 1);
+        m_vertices[1] = new Vector3(BRICK_BASIS_DIMENSION, 0, 0);
+        m_vertices[2] = new Vector3(BRICK_BASIS_DIMENSION, 0, BRICK_BASIS_DIMENSION);
+        m_vertices[3] = new Vector3(0, 0, BRICK_BASIS_DIMENSION);
+        m_vertices[4] = new Vector3(0, 2 * BRICK_BASIS_DIMENSION, 0);
+        m_vertices[5] = new Vector3(BRICK_BASIS_DIMENSION, 2 * BRICK_BASIS_DIMENSION, 0);
+        m_vertices[6] = new Vector3(BRICK_BASIS_DIMENSION, 2 * BRICK_BASIS_DIMENSION, BRICK_BASIS_DIMENSION);
+        m_vertices[7] = new Vector3(0, 2 * BRICK_BASIS_DIMENSION, BRICK_BASIS_DIMENSION);
 
         m_faces = new BrickFace[6];
         //build square faces of the brick
@@ -367,7 +426,7 @@ public class Brick
     **/
     public RollResult CanRoll(BrickFace currentFace, BrickFace rollToFace, RollDirection rollDirection, out CoveredTiles newCoveredTiles)
     {
-        Floor floor = GameController.GetInstance().m_floor.m_floorData;
+        Floor floor = GameController.GetInstance().m_floorRenderer.m_floorData;
 
         newCoveredTiles = new CoveredTiles();
 

@@ -9,7 +9,8 @@ public class TileRenderer : MonoBehaviour
 
     public Tile m_tile { get; set; } //the tile data used to render a cuboid tile
 
-    public Material m_tileMaterial;
+    public Material m_defaultTileMaterial;
+    public Material m_finishTileMaterial;
 
     //Bonus
     public BonusRenderer m_bonusPfb;
@@ -20,6 +21,10 @@ public class TileRenderer : MonoBehaviour
     //as we want to modify the color of a tile quickly, store the vertex of colors here
     private Color[] m_colors;
     private bool m_colorsArrayDirty;
+
+    //use uv mixed with colors
+    private Vector2[] m_uv;
+    //private bool m_uvArrayDirty;
 
     //when modifying the thickness of the contour, we want to modify the vertices array. So like colors array, store it here
     private Vector3[] m_vertices;
@@ -32,38 +37,52 @@ public class TileRenderer : MonoBehaviour
     Vector2[] m_vertexProjections;
 
     //colors of the tile as a TileColors object
-    private TileColors m_tileColors;
-    public TileColors TileColors
-    {
-        get
-        {
-            return m_tileColors;
-        }
-    }
+    //private TileColors m_tileColors;
+    //public TileColors TileColors
+    //{
+    //    get
+    //    {
+    //        return m_tileColors;
+    //    }
+    //}
+
+    //has the tile a contour on its top face
+    private bool m_hasContour;
 
     //Color variation
-    bool m_colorVariating;
-    TileColors m_fromColors;
-    TileColors m_toColors;
-    float m_duration;
-    float m_elapsedTime;
-    float m_delay;
+    //bool m_colorVariating;
+    //TileColors m_fromColors;
+    //TileColors m_toColors;
+    //float m_duration;
+    //float m_elapsedTime;
+    //float m_delay;
 
     //decals
     private GameObject m_decalObject;
     public Material m_testDecalMaterial;
 
+    //various animations
+    public GlowSquare m_glowSquarePfb;
+    private bool m_generatingGlowSquares;
+    private float m_gsGenerationPeriod;
+    private float m_gsGenerationElapsedTime;
+
     public void Init(Tile tile)
     {
         m_tile = tile;
-        
-        BuildFaces();
-
-        m_colorsArrayDirty = false;
-        m_verticesArrayDirty = false;
 
         //Assign a vertex-color unlit shader to this tile object
-        this.GetComponent<MeshRenderer>().material = m_tileMaterial;
+        if (tile.CurrentState == Tile.State.FINISH)
+            GetComponent<MeshRenderer>().sharedMaterial = m_finishTileMaterial;
+        else
+            GetComponent<MeshRenderer>().sharedMaterial = m_defaultTileMaterial;
+
+        float contourThicknessRatio;
+        if (tile.CurrentState == Tile.State.FINISH)
+            contourThicknessRatio = 0;
+        else
+            contourThicknessRatio = 0.06f;
+        BuildFaces(Tile.TILE_DEFAULT_HEIGHT, contourThicknessRatio);
 
         Invalidate();
 
@@ -77,8 +96,15 @@ public class TileRenderer : MonoBehaviour
     **/
     protected void BuildFaces(float height = Tile.TILE_DEFAULT_HEIGHT, float contourThicknessRatio = TILE_DEFAULT_CONTOUR_THICKNESS)
     {
+        m_hasContour = (contourThicknessRatio > 0);
+
+        //VERTICES
         //build only two faces as the 3 other wont be visible
-        m_vertices = new Vector3[20];
+        if (m_hasContour)
+            m_vertices = new Vector3[20];
+        else
+            m_vertices = new Vector3[12];
+
         m_vertices[0] = new Vector3(-0.5f * m_tile.m_size, -0.5f * height, 0.5f * m_tile.m_size);
         m_vertices[1] = new Vector3(-0.5f * m_tile.m_size, -0.5f * height, -0.5f * m_tile.m_size);
         m_vertices[2] = new Vector3(-0.5f * m_tile.m_size, 0.5f * height, -0.5f * m_tile.m_size);
@@ -87,24 +113,31 @@ public class TileRenderer : MonoBehaviour
         m_vertices[5] = new Vector3(0.5f * m_tile.m_size, -0.5f * height, -0.5f * m_tile.m_size);
         m_vertices[6] = new Vector3(0.5f * m_tile.m_size, 0.5f * height, -0.5f * m_tile.m_size);
         m_vertices[7] = new Vector3(-0.5f * m_tile.m_size, 0.5f * height, -0.5f * m_tile.m_size);
-
+        
         float innerSquareSize = (1 - contourThicknessRatio) * m_tile.m_size;
+        
         m_vertices[8] = new Vector3(-0.5f * innerSquareSize, 0.5f * height, 0.5f * innerSquareSize);
         m_vertices[9] = new Vector3(-0.5f * innerSquareSize, 0.5f * height, -0.5f * innerSquareSize);
         m_vertices[10] = new Vector3(0.5f * innerSquareSize, 0.5f * height, -0.5f * innerSquareSize);
         m_vertices[11] = new Vector3(0.5f * innerSquareSize, 0.5f * height, 0.5f * innerSquareSize);
 
-        //build actual contour
-        m_vertices[12] = new Vector3(-0.5f * m_tile.m_size, 0.5f * height, 0.5f * m_tile.m_size);
-        m_vertices[13] = new Vector3(-0.5f * m_tile.m_size, 0.5f * height, -0.5f * m_tile.m_size);
-        m_vertices[14] = new Vector3(0.5f * m_tile.m_size, 0.5f * height, -0.5f * m_tile.m_size);
-        m_vertices[15] = new Vector3(0.5f * m_tile.m_size, 0.5f * height, 0.5f * m_tile.m_size);
-        m_vertices[16] = new Vector3(-0.5f * innerSquareSize, 0.5f * height, 0.5f * innerSquareSize);
-        m_vertices[17] = new Vector3(-0.5f * innerSquareSize, 0.5f * height, -0.5f * innerSquareSize);
-        m_vertices[18] = new Vector3(0.5f * innerSquareSize, 0.5f * height, -0.5f * innerSquareSize);
-        m_vertices[19] = new Vector3(0.5f * innerSquareSize, 0.5f * height, 0.5f * innerSquareSize);
+        if (m_hasContour)
+        {
+            //build actual contour
+            m_vertices[12] = new Vector3(-0.5f * m_tile.m_size, 0.5f * height, 0.5f * m_tile.m_size);
+            m_vertices[13] = new Vector3(-0.5f * m_tile.m_size, 0.5f * height, -0.5f * m_tile.m_size);
+            m_vertices[14] = new Vector3(0.5f * m_tile.m_size, 0.5f * height, -0.5f * m_tile.m_size);
+            m_vertices[15] = new Vector3(0.5f * m_tile.m_size, 0.5f * height, 0.5f * m_tile.m_size);
+            m_vertices[16] = new Vector3(-0.5f * innerSquareSize, 0.5f * height, 0.5f * innerSquareSize);
+            m_vertices[17] = new Vector3(-0.5f * innerSquareSize, 0.5f * height, -0.5f * innerSquareSize);
+            m_vertices[18] = new Vector3(0.5f * innerSquareSize, 0.5f * height, -0.5f * innerSquareSize);
+            m_vertices[19] = new Vector3(0.5f * innerSquareSize, 0.5f * height, 0.5f * innerSquareSize);
+        }
 
-        m_triangles = new int[] { 0, 2, 1, 0, 3, 2, //face 1
+        //TRIANGLES
+        if (contourThicknessRatio > 0)
+        {
+            m_triangles = new int[] { 0, 2, 1, 0, 3, 2, //face 1
                                     4, 6, 5, 4, 7, 6, //face 2
                                     8, 10, 9, 8, 11, 10, //inner square                                    
                                     12, 17, 13, 12, 16, 17, //contour
@@ -112,74 +145,145 @@ public class TileRenderer : MonoBehaviour
                                     14, 19, 15, 14, 18, 19, //contour
                                     15, 16, 12, 15, 19, 16, //contour
             };
+        }
+        else
+        {
+            m_triangles = new int[] { 0, 2, 1, 0, 3, 2, //face 1
+                                    4, 6, 5, 4, 7, 6, //face 2
+                                    8, 10, 9, 8, 11, 10, //top face
+            };
 
-        m_colors = new Color[20];
+        }
+
+        m_colors = new Color[m_hasContour ? 20 : 12];
+        for (int i = 0; i != m_colors.Length; i++)
+        {
+            m_colors[i] = Color.white;
+        }
+
+        if (m_tile.CurrentState == Tile.State.FINISH)
+        {
+            GetComponent<MeshRenderer>().sharedMaterial.mainTexture.wrapMode = TextureWrapMode.Repeat;
+
+            int repeatCount = 2; //repeat the texture 2 times over the tile dimension
+            m_uv = new Vector2[12];
+            m_uv[0] = new Vector2(0, 0);
+            m_uv[1] = new Vector2(repeatCount, 0);
+            m_uv[2] = new Vector2(repeatCount, repeatCount / 2);
+            m_uv[3] = new Vector2(0, repeatCount / 2);
+
+            m_uv[4] = new Vector2(0, repeatCount / 2);
+            m_uv[5] = new Vector2(repeatCount, repeatCount / 2);
+            m_uv[6] = new Vector2(repeatCount, 0);
+            m_uv[7] = new Vector2(0, 0);
+
+            m_uv[8] = new Vector2(0, 0);
+            m_uv[9] = new Vector2(repeatCount, 0);
+            m_uv[10] = new Vector2(repeatCount, repeatCount);
+            m_uv[11] = new Vector2(0, repeatCount);
+        }
+        else
+            m_uv = new Vector2[m_hasContour ? 20 : 12];
+
+        //NORMALS (in case of we change to vertex lit)
+        Vector3[] normals;
+        if (m_hasContour)
+        {
+            normals = new Vector3[20];
+            for (int i = 0; i != normals.Length; i++)
+            {
+                if (i < 4)
+                    normals[i] = Vector3.left;
+                else if (i < 8)
+                    normals[i] = Vector3.back;
+                else
+                    normals[i] = Vector3.up;
+            }
+        }
+        else
+        {
+            normals = new Vector3[12];
+            for (int i = 0; i != normals.Length; i++)
+            {
+                if (i < 4)
+                    normals[i] = Vector3.left;
+                else if (i < 8)
+                    normals[i] = Vector3.back;
+                else
+                    normals[i] = Vector3.up;
+            }
+        }
 
         Mesh facesMesh = new Mesh();
         facesMesh.name = "TileMesh";
         facesMesh.vertices = m_vertices;
         facesMesh.triangles = m_triangles;
         facesMesh.colors = m_colors;
+        facesMesh.uv = m_uv;
+        facesMesh.normals = normals;
 
         this.GetComponent<MeshFilter>().sharedMesh = facesMesh;
     }
 
-    public void SetColors(TileColors colors)
-    {
-        m_tileColors = colors;
-        SetLeftFaceColor(colors.m_tileLeftFaceColor, false);
-        SetRightFaceColor(colors.m_tileRightFaceColor, false);
-        SetTopFaceColor(colors.m_tileTopFaceColor, false);
-        SetContourColor(colors.m_tileContourColor, true);
-    }
+    //public void SetColors(TileColors colors)
+    //{
+    //    m_tileColors = colors;
+    //    SetLeftFaceColor(colors.m_tileLeftFaceColor, false);
+    //    SetRightFaceColor(colors.m_tileRightFaceColor, false);
+    //    SetTopFaceColor(colors.m_tileTopFaceColor, false);
+    //    SetContourColor(colors.m_tileContourColor, true);
+    //}
 
-    public void SetLeftFaceColor(Color color, bool bUpdateMeshDirectly = true)
-    {
-        int i = 0;
-        while (i < 4)
-        {
-            m_colors[i] = color;
-            i++;
-        }
+    //public void SetLeftFaceColor(Color color, bool bUpdateMeshDirectly = true)
+    //{
+    //    int i = 0;
+    //    while (i < 4)
+    //    {
+    //        m_colors[i] = color;
+    //        i++;
+    //    }
 
-        if (bUpdateMeshDirectly)
-            GetComponent<MeshFilter>().sharedMesh.colors = m_colors;
-        else
-            m_colorsArrayDirty = true;
-    }
+    //    if (bUpdateMeshDirectly)
+    //        GetComponent<MeshFilter>().sharedMesh.colors = m_colors;
+    //    else
+    //        m_colorsArrayDirty = true;
+    //}
 
-    public void SetRightFaceColor(Color color, bool bUpdateMeshDirectly = true)
-    {
-        int i = 4;
-        while (i < 8)
-        {
-            m_colors[i] = color;
-            i++;
-        }
+    //public void SetRightFaceColor(Color color, bool bUpdateMeshDirectly = true)
+    //{
+    //    int i = 4;
+    //    while (i < 8)
+    //    {
+    //        m_colors[i] = color;
+    //        i++;
+    //    }
 
-        if (bUpdateMeshDirectly)
-            GetComponent<MeshFilter>().sharedMesh.colors = m_colors;
-        else
-            m_colorsArrayDirty = true;
-    }
+    //    if (bUpdateMeshDirectly)
+    //        GetComponent<MeshFilter>().sharedMesh.colors = m_colors;
+    //    else
+    //        m_colorsArrayDirty = true;
+    //}
 
-    public void SetTopFaceColor(Color color, bool bUpdateMeshDirectly = true)
-    {
-        int i = 8;
-        while (i < 12)
-        {
-            m_colors[i] = color;
-            i++;
-        }
+    //public void SetTopFaceColor(Color color, bool bUpdateMeshDirectly = true)
+    //{
+    //    int i = 8;
+    //    while (i < 12)
+    //    {
+    //        m_colors[i] = color;
+    //        i++;
+    //    }
 
-        if (bUpdateMeshDirectly)
-            GetComponent<MeshFilter>().sharedMesh.colors = m_colors;
-        else
-            m_colorsArrayDirty = true;
-    }
+    //    if (bUpdateMeshDirectly)
+    //        GetComponent<MeshFilter>().sharedMesh.colors = m_colors;
+    //    else
+    //        m_colorsArrayDirty = true;
+    //}
 
     public void SetContourColor(Color color, bool bUpdateMeshDirectly = true)
     {
+        if (!m_hasContour)
+            return;
+
         int i = 12;
         while (i < 20)
         {
@@ -226,12 +330,23 @@ public class TileRenderer : MonoBehaviour
         transform.localPosition = position;
     }
 
-    public void UpdateTileColors()
-    {
+    public void UpdateTileColor()
+    {      
         ColorTheme currentTheme = GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme;
+        Color color = currentTheme.GetTileColorForTileState(m_tile.CurrentState);
+        SetTileColor(color);
+    }
 
-        TileColors colors = currentTheme.GetTileColorsForTileState(m_tile.CurrentState);
-        SetColors(colors);
+    public void SetTileColor(Color color)
+    {
+        for (int i = 0; i != m_colors.Length; i++)
+        {
+            m_colors[i] = color;
+        }
+
+        SetContourColor(ColorUtils.LightenColor(color, 0.1f));
+
+        m_colorsArrayDirty = true;
     }
 
     public void UpdateTileDecal()
@@ -340,15 +455,15 @@ public class TileRenderer : MonoBehaviour
         return false;
     }
 
-    public void ChangeColorsTo(TileColors toColors, float duration, float delay = 0.0f)
-    {
-        m_colorVariating = true;
-        m_fromColors = m_tileColors;
-        m_toColors = toColors;
-        m_duration = duration;
-        m_delay = delay;
-        m_elapsedTime = 0;
-    }
+    //public void ChangeColorsTo(TileColors toColors, float duration, float delay = 0.0f)
+    //{
+    //    m_colorVariating = true;
+    //    m_fromColors = m_tileColors;
+    //    m_toColors = toColors;
+    //    m_duration = duration;
+    //    m_delay = delay;
+    //    m_elapsedTime = 0;
+    //}
 
     /**
     * Add a decal texture on the top face of this tile
@@ -380,9 +495,7 @@ public class TileRenderer : MonoBehaviour
         vertices[3] = m_vertices[11];
 
         int[] triangles = new int[] { 0, 2, 1, 0, 3, 2 };
-
-        Debug.Log("vertices[0].y):" + vertices[0].y);
-
+        
         Vector2[] uv = new Vector2[4];
         uv[0] = Vector2.zero;
         uv[1] = new Vector2(1, 0);
@@ -400,6 +513,52 @@ public class TileRenderer : MonoBehaviour
             Destroy(m_decalObject);
     }
 
+    /**
+    * Add a glow square and animate it
+    **/
+    public void DisplayGlowSquareOnBrickLanding()
+    {
+        GlowSquare glowSquare = Instantiate(m_glowSquarePfb);
+        glowSquare.name = "GlowSquare";
+        glowSquare.transform.parent = this.transform;
+        glowSquare.Init();
+
+        GameObjectAnimator glowSquareAnimator = glowSquare.GetComponent<GameObjectAnimator>();
+        glowSquareAnimator.UpdatePivotPoint(Vector3.zero);
+        glowSquareAnimator.SetPosition(new Vector3(0, 0.5f * Tile.TILE_DEFAULT_HEIGHT + 0.0001f, 0));
+        glowSquareAnimator.SetScale(new Vector3(1.33f, 1.33f, 1.33f));
+        glowSquareAnimator.ScaleTo(new Vector3(1.4f, 1.4f, 1.4f), 0.5f);
+        glowSquareAnimator.SetOpacity(1.0f);
+        glowSquareAnimator.FadeTo(0.0f, 0.5f, 0.0f, ValueAnimator.InterpolationType.LINEAR, false);
+    }
+
+    /**
+    * Generate a cycle of fading glow squares on the finish tile
+    **/
+    public void GenerateGlowSquaresOnFinishTile()
+    {
+        return;
+        m_generatingGlowSquares = true;
+        m_gsGenerationElapsedTime = 0;
+        m_gsGenerationPeriod = 1.0f;
+    }
+
+    private void GenerateGlowSquareOnFinishTile()
+    {
+        GlowSquare glowSquare = Instantiate(m_glowSquarePfb);
+        glowSquare.name = "GlowSquare";
+        glowSquare.transform.parent = this.transform;
+        glowSquare.Init();
+
+        GlowSquareAnimator glowSquareAnimator = glowSquare.GetComponent<GlowSquareAnimator>();
+        glowSquareAnimator.UpdatePivotPoint(Vector3.zero);
+        glowSquareAnimator.SetPosition(new Vector3(0, 0.5f * Tile.TILE_DEFAULT_HEIGHT + 0.0001f, 0));
+        glowSquareAnimator.SetScale(new Vector3(1.4f, 1.4f, 1.4f));
+        glowSquareAnimator.ScaleTo(Vector3.zero, 3.0f);
+        glowSquareAnimator.SetOpacity(0);
+        glowSquareAnimator.FadeTo(0.75f, 3.0f, 0.0f, ValueAnimator.InterpolationType.LINEAR, true);
+    }
+
     public void LiftUp()
     {
 
@@ -414,41 +573,51 @@ public class TileRenderer : MonoBehaviour
     {
         UpdateTileHeight(GetTileHeight());
         UpdateTilePosition(m_tile.GetLocalPosition());
-        UpdateTileColors();
+        UpdateTileColor();
         UpdateTileDecal();
     }
 
     public void Update()
     {
-        if (m_colorVariating)
+        float dt = Time.deltaTime;
+
+        //if (m_colorVariating)
+        //{      
+        //    bool inDelay = (m_elapsedTime < m_delay);
+        //    m_elapsedTime += dt;
+        //    if (m_elapsedTime > m_delay)
+        //    {
+        //        if (inDelay) //we were in delay previously
+        //            dt = m_elapsedTime - m_delay;
+        //        float effectiveElapsedTime = m_elapsedTime - m_delay;
+        //        float t1 = effectiveElapsedTime - dt;
+        //        float t2 = effectiveElapsedTime;
+
+        //        //Top color variation
+        //        TileColors colorsVariation = m_toColors;
+        //        colorsVariation.Substract(m_fromColors);
+        //        TileColors deltaColors = colorsVariation;
+        //        deltaColors.Multiply((t2 - t1) / m_duration);
+
+        //        m_tileColors.Add(deltaColors);
+
+        //        if (effectiveElapsedTime > m_duration)
+        //        {
+        //            m_tileColors = m_toColors;
+        //            m_colorVariating = false;
+        //        }
+
+        //        SetColors(m_tileColors);
+        //    }
+        //}
+
+        if (m_generatingGlowSquares)
         {
-            float dt = Time.deltaTime;
-
-            bool inDelay = (m_elapsedTime < m_delay);
-            m_elapsedTime += dt;
-            if (m_elapsedTime > m_delay)
+            m_gsGenerationElapsedTime -= dt;
+            if (m_gsGenerationElapsedTime <= 0)
             {
-                if (inDelay) //we were in delay previously
-                    dt = m_elapsedTime - m_delay;
-                float effectiveElapsedTime = m_elapsedTime - m_delay;
-                float t1 = effectiveElapsedTime - dt;
-                float t2 = effectiveElapsedTime;
-
-                //Top color variation
-                TileColors colorsVariation = m_toColors;
-                colorsVariation.Substract(m_fromColors);
-                TileColors deltaColors = colorsVariation;
-                deltaColors.Multiply((t2 - t1) / m_duration);
-
-                m_tileColors.Add(deltaColors);
-
-                if (effectiveElapsedTime > m_duration)
-                {
-                    m_tileColors = m_toColors;
-                    m_colorVariating = false;
-                }
-
-                SetColors(m_tileColors);
+                m_gsGenerationElapsedTime = m_gsGenerationPeriod;
+                GenerateGlowSquareOnFinishTile();
             }
         }
 
@@ -464,11 +633,22 @@ public class TileRenderer : MonoBehaviour
         //else if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
         //    bUpdateTileRenderingOnStateChange = true;
 
-        LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI; 
-        if (m_tile.m_tileStateDirty && !levelEditor.m_computingSolution)
+
+        if (m_tile.m_tileStateDirty)
         {
-            Invalidate();
-            m_tile.m_tileStateDirty = false;
+            bool bInvalidateTileRendering = true;
+            if (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR)
+            {
+                LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+                if (levelEditor.m_computingSolution) //do not invalidate tile rendering when we are computing a solution
+                    bInvalidateTileRendering = false;
+            }
+
+            if (bInvalidateTileRendering)
+            {
+                Invalidate();
+                m_tile.m_tileStateDirty = false;
+            }
         }
 
         Mesh mesh = GetComponent<MeshFilter>().sharedMesh;

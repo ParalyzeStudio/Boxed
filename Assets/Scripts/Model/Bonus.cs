@@ -8,5 +8,13 @@ using UnityEngine;
 [Serializable]
 public class Bonus
 {
+    public Bonus()
+    {
 
+    }
+
+    public Bonus(Bonus other)
+    {
+
+    }
 }

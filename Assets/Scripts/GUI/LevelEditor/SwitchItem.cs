@@ -95,7 +95,7 @@ public class SwitchItem : MonoBehaviour
                 m_parentPanel.m_parentMenu.m_parentEditor.m_editedLevel.m_floor.InsertTile(tile);
 
                 //invalidate the tile on the renderer
-                GameController.GetInstance().m_floor.ReplaceTileOnRenderer(tile);
+                GameController.GetInstance().m_floorRenderer.ReplaceTileOnRenderer(tile);
             }
         }
         else
@@ -106,7 +106,7 @@ public class SwitchItem : MonoBehaviour
             m_parentPanel.m_parentMenu.m_parentEditor.m_editedLevel.m_floor.InsertTile(normalTile);
 
             //invalidate the tile on the renderer
-            GameController.GetInstance().m_floor.ReplaceTileOnRenderer(normalTile);
+            GameController.GetInstance().m_floorRenderer.ReplaceTileOnRenderer(normalTile);
 
             if (tile != null)
             {
@@ -114,7 +114,7 @@ public class SwitchItem : MonoBehaviour
 
                 m_parentPanel.m_parentMenu.m_parentEditor.m_editedLevel.m_floor.InsertTile(tile);
 
-                GameController.GetInstance().m_floor.ReplaceTileOnRenderer(tile);
+                GameController.GetInstance().m_floorRenderer.ReplaceTileOnRenderer(tile);
             }
         }
 
@@ -138,7 +138,7 @@ public class SwitchItem : MonoBehaviour
             return;
 
         m_parentPanel.m_parentMenu.m_parentEditor.m_editedLevel.m_floor.InsertTile(tile);
-        GameController.GetInstance().m_floor.ReplaceTileOnRenderer(tile);
+        GameController.GetInstance().m_floorRenderer.ReplaceTileOnRenderer(tile);
 
         m_triggeredTiles.Add(tile);
         tile.m_isLiftUp = m_parentPanel.m_triggeredTileLiftUpState;
@@ -155,7 +155,7 @@ public class SwitchItem : MonoBehaviour
             normalTile.CurrentState = Tile.State.NORMAL;
 
             m_parentPanel.m_parentMenu.m_parentEditor.m_editedLevel.m_floor.InsertTile(normalTile);
-            GameController.GetInstance().m_floor.ReplaceTileOnRenderer(normalTile);
+            GameController.GetInstance().m_floorRenderer.ReplaceTileOnRenderer(normalTile);
         }
     }
 

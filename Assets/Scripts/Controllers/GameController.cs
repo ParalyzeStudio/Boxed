@@ -5,8 +5,8 @@ public class GameController : MonoBehaviour
     public GameObject m_brickPfb;
     public GameObject m_floorPfb;
 
-    public BrickRenderer m_brick { get; set; }
-    public FloorRenderer m_floor { get; set; }
+    public BrickRenderer m_brickRenderer { get; set; }
+    public FloorRenderer m_floorRenderer { get; set; }
     public GameObject m_bonuses { get; set; } //use this object to hold bonus objects
 
     private GUIManager m_guiManager; //maybe to speed up a bit instead of calling GetComponent<>
@@ -29,7 +29,7 @@ public class GameController : MonoBehaviour
     {
         //cache levels
         LevelManager levelManager = this.GetComponent<LevelManager>();
-        //levelManager.CacheLevels();
+        levelManager.CacheLevels();
 
         //init the camera
         GameObject.FindGameObjectWithTag("MainCamera").GetComponent<IsometricCameraController>().Init();
@@ -108,19 +108,19 @@ public class GameController : MonoBehaviour
 
     public void RemoveFloor()
     {
-        if (m_floor != null)
+        if (m_floorRenderer != null)
         {
-            Destroy(m_floor.gameObject);
-            m_floor = null;
+            Destroy(m_floorRenderer.gameObject);
+            m_floorRenderer = null;
         }
     }
 
     public void RemoveBrick()
     {
-        if (m_brick != null)
+        if (m_brickRenderer != null)
         {
-            Destroy(m_brick.gameObject);
-            m_brick = null;
+            Destroy(m_brickRenderer.gameObject);
+            m_brickRenderer = null;
         }
     }
 
@@ -138,6 +138,12 @@ public class GameController : MonoBehaviour
         BuildBonusesHolder();
         RenderFloor(level.m_floor);
         BuildBrick(level);
+        DropBrick(); //drop animation when level begins
+
+        
+        Tile finishTile = level.m_floor.GetFinishTile();
+        TileRenderer finishTileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(finishTile);
+        finishTileRenderer.GenerateGlowSquaresOnFinishTile();
     }
 
     /**
@@ -191,16 +197,16 @@ public class GameController : MonoBehaviour
 
     public void RenderFloor(Floor floor)
     {
-        if (m_floor != null)
+        if (m_floorRenderer != null)
         {
-            Destroy(m_floor.gameObject);
-            m_floor = null;
+            Destroy(m_floorRenderer.gameObject);
+            m_floorRenderer = null;
         }
 
         //Render the floor
         GameObject floorObject = (GameObject)Instantiate(m_floorPfb);
-        m_floor = floorObject.GetComponent<FloorRenderer>();
-        m_floor.Render(floor);
+        m_floorRenderer = floorObject.GetComponent<FloorRenderer>();
+        m_floorRenderer.Render(floor);
     }
 
     private void BuildBrick(Level level)
@@ -208,14 +214,37 @@ public class GameController : MonoBehaviour
         if (level != null)
         {
             GameObject brickObject = (GameObject)Instantiate(m_brickPfb);
-            m_brick = brickObject.GetComponent<BrickRenderer>();
+            m_brickRenderer = brickObject.GetComponent<BrickRenderer>();
 
             Tile[] coveredTiles = new Tile[2];
-            coveredTiles[0] = (level == null) ? m_floor.m_floorData.GetCenterTile() : level.m_floor.GetStartTile();
+            coveredTiles[0] = (level == null) ? m_floorRenderer.m_floorData.GetCenterTile() : level.m_floor.GetStartTile();
             //coveredTiles[1] = m_floor.m_floorData.GetNextTileForDirection(coveredTiles[0], Brick.RollDirection.BOTTOM);
             coveredTiles[1] = null;
-            m_brick.BuildOnTiles(coveredTiles);
+            m_brickRenderer.BuildOnTiles(coveredTiles);
         }
+    }
+
+    private void DropBrick()
+    {
+        float dropHeight = 4.0f * Brick.BRICK_BASIS_DIMENSION;
+        Vector3 brickFinalPosition = m_brickRenderer.gameObject.transform.localPosition;
+        m_brickRenderer.gameObject.transform.localPosition += new Vector3(0, dropHeight, 0);
+
+        float dropDuration = 0.5f;
+
+        BrickAnimator brickAnimator = m_brickRenderer.GetComponent<BrickAnimator>();
+        brickAnimator.UpdatePivotPoint(Vector3.zero);
+        brickAnimator.TranslateTo(brickFinalPosition, dropDuration, 0, ValueAnimator.InterpolationType.HERMITE1, false);
+
+        CallFuncHandler callFuncHandler = GetInstance().GetComponent<CallFuncHandler>();
+        callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(OnBrickLanding), dropDuration);
+    }
+
+    private void OnBrickLanding()
+    {
+        Tile landedTile = m_brickRenderer.m_brick.m_coveredTiles.GetFirstTile();
+        TileRenderer tileRenderer = m_floorRenderer.GetRendererForTile(landedTile);
+        tileRenderer.DisplayGlowSquareOnBrickLanding();
     }
 
     public void BuildBonusesHolder()
@@ -239,13 +268,13 @@ public class GameController : MonoBehaviour
 
     private void CheckForVictoryDefeat()
     {
-        if (m_victory || m_brick.IsOnFinishTile())
+        if (m_victory || m_brickRenderer.IsOnFinishTile())
         {
             m_victory = true;
             m_gameStatus = GameStatus.VICTORY;
         }
 
-        if (m_defeat || m_brick.IsFalling())
+        if (m_defeat || m_brickRenderer.IsFalling())
         {
             m_defeat = true;
             m_gameStatus = GameStatus.DEFEAT;

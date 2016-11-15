@@ -43,33 +43,33 @@ public class LevelSlot : TileRenderer
 
     private void Disable(bool bNullLevel)
     {
-        //m_interactable = false;
+        m_interactable = bNullLevel;
 
-        TileColors colors = GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme.m_defaultTileColors;
+        //TileColors colors = GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme.m_defaultTileColors;
 
-        if (bNullLevel)
-        {
-            colors.Darken(0.5f);
-            colors.Fade(0.5f);
-            ChangeColorsTo(colors, 0.5f);
-            m_interactable = false;
-        }
-        else
-        {
-            colors.Darken(0.35f);
-            ChangeColorsTo(colors, 0.5f);
-            m_interactable = true;
-        }
+        //if (bNullLevel)
+        //{
+        //    colors.Darken(0.5f);
+        //    colors.Fade(0.5f);
+        //    ChangeColorsTo(colors, 0.5f);
+        //    m_interactable = false;
+        //}
+        //else
+        //{
+        //    colors.Darken(0.35f);
+        //    ChangeColorsTo(colors, 0.5f);
+        //    m_interactable = true;
+        //}
     }
 
     private void Enable()
     {
-        TileColors colors = GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme.m_defaultTileColors;
-        ChangeColorsTo(colors, 0.5f);
+        //TileColors colors = GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme.m_defaultTileColors;
+        //ChangeColorsTo(colors, 0.5f);
         m_interactable = true;
     }
 
-    public void Invalidate()
+    public new void Invalidate()
     {
         if (m_level == null)
             Disable(true);

@@ -144,21 +144,21 @@ public class GameGUI : BaseGUI
 
     public void OnClickRollLeft()
     {
-        GameController.GetInstance().m_brick.GetComponent<BrickController>().RollLeft();
+        GameController.GetInstance().m_brickRenderer.GetComponent<BrickController>().RollLeft();
     }
 
     public void OnClickRollRight()
     {
-        GameController.GetInstance().m_brick.GetComponent<BrickController>().RollRight();
+        GameController.GetInstance().m_brickRenderer.GetComponent<BrickController>().RollRight();
     }
 
     public void OnClickRollTop()
     {
-        GameController.GetInstance().m_brick.GetComponent<BrickController>().RollTop();
+        GameController.GetInstance().m_brickRenderer.GetComponent<BrickController>().RollTop();
     }
 
     public void OnClickRollBottom()
     {
-        GameController.GetInstance().m_brick.GetComponent<BrickController>().RollBottom();
+        GameController.GetInstance().m_brickRenderer.GetComponent<BrickController>().RollBottom();
     }
 }

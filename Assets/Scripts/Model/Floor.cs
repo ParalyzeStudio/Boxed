@@ -369,8 +369,6 @@ public class Floor
                     tile.m_columnIndex = i;
                     tile.m_lineIndex = j;
                     unclampedSwitchTiles.Add((SwitchTile)tile);
-
-                    Debug.Log("SwitchTile c:" + i + " l:" + j);
                 }
                 else if (replacedTile.CurrentState != Tile.State.TRIGGERED_BY_SWITCH)
                 {
@@ -393,8 +391,6 @@ public class Floor
                 newTriggeredTile.m_columnIndex += minColumnIndex;
                 newTriggeredTile.m_lineIndex += minLineIndex;
                 switchTile.m_triggeredTiles[q] = newTriggeredTile;
-
-                Debug.Log("TriggeredTile c:" + newTriggeredTile.m_columnIndex + " l:" + newTriggeredTile.m_lineIndex);
 
                 floor.m_tiles[newTriggeredTile.m_columnIndex * floorSize + newTriggeredTile.m_lineIndex] = newTriggeredTile;
             }

@@ -453,19 +453,34 @@ public class ValueAnimator : MonoBehaviour
     private float CalculateDeltaForInterpolationType(float t1, float t2, float L, float amp, InterpolationType interpolationType)
     {
         if (interpolationType == InterpolationType.LINEAR)
-            return (t2 - t1) / L * amp;
+            return amp * (Linear(t2/ L) - Linear(t1/ L));
         else if (interpolationType == InterpolationType.SINUSOIDAL)
-            return amp * (Mathf.Sin(t2 * Mathf.PI / (2 * L)) - Mathf.Sin(t1 * Mathf.PI / (2 * L)));
+            return amp * (Sinusoidal(t2 / L) - Sinusoidal(t1 / L));
         else if (interpolationType == InterpolationType.HERMITE1)
-            return amp * (SmoothStep(t2) - SmoothStep(t1));
+            return amp * (SmoothStep(t2 / L) - SmoothStep(t1 / L));
         else if (interpolationType == InterpolationType.HERMITE2)
-            return amp * (SmootherStep(t2) - SmootherStep(t1));
-
+            return amp * (SmootherStep(t2 / L) - SmootherStep(t1 / L));
         return 0;
     }
 
     /**
-    * 3x^2 - 2x^3
+    * f(x) =  = x
+    **/
+    private float Linear(float x)
+    {
+        return x;
+    }
+
+    /**
+    * f(x) = sin(pi/2 * x)
+    **/
+    private float Sinusoidal(float x)
+    {
+        return Mathf.Sin(Mathf.PI / 2 * x);
+    }
+
+    /**
+    * f(x) = 3x^2 - 2x^3
     **/
     private float SmoothStep(float x)
     {
@@ -473,7 +488,7 @@ public class ValueAnimator : MonoBehaviour
     }
 
     /**
-    * 6x^5 - 15x^4 + 10x^3
+    * f(x) = 6x^5 - 15x^4 + 10x^3
     **/
     private float SmootherStep(float x)
     {

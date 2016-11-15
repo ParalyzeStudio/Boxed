@@ -115,18 +115,12 @@ public class SolutionTree
 
         //construct a root node with arbitrary direction (does not matter there)
         m_currentNode = new SolutionNode(Brick.RollDirection.LEFT, null, 0);
-
-        int stopIdx = 1000000;
-        while (!(m_stopWhenTreeIsSolved && m_isSolved) && stopIdx > 0)
+        
+        while (!(m_stopWhenTreeIsSolved && m_isSolved))
         {
-            stopIdx--;
-
             if (!MovePawn())
                 break;
         }
-
-        if (stopIdx <= 0)
-            Debug.Log("STOP IDX REACHED");
 
         //now search for paths that are marked as successful and return them
         m_solutions = ExtractSuccessPaths(m_filters);
@@ -213,7 +207,46 @@ public class SolutionTree
     **/
     public bool PathContainsAllBonuses(SolutionNode leafNode)
     {
-        return true;
+        SolutionNode[] path = ExtractPathFromNode(leafNode);
+
+        //build a dummy brick that will roll on this path
+        Brick pawn = new Brick();
+        pawn.PlaceOnTiles(m_startTiles);
+
+        //count how many bonuses are traversed
+        int bonusTilesCount = m_bonusTiles.Count;
+        bool[] bonusTilesCoveredState = new bool[bonusTilesCount];
+        int bonusTilesCoveredCount = 0;
+
+        Brick.CoveredTiles coveredTiles = pawn.m_coveredTiles;
+
+        //check the start tiles
+        for (int p = 0; p != bonusTilesCount; p++)
+        {
+            if (!bonusTilesCoveredState[p] && pawn.m_coveredTiles.ContainsBonus(m_bonusTiles[p].AttachedBonus))
+            {
+                bonusTilesCoveredState[p] = true;
+                bonusTilesCoveredCount++;
+            }
+        }        
+
+        //check other tiles
+        for (int i = 0; i != path.Length; i++)
+        {
+            SolutionNode node = path[i];
+            coveredTiles = coveredTiles.GetNextCoveredTilesForDirection(m_levelToSolve.m_floor, node.m_direction);
+
+            for (int p = 0; p != bonusTilesCount; p++)
+            {
+                if (!bonusTilesCoveredState[p] && pawn.m_coveredTiles.ContainsBonus(m_bonusTiles[p].AttachedBonus))
+                {
+                    bonusTilesCoveredState[p] = true;
+                    bonusTilesCoveredCount++;
+                }
+            }
+        }
+
+        return bonusTilesCoveredCount == bonusTilesCount;
 
         //int bonusTilesCount = m_bonusTiles.Count;
         //bool[] bonusTilesCoveredState = new bool[bonusTilesCount];
@@ -298,12 +331,7 @@ public class SolutionTree
 
         SolutionNode previousNode = m_currentNode;
         m_currentNode = nextNode;
-
-        //if (m_pawn.IsCycling())
-        //{
-
-        //}
-
+        
 
         if (!PerformRolling(direction)) //dead node, revert the m_currentNode to the previous node and reset the state of the pawn to IDLE
         {
@@ -389,8 +417,11 @@ public class SolutionTree
             }
         }
 
-        //backward rolling operation is automatically successful
-        PerformRolling(oppDirection);
+        //try to make the brick roll
+        Brick.RollResult rollResult;
+        Geometry.Edge rotationEdge;
+        m_pawn.Roll(oppDirection, out rollResult, out rotationEdge);
+        m_pawn.m_state = Brick.BrickState.IDLE;
 
         m_currentNode = m_currentNode.m_parentNode;
 

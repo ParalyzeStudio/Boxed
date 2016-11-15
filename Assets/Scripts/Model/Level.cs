@@ -15,7 +15,7 @@ public class Level
 
     public bool m_published; //has the level been published
 
-    private const int MAX_SOLUTION_TREE_HEIGHT = 25;
+    private const int MAX_SOLUTION_TREE_HEIGHT = 40;
 
     private static System.Diagnostics.Stopwatch s_stopwatch;
 
@@ -162,7 +162,7 @@ public class Level
 
 
         Level duplicateLevelForSolving = new Level(this);
-        GameController.GetInstance().m_floor.m_floorData = duplicateLevelForSolving.m_floor; //replace temporarily the global floor instance
+        GameController.GetInstance().m_floorRenderer.m_floorData = duplicateLevelForSolving.m_floor; //replace temporarily the global floor instance
         SolutionTree solutionTree = new SolutionTree(treeHeight, duplicateLevelForSolving); //perform the algorithm on a copied tree to not modify the original state of the floor
         solutionTree.SearchForSolutions(validationData);
     }
@@ -201,7 +201,7 @@ public class Level
         //revert back to the correct global floor instance
         LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
         Level editedLevel = levelEditor.m_editedLevel;
-        GameController.GetInstance().m_floor.m_floorData = editedLevel.m_floor;
+        GameController.GetInstance().m_floorRenderer.m_floorData = editedLevel.m_floor;
 
         if (shortestSolution == null) //no solution
         {
