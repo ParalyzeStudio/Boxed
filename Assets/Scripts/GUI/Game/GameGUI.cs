@@ -105,7 +105,7 @@ public class GameGUI : BaseGUI
     {
         Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
         m_targetActionsCount.text = currentLevel.m_solution.Length.ToString();
-        m_targetActionsCount.color = GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme.m_highScoreColor;
+        m_targetActionsCount.color = GameController.GetInstance().GetComponent<ThemeManager>().GetSelectedTheme().m_highScoreColor;
     }
 
     public void UpdateActionsCount()
@@ -115,11 +115,11 @@ public class GameGUI : BaseGUI
 
     private Quaternion GetArrowRotationForDirection(Brick.RollDirection direction)
     {
-        if (direction == Brick.RollDirection.LEFT)
+        if (direction == Brick.RollDirection.BOTTOM_LEFT)
             return Quaternion.AngleAxis(180, Vector3.forward);
-        else if (direction == Brick.RollDirection.TOP)
+        else if (direction == Brick.RollDirection.TOP_LEFT)
             return Quaternion.AngleAxis(90, Vector3.forward);
-        else if (direction == Brick.RollDirection.RIGHT)
+        else if (direction == Brick.RollDirection.TOP_RIGHT)
             return Quaternion.identity;
         else
             return Quaternion.AngleAxis(270, Vector3.forward);
@@ -142,23 +142,10 @@ public class GameGUI : BaseGUI
         ToggleSolution();
     }
 
-    public void OnClickRollLeft()
+    public void OnGUI()
     {
-        GameController.GetInstance().m_brickRenderer.GetComponent<BrickController>().RollLeft();
-    }
-
-    public void OnClickRollRight()
-    {
-        GameController.GetInstance().m_brickRenderer.GetComponent<BrickController>().RollRight();
-    }
-
-    public void OnClickRollTop()
-    {
-        GameController.GetInstance().m_brickRenderer.GetComponent<BrickController>().RollTop();
-    }
-
-    public void OnClickRollBottom()
-    {
-        GameController.GetInstance().m_brickRenderer.GetComponent<BrickController>().RollBottom();
+        GUI.depth = 1;
+        //Debug.Log("GameGUI >>> OnGUI()");
+        //Debug.Log("GameGUI depth:" + GUI.depth);
     }
 }

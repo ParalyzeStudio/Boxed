@@ -192,17 +192,17 @@ public class Floor
     {
         int nextTileColumnIndex = -1;
         int nextTileLineIndex = -1;
-        if (direction == Brick.RollDirection.LEFT)
+        if (direction == Brick.RollDirection.BOTTOM_LEFT)
         {
             nextTileColumnIndex = tile.m_columnIndex - 1;
             nextTileLineIndex = tile.m_lineIndex;
         }
-        else if (direction == Brick.RollDirection.TOP)
+        else if (direction == Brick.RollDirection.TOP_LEFT)
         {
             nextTileColumnIndex = tile.m_columnIndex;
             nextTileLineIndex = tile.m_lineIndex + 1;
         }
-        else if (direction == Brick.RollDirection.RIGHT)
+        else if (direction == Brick.RollDirection.TOP_RIGHT)
         {
             nextTileColumnIndex = tile.m_columnIndex + 1;
             nextTileLineIndex = tile.m_lineIndex;

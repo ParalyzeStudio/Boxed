@@ -7,7 +7,7 @@ public class Tile
     public float m_size { get; set; } //tile dimension along x and z
 
     private const float TILE_SIZE = 1.0f;
-    public const float TILE_DEFAULT_HEIGHT = 0.5f;
+    public const float TILE_DEFAULT_HEIGHT = 0.75f;
 
     public enum State
     {

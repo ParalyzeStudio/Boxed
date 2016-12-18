@@ -15,6 +15,8 @@ public class BillboardSprite : Quad
     public virtual void LateUpdate()
     {
         if (m_camera != null)
+        {
             this.transform.rotation = m_camera.transform.rotation;
+        }
     }
 }

@@ -114,7 +114,7 @@ public class SolutionTree
         m_pawn.AddCurrentCoveredTilesToRolledOnTiles();
 
         //construct a root node with arbitrary direction (does not matter there)
-        m_currentNode = new SolutionNode(Brick.RollDirection.LEFT, null, 0);
+        m_currentNode = new SolutionNode(Brick.RollDirection.BOTTOM_LEFT, null, 0);
         
         while (!(m_stopWhenTreeIsSolved && m_isSolved))
         {
@@ -315,13 +315,13 @@ public class SolutionTree
 
     private void MovePawnForward(Brick.RollDirection direction)
     {
-        if (direction == Brick.RollDirection.LEFT)
+        if (direction == Brick.RollDirection.BOTTOM_LEFT)
             m_currentNode.m_remainingMoves[0] = false;
-        else if (direction == Brick.RollDirection.TOP)
+        else if (direction == Brick.RollDirection.TOP_LEFT)
             m_currentNode.m_remainingMoves[1] = false;
-        else if (direction == Brick.RollDirection.RIGHT)
+        else if (direction == Brick.RollDirection.TOP_RIGHT)
             m_currentNode.m_remainingMoves[2] = false;
-        else if (direction == Brick.RollDirection.BOTTOM)
+        else if (direction == Brick.RollDirection.BOTTOM_RIGHT)
             m_currentNode.m_remainingMoves[3] = false;
                 
         int nextNodeDistanceFromRoot = m_currentNode.m_distanceFromRoot + 1;
@@ -390,14 +390,14 @@ public class SolutionTree
 
         //Find the opposite direction
         Brick.RollDirection oppDirection = Brick.RollDirection.NONE;
-        if (currentNodeDirection == Brick.RollDirection.LEFT)
-            oppDirection = Brick.RollDirection.RIGHT;
-        else if (currentNodeDirection == Brick.RollDirection.TOP)
-            oppDirection = Brick.RollDirection.BOTTOM;
-        else if (currentNodeDirection == Brick.RollDirection.RIGHT)
-            oppDirection = Brick.RollDirection.LEFT;
-        else if (currentNodeDirection == Brick.RollDirection.BOTTOM)
-            oppDirection = Brick.RollDirection.TOP;
+        if (currentNodeDirection == Brick.RollDirection.BOTTOM_LEFT)
+            oppDirection = Brick.RollDirection.TOP_RIGHT;
+        else if (currentNodeDirection == Brick.RollDirection.TOP_LEFT)
+            oppDirection = Brick.RollDirection.BOTTOM_RIGHT;
+        else if (currentNodeDirection == Brick.RollDirection.TOP_RIGHT)
+            oppDirection = Brick.RollDirection.BOTTOM_LEFT;
+        else if (currentNodeDirection == Brick.RollDirection.BOTTOM_RIGHT)
+            oppDirection = Brick.RollDirection.TOP_LEFT;
 
 
 
@@ -653,13 +653,13 @@ public class SolutionNode
         switch (moveIndex)
         {
             case 0:
-                return Brick.RollDirection.LEFT;
+                return Brick.RollDirection.BOTTOM_LEFT;
             case 1:
-                return Brick.RollDirection.TOP;
+                return Brick.RollDirection.TOP_LEFT;
             case 2:
-                return Brick.RollDirection.RIGHT;
+                return Brick.RollDirection.TOP_RIGHT;
             case 3:
-                return Brick.RollDirection.BOTTOM;
+                return Brick.RollDirection.BOTTOM_RIGHT;
             default:
                 return Brick.RollDirection.NONE;
         }

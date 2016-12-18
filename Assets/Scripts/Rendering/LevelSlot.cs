@@ -1,33 +1,19 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class LevelSlot : TileRenderer
+public class LevelSlot : MonoBehaviour
 {
     public int m_index { get; set; }
     public Level m_level { get; set; }
+    public Text m_levelNumberText;
 
     private LevelsGUI m_parentGUI;
 
     private bool m_interactable;
-    
-    //private Color[] m_colors;
-    //private Vector3[] m_vertices;
-    //private bool m_colorsArrayDirty;
-    //private bool m_verticesArrayDirty;
 
     public void Init(LevelsGUI parentGUI, int index)
     {
         m_parentGUI = parentGUI;
-        
-        //zero-initialization of a tile object
-        Tile tile = new Tile(0, 0, Tile.State.NORMAL, null);
-        tile.m_size = 1.3f;
-        base.Init(tile);
-
-        float slotHeight = 0.3f;
-        BuildFaces(slotHeight, 0);
-
-        //this.GetComponent<Button>().onClick.AddListener(delegate { parentGUI.OnSlotClick(this); });
         m_index = index;
 
         InvalidateLevel();
@@ -38,6 +24,8 @@ public class LevelSlot : TileRenderer
         int localLevelNumber = m_index + 1;
         int absoluteLevelNumber = (m_parentGUI.m_chapterNumber - 1) * LevelManager.NUM_LEVELS_PER_CHAPTER + localLevelNumber;
         m_level = GameController.GetInstance().GetComponent<LevelManager>().GetLevelForNumber(absoluteLevelNumber);
+
+        m_levelNumberText.text = localLevelNumber.ToString();
         Invalidate();
     }
 
@@ -69,7 +57,7 @@ public class LevelSlot : TileRenderer
         m_interactable = true;
     }
 
-    public new void Invalidate()
+    public void Invalidate()
     {
         if (m_level == null)
             Disable(true);
@@ -89,8 +77,9 @@ public class LevelSlot : TileRenderer
     {
         if (m_interactable)
         {
-            LevelsGUI levelsGUI = (LevelsGUI)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
-            levelsGUI.OnSlotClick(this);
+            //LevelsGUI levelsGUI = (LevelsGUI)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+            //levelsGUI.OnSlotClick(this);
+            GameController.GetInstance().StartGameForLevel(m_level);
         }
     }
 }

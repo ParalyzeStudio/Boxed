@@ -24,7 +24,7 @@ public class GUIManager : MonoBehaviour
     public BaseGUI m_currentGUI { get; set; }
 
     //themes
-    public ColorThemes m_themes;
+    //public ThemeManager m_themeManager;
 
     //gradient background
     public GradientBackground m_gradientBackgroundPfb;
@@ -36,16 +36,16 @@ public class GUIManager : MonoBehaviour
 
     public void Init()
     {
-        m_themes = new ColorThemes();
-        m_themes.Init();
-
-        ShowBackgroundForTheme(m_themes.m_currentTheme);
+        //m_themeManager = new ThemeManager();
+        //m_themeManager.Init();
+        
+        ShowBackgroundForTheme(GameController.GetInstance().GetComponent<ThemeManager>().GetSelectedTheme());
 
         if (m_overlay == null)
             BuildGradientOverlay();
     }
 
-    public void ShowBackgroundForTheme(ColorTheme theme)
+    public void ShowBackgroundForTheme(ThemeManager.Theme theme)
     {
         //show gradient background
         m_background = Instantiate(m_gradientBackgroundPfb);

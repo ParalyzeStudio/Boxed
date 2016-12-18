@@ -9,6 +9,8 @@ public class GradientBackground : BillboardSprite
     //public Color m_bottomColor { get; set; }
     public Color m_topColor;
     public Color m_bottomColor;
+    private Color m_prevTopColor;
+    private Color m_prevBottomColor;
 
     private bool m_colorWheel;
 
@@ -16,6 +18,9 @@ public class GradientBackground : BillboardSprite
     private HSVColor m_endHSV;
     
     private const float HUE_VARIATION_SPEED = 60.0f;
+
+    GameObjectAnimator m_backgroundAnimator;
+    Transform m_cameraTransform;
 
     //Color variation
     private bool m_colorVariating;
@@ -55,17 +60,25 @@ public class GradientBackground : BillboardSprite
         InvalidateColors();
 
         m_size = ScreenUtils.GetScreenSize();
-
-        //set the background at a long distance from camera so it is behind all scene elements
-        Vector3 cameraPosition = m_camera.gameObject.transform.position;
-        float distanceFromCamera = camera.farClipPlane;
-        GameObjectAnimator backgroundAnimator = this.GetComponent<GameObjectAnimator>();
-        backgroundAnimator.SetPosition(cameraPosition + distanceFromCamera * m_camera.transform.forward);
+        
+        m_backgroundAnimator = this.GetComponent<GameObjectAnimator>();
+        m_cameraTransform = m_camera.transform;
     }
 
     public void InvalidateColors()
     {
         SetColors(new Color[4] { m_topColor, m_topColor, m_bottomColor, m_bottomColor });
+
+        m_prevTopColor = m_topColor;
+        m_prevBottomColor = m_bottomColor;
+
+        //invalidate the color of the support if any
+        FloorRenderer floorRenderer = GameController.GetInstance().m_floorRenderer;
+        if (floorRenderer != null)
+        {
+            FloorSupportRenderer supportRenderer = floorRenderer.GetComponentInChildren<FloorSupportRenderer>();
+            supportRenderer.InvalidateGradientBottomColor();
+        }
     }
 
     public void ChangeColorsTo(Color topToColor, Color bottomToColor, float duration, float delay = 0.0f)
@@ -153,7 +166,7 @@ public class GradientBackground : BillboardSprite
     public void Update()
     {
         float dt = Time.deltaTime;
-
+        
         if (m_colorWheel)
         {           
             float dHue = HUE_VARIATION_SPEED * dt;
@@ -163,19 +176,28 @@ public class GradientBackground : BillboardSprite
 
             m_topColor = m_startHSV.ToRGBA();
             m_bottomColor = m_endHSV.ToRGBA();
-
-            InvalidateColors();
         }
 
         UpdateColor(dt);
+
+       
+        if (m_prevTopColor != m_topColor || m_prevBottomColor != m_bottomColor)
+            InvalidateColors();
     }
 
     public override void LateUpdate()
     {
         base.LateUpdate();
 
-        GameObjectAnimator backgroundAnimator = this.GetComponent<GameObjectAnimator>();
-        backgroundAnimator.SetScale(new Vector3(m_size.x, m_size.y, 1));
+        if (m_backgroundAnimator != null)
+        {
+            m_size = ScreenUtils.GetScreenSize();
+            m_backgroundAnimator.SetScale(new Vector3(m_size.x, m_size.y, 1));
+
+            Vector3 cameraPosition = m_cameraTransform.position;
+            float distanceFromCamera = m_camera.farClipPlane - 1;
+            m_backgroundAnimator.SetPosition(cameraPosition + distanceFromCamera * m_camera.transform.forward);
+        }
     }
 
     /**

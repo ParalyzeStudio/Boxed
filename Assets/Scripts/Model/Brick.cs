@@ -309,10 +309,10 @@ public class Brick
     public enum RollDirection
     {
         NONE = 0,
-        LEFT = 1,
-        TOP,
-        RIGHT,
-        BOTTOM
+        BOTTOM_LEFT = 1,
+        TOP_LEFT,
+        TOP_RIGHT,
+        BOTTOM_RIGHT
     }
 
     public enum RollResult
@@ -411,11 +411,11 @@ public class Brick
 
     public static Vector3 GetVector3DirectionForRollingDirection(Brick.RollDirection rollDirection)
     {
-        if (rollDirection == RollDirection.LEFT)
+        if (rollDirection == RollDirection.BOTTOM_LEFT)
             return new Vector3(-1, 0, 0);
-        else if (rollDirection == RollDirection.TOP)
+        else if (rollDirection == RollDirection.TOP_LEFT)
             return new Vector3(0, 0, 1);
-        else if (rollDirection == RollDirection.RIGHT)
+        else if (rollDirection == RollDirection.TOP_RIGHT)
             return new Vector3(1, 0, 0);
         else
             return new Vector3(0, 0, -1);

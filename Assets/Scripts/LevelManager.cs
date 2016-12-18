@@ -5,7 +5,7 @@ using UnityEngine;
 public class LevelManager : MonoBehaviour
 {
     public const int NUM_LEVELS_PER_CHAPTER = 15;
-    public const int NUM_CHAPTERS = 2;
+    public const int NUM_CHAPTERS = 4;
 
     //levels that are currently edited and can be reopened inside the level editor
     private List<Level> m_editedLevels;

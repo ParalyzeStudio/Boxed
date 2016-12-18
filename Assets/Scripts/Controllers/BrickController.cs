@@ -30,10 +30,10 @@ public class BrickController : MonoBehaviour
         }
 
         Brick.RollDirection[] directions = new Brick.RollDirection[4];
-        directions[0] = Brick.RollDirection.LEFT;
-        directions[1] = Brick.RollDirection.TOP;
-        directions[2] = Brick.RollDirection.RIGHT;
-        directions[3] = Brick.RollDirection.BOTTOM;
+        directions[0] = Brick.RollDirection.BOTTOM_LEFT;
+        directions[1] = Brick.RollDirection.TOP_LEFT;
+        directions[2] = Brick.RollDirection.TOP_RIGHT;
+        directions[3] = Brick.RollDirection.BOTTOM_RIGHT;
 
         Vector2[] vectorDirections = new Vector2[4];
         vectorDirections[0] = Geometry.RemoveYComponent(Brick.GetVector3DirectionForRollingDirection(directions[0]));
@@ -66,43 +66,46 @@ public class BrickController : MonoBehaviour
         m_brickRenderer.Roll(directions[maxDotProductIdx]);
     }
 
-    public void RollLeft()
+    public void RollBottomLeft()
     {
-        m_brickRenderer.Roll(Brick.RollDirection.LEFT);
+        m_brickRenderer.Roll(Brick.RollDirection.BOTTOM_LEFT);
     }
 
-    public void RollRight()
+    public void RollTopRight()
     {
-        m_brickRenderer.Roll(Brick.RollDirection.RIGHT);
+        m_brickRenderer.Roll(Brick.RollDirection.TOP_RIGHT);
     }
 
-    public void RollTop()
+    public void RollTopLeft()
     {
-        m_brickRenderer.Roll(Brick.RollDirection.TOP);
+        m_brickRenderer.Roll(Brick.RollDirection.TOP_LEFT);
     }
 
-    public void RollBottom()
+    public void RollBottomRight()
     {
-        m_brickRenderer.Roll(Brick.RollDirection.BOTTOM);
+        m_brickRenderer.Roll(Brick.RollDirection.BOTTOM_RIGHT);
     }
 
     void Update()
     {
-        if (Input.GetKey(KeyCode.LeftArrow))
+        if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)
         {
-            RollLeft();
-        }
-        else if (Input.GetKey(KeyCode.UpArrow))
-        {
-            RollTop();
-        }
-        else if (Input.GetKey(KeyCode.RightArrow))
-        {
-            RollRight();
-        }
-        else if(Input.GetKey(KeyCode.DownArrow))
-        {
-            RollBottom();
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                RollBottomLeft();
+            }
+            else if (Input.GetKey(KeyCode.UpArrow))
+            {
+                RollTopLeft();
+            }
+            else if (Input.GetKey(KeyCode.RightArrow))
+            {
+                RollTopRight();
+            }
+            else if (Input.GetKey(KeyCode.DownArrow))
+            {
+                RollBottomRight();
+            }
         }
     }
 }

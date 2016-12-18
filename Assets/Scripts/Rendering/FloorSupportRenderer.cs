@@ -13,6 +13,9 @@ public class FloorSupportRenderer : MonoBehaviour
     private List<int> m_triangles;
     private List<Color> m_colors;
 
+    public Color m_mainColor;
+    private Color m_prevMainColor;
+
     public void Render(Floor floor)
     {
         m_floor = floor;
@@ -60,31 +63,72 @@ public class FloorSupportRenderer : MonoBehaviour
     {
         int triangleFirstIndex = m_vertices.Count;
 
-        m_vertices.Add(topEdge.m_pointA + new Vector3(0, verticalOffset, 0)); //top-left
-        m_vertices.Add(topEdge.m_pointB + new Vector3(0, verticalOffset, 0)); //top-right
-        Vector3 bottomEdgePointA = topEdge.m_pointA - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0);
-        Vector3 bottomEdgePointB = topEdge.m_pointB - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0);
-        m_vertices.Add(bottomEdgePointA + new Vector3(0, verticalOffset, 0)); //bottom-left
-        m_vertices.Add(bottomEdgePointB + new Vector3(0, verticalOffset, 0)); //bottom-right        
+        Vector3 tlVertex = topEdge.m_pointA + new Vector3(0, verticalOffset, 0);  //top-left
+        Vector3 trVertex = topEdge.m_pointB + new Vector3(0, verticalOffset, 0);  //top-right
+        Vector3 blVertex = tlVertex - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0); //bottom-left
+        Vector3 brVertex = trVertex - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0);  //bottom-right
+
+        m_vertices.Add(tlVertex);
+        m_vertices.Add(trVertex);
+        m_vertices.Add(blVertex);
+        m_vertices.Add(brVertex);
+
+        //m_vertices.Add(topEdge.m_pointA + new Vector3(0, verticalOffset, 0));
+        //m_vertices.Add(topEdge.m_pointB + new Vector3(0, verticalOffset, 0)); //top-right
+        //Vector3 bottomEdgePointA = topEdge.m_pointA - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0);
+        //Vector3 bottomEdgePointB = topEdge.m_pointB - new Vector3(0, 0.5f * SUPPORT_HEIGHT, 0);
+        //m_vertices.Add(bottomEdgePointA + new Vector3(0, verticalOffset, 0)); //bottom-left
+        //m_vertices.Add(bottomEdgePointB + new Vector3(0, verticalOffset, 0)); //bottom-right        
 
         int[] indices = new int[6] { triangleFirstIndex, triangleFirstIndex + 1 , triangleFirstIndex + 2, triangleFirstIndex + 3, triangleFirstIndex + 2, triangleFirstIndex + 1 };
         m_triangles.AddRange(indices);
 
         Camera mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
         GradientBackground background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
-        Color vertex3Color = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(bottomEdgePointA + this.transform.position));
-        Color vertex4Color = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(bottomEdgePointB + this.transform.position));
+        Color vertex3Color = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(blVertex + this.transform.position));
+        Color vertex4Color = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(brVertex + this.transform.position));
 
-        Color[] faceColors = new Color[4];
-        faceColors[0] = color;
-        faceColors[1] = color;
-        faceColors[2] = vertex3Color;
-        faceColors[3] = vertex4Color;
-        m_colors.AddRange(faceColors);
+        m_colors.Add(color);
+        m_colors.Add(color);
+        m_colors.Add(vertex3Color);
+        m_colors.Add(vertex4Color);
+    }
+
+    public void UpdateGradientTopColor(Color color)
+    {
+        for (int i = 0; i != m_colors.Count; i+=4)
+        {
+            m_colors[i] = color;
+            m_colors[i + 1] = color;
+        }
+
+        GetComponent<MeshFilter>().sharedMesh.colors = m_colors.ToArray();
+    }
+
+    public void InvalidateGradientBottomColor()
+    {
+        Camera mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        GradientBackground background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
+        for (int i = 0; i != m_colors.Count; i += 4)
+        {
+            m_colors[i + 2] = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(m_vertices[i + 2] + this.transform.position)); ;
+            m_colors[i + 3] = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(m_vertices[i + 3] + this.transform.position)); ;
+        }
+
+        GetComponent<MeshFilter>().sharedMesh.colors = m_colors.ToArray();
     }
 
     private Color GetSupportColor()
     {
-        return GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme.m_floorSupportColor;
+        return GameController.GetInstance().GetComponent<ThemeManager>().GetSelectedTheme().m_floorSupportColor;
+    }
+
+    public void Update()
+    {
+        if (m_mainColor != m_prevMainColor)
+        {
+            UpdateGradientTopColor(m_mainColor);
+            m_prevMainColor = m_mainColor;
+        }
     }
 }

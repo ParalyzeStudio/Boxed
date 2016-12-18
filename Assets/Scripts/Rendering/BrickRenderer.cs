@@ -12,6 +12,15 @@ public class BrickRenderer : MonoBehaviour
     private const float DEFAULT_ANGULAR_SPEED = 90 / 0.3f;
 
     public GameObject m_cubePartPfb;
+    
+    public bool m_brickTeleporting { get; set; }
+
+    //fragments
+    public BrickFragmenter m_brickFragmenter;
+
+    //FX
+    public GlowCube m_glowCubePfb;
+    public ParticleSystem m_teleportInFX;
 
     /**
     * Build a rectangular cuboid that will serve as our main object in the scene.
@@ -53,11 +62,61 @@ public class BrickRenderer : MonoBehaviour
             }
         }
 
+        //build uv map
+        Vector2[] baseUV = new Vector2[7];
+        //baseUV[0] = new Vector2(0.219f, 1 - 0.661f);
+        //baseUV[1] = new Vector2(0.507f, 1 - 0.847f);
+        //baseUV[2] = new Vector2(0.786f, 1 - 0.675f);
+        //baseUV[3] = new Vector2(0.219f, 1 - 0.305f);
+        //baseUV[4] = new Vector2(0.5f, 1 - 0.505f);
+        //baseUV[5] = new Vector2(0.784f, 1 - 0.31f);
+        //baseUV[6] = new Vector2(0.505f, 1 - 0.125f);
+
+        baseUV[0] = new Vector2(0.091f, 1 - 0.736f);
+        baseUV[1] = new Vector2(0.5f, 1 - 0.969f);
+        baseUV[2] = new Vector2(0.906f, 1 - 0.736f);
+        baseUV[3] = new Vector2(0.091f, 1 - 0.263f);
+        baseUV[4] = new Vector2(0.5f, 1 - 0.505f);
+        baseUV[5] = new Vector2(0.906f, 1 - 0.264f);
+        baseUV[6] = new Vector2(0.5f, 1 - 0.027f);
+
+
+        Vector2[] uv = new Vector2[24];
+        uv[0] = baseUV[3];
+        uv[1] = baseUV[4];
+        uv[2] = baseUV[5];
+        uv[3] = baseUV[6];
+        uv[4] = baseUV[4];
+        uv[5] = baseUV[5];
+        uv[6] = baseUV[6];
+        uv[7] = baseUV[3];
+
+        uv[8] = baseUV[1];
+        uv[9] = baseUV[2];
+        uv[10] = baseUV[5];
+        uv[11] = baseUV[4];
+
+        uv[12] = baseUV[0];
+        uv[13] = baseUV[1];
+        uv[14] = baseUV[4];
+        uv[15] = baseUV[3];
+
+        uv[16] = baseUV[1];
+        uv[17] = baseUV[2];
+        uv[18] = baseUV[5];
+        uv[19] = baseUV[4];
+
+        uv[20] = baseUV[0];
+        uv[21] = baseUV[1];
+        uv[22] = baseUV[4];
+        uv[23] = baseUV[3];
+
         Mesh brickMesh = new Mesh();
         brickMesh.name = "BrickMesh";
         brickMesh.vertices = vertices;
         brickMesh.triangles = triangles;
         brickMesh.normals = normals;
+        brickMesh.uv = uv;
 
         brickMesh.RecalculateBounds();
 
@@ -66,6 +125,8 @@ public class BrickRenderer : MonoBehaviour
 
         //place the brick upon the tile parameter
         PlaceOnTiles(tiles);
+        
+        //GetComponent<MeshRenderer>().sharedMaterial.SetInt("_ZWrite", 1);
     }
 
     /**
@@ -383,5 +444,106 @@ public class BrickRenderer : MonoBehaviour
     public bool IsFalling()
     {
         return m_brick.m_state == Brick.BrickState.FALLING;
+    }
+
+
+
+
+
+
+
+
+    /************ BRICK TELEPORTATION **************/
+    //private class Cube
+
+    public void OnStartTeleportation()
+    {
+        m_brickTeleporting = true;
+
+        //float dropHeight = 4.0f * Brick.BRICK_BASIS_DIMENSION;
+        //Vector3 brickFinalPosition = transform.localPosition;
+        //transform.localPosition += new Vector3(0, dropHeight, 0);
+
+        //float dropDuration = 0.5f;
+
+        //BrickAnimator brickAnimator = GetComponent<BrickAnimator>();
+        //brickAnimator.UpdatePivotPoint(Vector3.zero);
+        //brickAnimator.TranslateTo(brickFinalPosition, dropDuration, 0, ValueAnimator.InterpolationType.HERMITE1, false);
+
+        //Assemble the brick with small glow cubes
+        AssembleBrick2();
+
+        //FX_TeleportIN
+        ParticleSystem teleportInFX = Instantiate(m_teleportInFX);
+        teleportInFX.transform.position = transform.localPosition + new Vector3(0.5f * Brick.BRICK_BASIS_DIMENSION, 0, 0.5f * Brick.BRICK_BASIS_DIMENSION);
+        teleportInFX.Play();
+    }
+
+    public void OnFinishTeleportation()
+    {
+        m_brickTeleporting = false;
+
+        Tile landedTile = m_brick.m_coveredTiles.GetFirstTile();
+        TileRenderer tileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(landedTile);
+        tileRenderer.DisplayGlowSquareOnBrickLanding();
+
+        //start the actual game
+        GameController.GetInstance().m_gameStatus = GameController.GameStatus.RUNNING;
+    }
+
+    private void AssembleBrick2()
+    {
+        m_brickFragmenter.FragmentBrick();
+        m_brickFragmenter.transform.localPosition = new Vector3(0.5f * Brick.BRICK_BASIS_DIMENSION, Brick.BRICK_BASIS_DIMENSION, 0.5f * Brick.BRICK_BASIS_DIMENSION);
+    }
+
+    private void AssembleBrick()
+    {
+        int numCubesPerDimension = 4;
+        float glowCubeSize = Brick.BRICK_BASIS_DIMENSION / (float) numCubesPerDimension;
+
+        GameObject cubes = new GameObject("GlowCubes");
+        cubes.transform.position = this.transform.position + new Vector3(0.5f * Brick.BRICK_BASIS_DIMENSION, Brick.BRICK_BASIS_DIMENSION, 0.5f * Brick.BRICK_BASIS_DIMENSION);
+
+        Vector3 cubeSpawnPosition = cubes.transform.position + new Vector3(0, 2 * Brick.BRICK_BASIS_DIMENSION, 0);
+
+        for (int i = 0; i != numCubesPerDimension; i++)
+        {
+            for (int j = 0; j != 2 * numCubesPerDimension; j++)
+            {
+                for (int k = 0; k != numCubesPerDimension; k++)
+                {
+                    Vector3 cubePosition;
+                    if (numCubesPerDimension % 2 == 0)
+                    {
+                        cubePosition = new Vector3((i - numCubesPerDimension / 2 + 0.5f) * glowCubeSize,
+                                                   (j - 2 * numCubesPerDimension / 2 + 0.5f) * glowCubeSize,
+                                                   (k - numCubesPerDimension / 2 + 0.5f) * glowCubeSize);
+                    }
+                    else
+                    {
+                        cubePosition = new Vector3((i - numCubesPerDimension / 2) * glowCubeSize,
+                                                   (j - 2 * numCubesPerDimension / 2) * glowCubeSize,
+                                                   (k - numCubesPerDimension / 2) * glowCubeSize);
+                    }
+
+                    GlowCube glowCube = Instantiate(m_glowCubePfb);
+                    glowCube.transform.parent = cubes.transform;
+                    glowCube.transform.localPosition = Vector3.zero;
+                    glowCube.transform.localPosition = cubePosition;
+                    glowCube.transform.localScale = glowCubeSize * Vector3.one;
+
+                    float delay = j * 0.1f;
+
+                    GameObjectAnimator cubeAnimator = glowCube.GetComponent<GameObjectAnimator>();
+                    //cubeAnimator.SetScale(Vector3.zero);
+                    //cubeAnimator.ScaleTo(glowCubeSize * Vector3.one, 0.1f, delay);
+                    cubeAnimator.SetPosition(cubeSpawnPosition);
+                    //cubeAnimator.TranslateTo(cubePosition, 0.1f, delay);
+
+                }
+            }
+            //StartCoroutine();
+        }
     }
 }

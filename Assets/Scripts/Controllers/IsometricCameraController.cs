@@ -10,7 +10,7 @@ public class IsometricCameraController : MonoBehaviour
     {
         transform.position = Vector3.zero;
         //Look at the center to get an angle
-        transform.rotation = Quaternion.Euler(new Vector3(30, 45, 0));
+        transform.rotation = Quaternion.Euler(new Vector3(38, 45, 0));
 
         Vector3 cameraDirection = this.transform.forward;
 

@@ -3,7 +3,7 @@
 public class FloorRenderer : MonoBehaviour
 {
     public Floor m_floorData { get; set; }
-    public FloorSupportRenderer m_floorSupportPfb;
+    public FloorSupportRenderer m_floorSupport;
     public TileRenderer m_tilePfb; //a cuboid tile
 
     public GameObject m_tilesHolder;
@@ -62,11 +62,10 @@ public class FloorRenderer : MonoBehaviour
         //render the floor support (only in game mode)
         if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
         {
-            FloorSupportRenderer supportRenderer = Instantiate(m_floorSupportPfb);
-            supportRenderer.name = "Support";
-            supportRenderer.transform.parent = this.transform;
-            supportRenderer.transform.localPosition = new Vector3(0, -0.5f * Tile.TILE_DEFAULT_HEIGHT, 0);
-            supportRenderer.Render(floor);
+            m_floorSupport.name = "Support";
+            m_floorSupport.transform.parent = this.transform;
+            m_floorSupport.transform.localPosition = new Vector3(0, -0.5f * Tile.TILE_DEFAULT_HEIGHT, 0);
+            m_floorSupport.Render(floor);
         }
     }
 

@@ -75,10 +75,10 @@ public class SwitchTile : Tile
     {
         //change the color of the switch tile to show that it is selected
         TileRenderer tileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(this);
-        ColorTheme currentTheme = GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme;
-        Color switchTileColor = currentTheme.m_switchTileColor;
-        Color selectedColor = ColorUtils.LightenColor(switchTileColor, 0.25f);
-        tileRenderer.SetTileColor(selectedColor);
+        //ThemeManager thememanager currentTheme = GameController.GetInstance().GetComponent<ThemeManager>().m_selectedTheme;
+        //Color switchTileColor = currentTheme.m_switchTileColor;
+        //Color selectedColor = ColorUtils.LightenColor(switchTileColor, 0.25f);
+        tileRenderer.SetTileColor(Color.yellow);
 
 
         //if (m_triggeredTiles != null)

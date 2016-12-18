@@ -37,11 +37,11 @@ public class SolutionPanel : MonoBehaviour
 
     private Quaternion GetRotationForDirection(Brick.RollDirection direction)
     {
-        if (direction == Brick.RollDirection.LEFT)
+        if (direction == Brick.RollDirection.BOTTOM_LEFT)
             return Quaternion.AngleAxis(180, Vector3.forward);
-        else if (direction == Brick.RollDirection.TOP)
+        else if (direction == Brick.RollDirection.TOP_LEFT)
             return Quaternion.AngleAxis(90, Vector3.forward);
-        else if (direction == Brick.RollDirection.BOTTOM)
+        else if (direction == Brick.RollDirection.BOTTOM_RIGHT)
             return Quaternion.AngleAxis(270, Vector3.forward);
         else
             return Quaternion.identity;
@@ -49,11 +49,11 @@ public class SolutionPanel : MonoBehaviour
 
     private string GetDirectionAsString(Brick.RollDirection direction)
     {
-        if (direction == Brick.RollDirection.LEFT)
+        if (direction == Brick.RollDirection.BOTTOM_LEFT)
             return "Left";
-        else if (direction == Brick.RollDirection.RIGHT)
+        else if (direction == Brick.RollDirection.TOP_RIGHT)
             return "Right";
-        else if (direction == Brick.RollDirection.TOP)
+        else if (direction == Brick.RollDirection.TOP_LEFT)
             return "Top";
         else
             return "Bottom";

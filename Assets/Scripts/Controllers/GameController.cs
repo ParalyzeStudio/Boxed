@@ -34,9 +34,11 @@ public class GameController : MonoBehaviour
         //init the camera
         GameObject.FindGameObjectWithTag("MainCamera").GetComponent<IsometricCameraController>().Init();
 
+        //init the theme manager
+        //GetComponent<ThemeManager>().Init();
+
         //init the GUI manager
-        GUIManager guiManager = GetComponent<GUIManager>();
-        guiManager.Init();
+        GetComponent<GUIManager>().Init();
 
         //m_gameMode = GameMode.MAIN_MENU;
 
@@ -138,7 +140,7 @@ public class GameController : MonoBehaviour
         BuildBonusesHolder();
         RenderFloor(level.m_floor);
         BuildBrick(level);
-        DropBrick(); //drop animation when level begins
+        TeleportBrick(); //drop animation when level begins
 
         
         Tile finishTile = level.m_floor.GetFinishTile();
@@ -180,7 +182,7 @@ public class GameController : MonoBehaviour
         
         GetComponent<GUIManager>().DisplayGameGUIForLevel(level);
 
-        m_gameStatus = GameStatus.RUNNING;
+        m_gameStatus = GameStatus.IDLE;
     }
 
     private void StartNextLevel()
@@ -224,27 +226,9 @@ public class GameController : MonoBehaviour
         }
     }
 
-    private void DropBrick()
+    private void TeleportBrick()
     {
-        float dropHeight = 4.0f * Brick.BRICK_BASIS_DIMENSION;
-        Vector3 brickFinalPosition = m_brickRenderer.gameObject.transform.localPosition;
-        m_brickRenderer.gameObject.transform.localPosition += new Vector3(0, dropHeight, 0);
-
-        float dropDuration = 0.5f;
-
-        BrickAnimator brickAnimator = m_brickRenderer.GetComponent<BrickAnimator>();
-        brickAnimator.UpdatePivotPoint(Vector3.zero);
-        brickAnimator.TranslateTo(brickFinalPosition, dropDuration, 0, ValueAnimator.InterpolationType.HERMITE1, false);
-
-        CallFuncHandler callFuncHandler = GetInstance().GetComponent<CallFuncHandler>();
-        callFuncHandler.AddCallFuncInstance(new CallFuncHandler.CallFunc(OnBrickLanding), dropDuration);
-    }
-
-    private void OnBrickLanding()
-    {
-        Tile landedTile = m_brickRenderer.m_brick.m_coveredTiles.GetFirstTile();
-        TileRenderer tileRenderer = m_floorRenderer.GetRendererForTile(landedTile);
-        tileRenderer.DisplayGlowSquareOnBrickLanding();
+        m_brickRenderer.OnStartTeleportation();
     }
 
     public void BuildBonusesHolder()
