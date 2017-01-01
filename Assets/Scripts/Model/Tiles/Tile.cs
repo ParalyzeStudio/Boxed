@@ -7,7 +7,7 @@ public class Tile
     public float m_size { get; set; } //tile dimension along x and z
 
     private const float TILE_SIZE = 1.0f;
-    public const float TILE_DEFAULT_HEIGHT = 0.75f;
+    public const float TILE_DEFAULT_HEIGHT = 1.0f;
 
     public enum State
     {
@@ -19,6 +19,7 @@ public class Tile
         TRAP, //brick will explode on this brick
         SWITCH, //switch that will make some tiles appear or disappear on the floor
         TRIGGERED_BY_SWITCH, //tiles that are triggered by a switch
+        ICE, //tiles that can be destroyed after the brick has rolled on them
     }
 
     private State m_currentState;
@@ -138,6 +139,20 @@ public class Tile
     public bool HasSameFloorPosition(Tile other)
     {
         return (this.m_columnIndex == other.m_columnIndex) && (this.m_lineIndex == other.m_lineIndex);
+    }
+
+    public bool IsBlocking()
+    {
+        if (CurrentState == State.BLOCKED)
+            return true;
+
+        if (CurrentState == State.TRIGGERED_BY_SWITCH && ((TriggeredTile)this).m_isLiftUp)
+            return true;
+
+        if (CurrentState == State.ICE && ((IceTile)this).m_blocked)
+            return true;
+
+        return false;
     }
 
     public override string ToString()

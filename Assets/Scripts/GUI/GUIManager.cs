@@ -124,10 +124,10 @@ public class GUIManager : MonoBehaviour
         LevelEditor levelEditor = Instantiate(m_levelEditorPfb);
         levelEditor.name = "LevelEditor";
         levelEditor.transform.SetParent(m_canvas.transform, false);
-        levelEditor.Init();
-        levelEditor.Show();
 
         m_currentGUI = levelEditor;
+        levelEditor.Init();
+        levelEditor.Show();        
     }
 
     public void DisplayMainMenuGUI()

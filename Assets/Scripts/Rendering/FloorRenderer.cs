@@ -42,7 +42,19 @@ public class FloorRenderer : MonoBehaviour
             Tile tile = floor.Tiles[i];
 
             //remove disabled tiles only in game mode
-            if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME && tile.CurrentState == Tile.State.DISABLED)
+            bool bGameIsRunning = GameController.GetInstance().m_gameMode == GameController.GameMode.GAME;
+            bool bTestingLevelInEditorMode = false;
+            if (!bGameIsRunning)
+            {
+                bTestingLevelInEditorMode = (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR);
+                if (bTestingLevelInEditorMode)
+                {
+                    BaseGUI currentGUI = GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+                    bTestingLevelInEditorMode = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI).m_isTestMenuShown;
+                }
+            }
+            
+            if (tile.CurrentState == Tile.State.DISABLED && (bGameIsRunning || bTestingLevelInEditorMode))
                 continue;
 
             //Tile renderer
@@ -60,7 +72,8 @@ public class FloorRenderer : MonoBehaviour
         }
 
         //render the floor support (only in game mode)
-        if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
+        GameController.GameMode gameMode = GameController.GetInstance().m_gameMode;
+        if (gameMode == GameController.GameMode.GAME || gameMode == GameController.GameMode.LEVEL_EDITOR)
         {
             m_floorSupport.name = "Support";
             m_floorSupport.transform.parent = this.transform;

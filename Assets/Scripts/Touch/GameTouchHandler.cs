@@ -140,44 +140,37 @@ public class GameTouchHandler : TouchHandler
             }
             else if (levelEditor.m_editingMode == LevelEditor.EditingMode.BONUSES_EDITING)
             {
-                //if (raycastTile.CurrentState == Tile.State.NORMAL)
-                //    {
-                    if (raycastTile.AttachedBonus != null)
-                    {
-                        FloorRenderer floorRenderer = GameController.GetInstance().m_floorRenderer;
-                        floorRenderer.GetRendererForTile(raycastTile).DestroyBonusObject();
-                        raycastTile.AttachedBonus = null;
-                    }
-                    else
-                    {
-                        Bonus bonus = new Bonus(); //for the moment set an empty object as a bonus
-                        FloorRenderer floorRenderer = GameController.GetInstance().m_floorRenderer;
-                        floorRenderer.GetRendererForTile(raycastTile).BuildBonusObject();
-                        raycastTile.AttachedBonus = bonus;
-                    }
-                //}
+                if (raycastTile.AttachedBonus != null)
+                {
+                    FloorRenderer floorRenderer = GameController.GetInstance().m_floorRenderer;
+                    floorRenderer.GetRendererForTile(raycastTile).DestroyBonusObject();
+                    raycastTile.AttachedBonus = null;
+                }
+                else
+                {
+                    Bonus bonus = new Bonus(); //for the moment set an empty object as a bonus
+                    FloorRenderer floorRenderer = GameController.GetInstance().m_floorRenderer;
+                    floorRenderer.GetRendererForTile(raycastTile).BuildBonusObject();
+                    raycastTile.AttachedBonus = bonus;
+                }
+            }
+            else if (levelEditor.m_editingMode == LevelEditor.EditingMode.ICE_TILES_EDITING)
+            {
+                if (raycastTile.CurrentState == Tile.State.NORMAL)
+                {
+                    IceTile switchTile = new IceTile(raycastTile, 1);
+                    GameController.GetInstance().m_floorRenderer.m_floorData.InsertTile(switchTile);
+                    GameController.GetInstance().m_floorRenderer.ReplaceTileOnRenderer(switchTile);
+                }
+                else if (raycastTile.CurrentState == Tile.State.ICE)
+                {
+                    Tile normalTile = new Tile(raycastTile);
+                    normalTile.CurrentState = Tile.State.NORMAL;
+                    GameController.GetInstance().m_floorRenderer.m_floorData.InsertTile(normalTile);
+                    GameController.GetInstance().m_floorRenderer.ReplaceTileOnRenderer(normalTile);
+                }
             }
         }
-        //else if (gameMode == GameController.GameMode.LEVELS)
-        //{
-        //    LevelsGUI levelsGUI = (LevelsGUI)GameController.GetInstance().GetGUIManager().m_currentGUI;
-        //    levelsGUI.ProcessClickOnSlots(clickLocation);
-        //}
-        //else if (gameMode == GameController.GameMode.GAME)
-        //{
-        //    if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)
-        //    {
-        //        Vector3 raycastPoint;
-        //        if (RaycastFloor(out raycastPoint))
-        //        {
-        //            //remove the y-component of this point
-        //            Vector2 point = new Vector2(raycastPoint.x, raycastPoint.z);
-
-        //            //pass it to the brick controller
-        //            GameController.GetInstance().m_brick.GetComponent<BrickController>().ProcessTouch(point);
-        //        }
-        //    }
-        //}
     }
 
     /**

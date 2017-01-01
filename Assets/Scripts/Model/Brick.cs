@@ -40,14 +40,21 @@ public class Brick
             SetTiles(tile1, tile2);
         }
 
-        public Tile GetFirstTile()
+        public Tile GetTileAtIndex(int index)
         {
-            return m_tiles[0];
+            return m_tiles[index];
         }
 
-        public Tile GetSecondTile()
+        public Tile[] GetAsTruncatedArray()
         {
-            return m_tiles[1];
+            Tile[] tiles = new Tile[GetCount()];
+
+            for (int i = 0; i != tiles.Length; i++)
+            {
+                tiles[i] = m_tiles[i];
+            }
+
+            return tiles;
         }
 
         public void SetTiles(Tile tile1, Tile tile2)
@@ -94,7 +101,7 @@ public class Brick
             if (GetCount() == 1)
             {
                 //find the next 2 tiles in the rolling direction
-                Tile coveredTile = GetFirstTile();
+                Tile coveredTile = GetTileAtIndex(0);
                 Tile nextTile1 = floor.GetNextTileForDirection(coveredTile, direction);
 
                 if (nextTile1 != null)
@@ -110,8 +117,8 @@ public class Brick
             }
             else
             {
-                Tile coveredTile1 = GetFirstTile();
-                Tile coveredTile2 = GetSecondTile();
+                Tile coveredTile1 = GetTileAtIndex(0);
+                Tile coveredTile2 = GetTileAtIndex(1);
 
                 Tile nextTile = floor.GetNextTileForDirection(coveredTile1, direction);
                 if (nextTile != null)
@@ -291,7 +298,7 @@ public class Brick
         }
         else //two tiles covered
         {            
-            Vector3 brickDirection = m_coveredTiles.GetSecondTile().GetLocalPosition() - m_coveredTiles.GetFirstTile().GetLocalPosition();
+            Vector3 brickDirection = m_coveredTiles.GetTileAtIndex(1).GetLocalPosition() - m_coveredTiles.GetTileAtIndex(0).GetLocalPosition();
 
             if (brickDirection == Vector3.left)
                 m_downFaceIndex = 5;
@@ -366,8 +373,21 @@ public class Brick
             //m_state = BrickState.ROLLING;
             m_state = (rollResult == RollResult.VALID) ? BrickState.ROLLING : BrickState.FALLING;
 
-            //replace the old covered tiles by new ones
-            m_coveredTiles = newCoveredTiles;
+            //block tiles if necessary
+            for (int i = 0; i != m_coveredTiles.GetCount(); i++)
+            {
+                Tile previousCoveredTile = m_coveredTiles.GetTileAtIndex(i);
+                if (previousCoveredTile is IceTile)
+                {
+                    ((IceTile)previousCoveredTile).m_blocked = true;
+                }
+            }
+
+            if (rollResult == RollResult.VALID)
+            {
+                //replace the old covered tiles by new ones
+                m_coveredTiles = newCoveredTiles;
+            }
 
             //Determine which of the 4 adjacent faces the rollToFace is equal to        
             int adjacentFaceIdx = -1;
@@ -384,11 +404,18 @@ public class Brick
             rotationEdge = currentFace.GetAdjacentFaceSharedEdge(adjacentFaceIdx);
             Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
 
-            Quaternion brickRotation = Quaternion.AngleAxis(90, rotationAxis);
-            m_rotation *= brickRotation;
+            if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME ||
+                GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR && rollResult == RollResult.VALID)
+            {
+                Quaternion brickRotation = Quaternion.AngleAxis(90, rotationAxis);
+                m_rotation *= brickRotation;
+            }
 
-            //set the new index for the face touching the floor
-            m_downFaceIndex = rollToFace.m_index;
+            if (rollResult == RollResult.VALID)
+            {
+                //set the new index for the face touching the floor
+                m_downFaceIndex = rollToFace.m_index;
+            }
         }
         else if (rollResult == RollResult.NO_TILE_TO_ROLL) //there is no tile on which we can land, just interrupt the rolling action
         {
@@ -436,15 +463,12 @@ public class Brick
         if (currentFace.GetAreaInTileUnits() == 1)
         {
             //find the next 2 tiles in the rolling direction
-            Tile coveredTile = m_coveredTiles.GetFirstTile();
+            Tile coveredTile = m_coveredTiles.GetTileAtIndex(0);
             Tile nextTile1 = floor.GetNextTileForDirection(coveredTile, rollDirection);            
 
             if (nextTile1 != null)
             {
-                if (nextTile1.CurrentState == Tile.State.BLOCKED)
-                    return RollResult.NONE;
-
-                if (nextTile1.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile1).m_isLiftUp)
+                if (nextTile1.IsBlocking())
                     return RollResult.NONE;
 
                 Tile nextTile2 = floor.GetNextTileForDirection(nextTile1, rollDirection);
@@ -452,9 +476,7 @@ public class Brick
                 {
                     if (nextTile2.CurrentState == Tile.State.DISABLED)
                         rollResult = RollResult.FALL;
-                    else if (nextTile2.CurrentState == Tile.State.BLOCKED)
-                        return RollResult.NONE;
-                    else if (nextTile2.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile2).m_isLiftUp)
+                    else if (nextTile1.IsBlocking())
                         return RollResult.NONE;
 
                     newCoveredTiles.SetTiles(nextTile1, nextTile2);
@@ -470,8 +492,8 @@ public class Brick
             if (rollToFace.GetAreaInTileUnits() == 1)
             {
                 //find the tile next to m_coveredTile[0] or m_coveredTile[1] in the rolling direction
-                Tile coveredTile1 = m_coveredTiles.GetFirstTile();
-                Tile coveredTile2 = m_coveredTiles.GetSecondTile();
+                Tile coveredTile1 = m_coveredTiles.GetTileAtIndex(0);
+                Tile coveredTile2 = m_coveredTiles.GetTileAtIndex(1);
                 Tile nextTile = floor.GetNextTileForDirection(coveredTile1, rollDirection);
                 if (nextTile != null)
                 {
@@ -480,9 +502,7 @@ public class Brick
                         nextTile = floor.GetNextTileForDirection(coveredTile2, rollDirection);
                         if (nextTile != null)
                         {
-                            if (nextTile.CurrentState == Tile.State.BLOCKED)
-                                return RollResult.NONE;
-                            else if (nextTile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile).m_isLiftUp)
+                            if (nextTile.IsBlocking())
                                 return RollResult.NONE;
                             else if (nextTile.CurrentState == Tile.State.DISABLED)
                                 rollResult = RollResult.FALL;
@@ -494,9 +514,7 @@ public class Brick
                     }
                     else
                     {
-                        if (nextTile.CurrentState == Tile.State.BLOCKED)
-                            return RollResult.NONE;
-                        else if (nextTile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile).m_isLiftUp)
+                        if (nextTile.IsBlocking())
                             return RollResult.NONE;
                         else if (nextTile.CurrentState == Tile.State.DISABLED)
                             return RollResult.FALL;
@@ -509,15 +527,11 @@ public class Brick
             }
             else
             {
-                Tile nextTile1 = floor.GetNextTileForDirection(m_coveredTiles.GetFirstTile(), rollDirection);
-                Tile nextTile2 = floor.GetNextTileForDirection(m_coveredTiles.GetSecondTile(), rollDirection);
+                Tile nextTile1 = floor.GetNextTileForDirection(m_coveredTiles.GetTileAtIndex(0), rollDirection);
+                Tile nextTile2 = floor.GetNextTileForDirection(m_coveredTiles.GetTileAtIndex(1), rollDirection);
                 if (nextTile1 != null && nextTile2 != null)
                 {
-                    if (nextTile1.CurrentState == Tile.State.BLOCKED || nextTile2.CurrentState == Tile.State.BLOCKED)
-                        return RollResult.NONE;
-                    else if (nextTile1.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile1).m_isLiftUp
-                             ||
-                             nextTile2.CurrentState == Tile.State.TRIGGERED_BY_SWITCH && ((TriggeredTile)nextTile2).m_isLiftUp)
+                    if (nextTile1.IsBlocking() || nextTile2.IsBlocking())
                         return RollResult.NONE;
                     else if (nextTile1.CurrentState == Tile.State.DISABLED || nextTile2.CurrentState == Tile.State.DISABLED)
                         return RollResult.FALL;
@@ -528,7 +542,7 @@ public class Brick
                     rollResult = RollResult.NO_TILE_TO_ROLL;
             }
         }
-
+        
         return rollResult;
     }
 
@@ -538,15 +552,15 @@ public class Brick
             return;
 
         //switches
-        if (m_coveredTiles.GetFirstTile() != null && m_coveredTiles.GetFirstTile().CurrentState == Tile.State.SWITCH)
+        if (m_coveredTiles.GetTileAtIndex(0) != null && m_coveredTiles.GetTileAtIndex(0).CurrentState == Tile.State.SWITCH)
         {
-            ((SwitchTile)m_coveredTiles.GetFirstTile()).Toggle();
+            ((SwitchTile)m_coveredTiles.GetTileAtIndex(0)).Toggle();
         }
         else
         {
-            if (m_coveredTiles.GetSecondTile() != null && m_coveredTiles.GetSecondTile().CurrentState == Tile.State.SWITCH)
+            if (m_coveredTiles.GetTileAtIndex(1) != null && m_coveredTiles.GetTileAtIndex(1).CurrentState == Tile.State.SWITCH)
             {
-                ((SwitchTile)m_coveredTiles.GetSecondTile()).Toggle();
+                ((SwitchTile)m_coveredTiles.GetTileAtIndex(1)).Toggle();
             }
         }
         

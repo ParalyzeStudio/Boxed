@@ -19,13 +19,13 @@ public class BrickController : MonoBehaviour
     {
         //we do not process touch on covered tiles
         Brick.CoveredTiles brickCoveredTiles = m_brickRenderer.m_brick.m_coveredTiles;
-        if (brickCoveredTiles.GetFirstTile().ContainsXZPoint(touchPlaneProjection))
+        if (brickCoveredTiles.GetTileAtIndex(0).ContainsXZPoint(touchPlaneProjection))
         {
             return;
         }
-        if (brickCoveredTiles.GetSecondTile() != null)
+        if (brickCoveredTiles.GetTileAtIndex(1) != null)
         {
-            if (brickCoveredTiles.GetSecondTile().ContainsXZPoint(touchPlaneProjection))
+            if (brickCoveredTiles.GetTileAtIndex(1).ContainsXZPoint(touchPlaneProjection))
                 return;
         }
 
@@ -43,10 +43,10 @@ public class BrickController : MonoBehaviour
 
         //find the minimal dot product between the vector joining the brick and the touchPlaneProjection point and each of the four direction vectors
         Vector2 brickGroundPosition;
-        if (brickCoveredTiles.GetSecondTile() == null)
-            brickGroundPosition = Geometry.RemoveYComponent(brickCoveredTiles.GetFirstTile().GetWorldPosition());
+        if (brickCoveredTiles.GetTileAtIndex(1) == null)
+            brickGroundPosition = Geometry.RemoveYComponent(brickCoveredTiles.GetTileAtIndex(0).GetWorldPosition());
         else
-            brickGroundPosition = 0.5f * (Geometry.RemoveYComponent(brickCoveredTiles.GetFirstTile().GetWorldPosition()) + Geometry.RemoveYComponent(brickCoveredTiles.GetSecondTile().GetWorldPosition()));
+            brickGroundPosition = 0.5f * (Geometry.RemoveYComponent(brickCoveredTiles.GetTileAtIndex(0).GetWorldPosition()) + Geometry.RemoveYComponent(brickCoveredTiles.GetTileAtIndex(1).GetWorldPosition()));
         
         Vector2 touchVector = touchPlaneProjection - brickGroundPosition;
 
@@ -88,8 +88,8 @@ public class BrickController : MonoBehaviour
 
     void Update()
     {
-        if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)
-        {
+        //if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)
+        //{
             if (Input.GetKey(KeyCode.LeftArrow))
             {
                 RollBottomLeft();
@@ -106,6 +106,6 @@ public class BrickController : MonoBehaviour
             {
                 RollBottomRight();
             }
-        }
+        //}
     }
 }

@@ -74,13 +74,28 @@ public class ThemeManager : MonoBehaviour
         {
             if (state == Tile.State.NORMAL)
                 return m_defaultTileMaterial;
+            else if (state == Tile.State.SWITCH)
+                return m_switchTileMaterial;
+            else if (state == Tile.State.TRIGGERED_BY_SWITCH)
+                return m_triggeredTileMaterial;
+            else if (state == Tile.State.ICE)
+                return m_iceTileMaterial;
             else
                 return m_defaultTileMaterial;
         }
 
         public Color GetTileColorForTileState(Tile.State state)
         {
-            return Color.white;
+            if (state == Tile.State.DISABLED)
+                return ColorUtils.DarkenColor(Color.white, 0.5f);
+            else if (state == Tile.State.START)
+                return Color.Lerp(Color.white, Color.green, 0.8f);
+            else if (state == Tile.State.FINISH)
+                return Color.Lerp(Color.white, Color.red, 0.8f);
+            else if (state == Tile.State.BLOCKED)
+                return ColorUtils.DarkenColor(Color.white, 0.8f);
+            else
+                return Color.white;
             //if (state == Tile.State.NORMAL)
             //    return m_defaultTileColor;
             //else if (state == Tile.State.DISABLED)
@@ -189,9 +204,13 @@ public class ThemeManager : MonoBehaviour
         GUIManager guiManager = GameController.GetInstance().GetComponent<GUIManager>();
         guiManager.m_background.m_topColor = selectedTheme.m_backgroundGradientTopColor;
         guiManager.m_background.m_bottomColor = selectedTheme.m_backgroundGradientBottomColor;
-        if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
-        {
+
+        GameController.GameMode gameMode = GameController.GetInstance().m_gameMode;
+        if (gameMode == GameController.GameMode.GAME || gameMode == GameController.GameMode.LEVEL_EDITOR)
             GameController.GetInstance().m_floorRenderer.m_floorSupport.m_mainColor = selectedTheme.m_floorSupportColor;
+
+        if (gameMode == GameController.GameMode.GAME)
+        {
             ((GameGUI)guiManager.m_currentGUI).m_targetActionsCount.color = selectedTheme.m_highScoreColor;
 
             //materials
@@ -241,10 +260,7 @@ public class ThemeManager : MonoBehaviour
     public void Update()
     {
         if (m_themes[m_selectedThemeIndex].UpdateValues())
-        {
-            Debug.Log("InvalidateTheme");
             InvalidateSelectedTheme();
-        }
 
         //if (m_theme != m_prevTheme)
         //{

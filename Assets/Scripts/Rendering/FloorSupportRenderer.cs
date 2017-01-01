@@ -30,11 +30,12 @@ public class FloorSupportRenderer : MonoBehaviour
     public void Build()
     {
         List<Geometry.Edge> frontLeftContour, frontRightContour;
-        m_floor.FindVisibleContours(out frontLeftContour, out frontRightContour);
+        m_floor.FindVisibleContours(out frontLeftContour, out frontRightContour, 0.9f);
 
         Color faceColor = GetSupportColor();
-        BuildFaces(frontLeftContour, faceColor);      
-        BuildFaces(frontRightContour, ColorUtils.LightenColor(faceColor, 0.1f));
+        BuildFaces(frontLeftContour, faceColor);
+        BuildFaces(frontRightContour, faceColor);
+        //BuildFaces(frontRightContour, ColorUtils.LightenColor(faceColor, 0.1f));
 
         //Build actual mesh
         Mesh supportMesh = new Mesh();

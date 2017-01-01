@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class LevelEditor : BaseGUI
 {
-    public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 20;
+    public const int FLOOR_DEFAULT_SIZE_FOR_EDITING = 15;
 
     //public LevelEditorMenuSwitcher m_levelEditorMenuSwitcherPfb;
     public SaveLoadLevelWindow m_saveLoadLevelWindowPfb;
@@ -31,7 +31,8 @@ public class LevelEditor : BaseGUI
         TILES_EDITING,
         CHECKPOINTS_EDITING,
         SWITCHES_EDITING,
-        BONUSES_EDITING
+        BONUSES_EDITING,
+        ICE_TILES_EDITING
     }
 
     public EditingMode m_editingMode { get; set; }

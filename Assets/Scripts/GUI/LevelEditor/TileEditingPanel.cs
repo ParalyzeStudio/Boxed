@@ -36,7 +36,8 @@ public class TileEditingPanel : ActionPanel
 
     public override void OnClickValidate()
     {
-        GameController.GetInstance().m_floorRenderer.m_floorData.AssignBlockedTiles();
+        //GameController.GetInstance().m_floorRenderer.m_floorData.AssignBlockedTiles();
+        GameController.GetInstance().m_floorRenderer.m_floorData.FindHoles();
         base.OnClickValidate();
     }
 

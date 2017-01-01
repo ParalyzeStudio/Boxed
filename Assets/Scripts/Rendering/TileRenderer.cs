@@ -194,18 +194,31 @@ public class TileRenderer : MonoBehaviour
 
         m_uv = new Vector2[12];
         //write hardcoded values based on the tile textures available under the Svenom_Tile_PNG\ folder
-        m_uv[0] = new Vector2(0.162f, 0.347f);
-        m_uv[1] = new Vector2(0.491f, 0.148f);
-        m_uv[2] = new Vector2(0.497f, 0.438f);
-        m_uv[3] = new Vector2(0.168f, 0.632f);
-        m_uv[4] = new Vector2(0.491f, 0.148f);
-        m_uv[5] = new Vector2(0.812f, 0.34f);
-        m_uv[6] = new Vector2(0.816f, 0.629f);
-        m_uv[7] = new Vector2(0.497f, 0.438f);
-        m_uv[8] = new Vector2(0.168f, 0.632f);
-        m_uv[9] = new Vector2(0.497f, 0.438f);
-        m_uv[10] = new Vector2(0.816f, 0.629f);
-        m_uv[11] = new Vector2(0.486f, 0.836f);
+        //m_uv[0] = new Vector2(0.162f, 0.347f);
+        //m_uv[1] = new Vector2(0.491f, 0.148f);
+        //m_uv[2] = new Vector2(0.497f, 0.438f);
+        //m_uv[3] = new Vector2(0.168f, 0.632f);
+        //m_uv[4] = new Vector2(0.491f, 0.148f);
+        //m_uv[5] = new Vector2(0.812f, 0.34f);
+        //m_uv[6] = new Vector2(0.816f, 0.629f);
+        //m_uv[7] = new Vector2(0.497f, 0.438f);
+        //m_uv[8] = new Vector2(0.168f, 0.632f);
+        //m_uv[9] = new Vector2(0.497f, 0.438f);
+        //m_uv[10] = new Vector2(0.816f, 0.629f);
+        //m_uv[11] = new Vector2(0.486f, 0.836f);
+        m_uv[0] = new Vector2(0, 1 - 0.752f);
+        m_uv[1] = new Vector2(0.504f, 1 - 0.998f);
+        m_uv[2] = new Vector2(0.497f, 0.5f);
+        m_uv[3] = new Vector2(0.04f, 1 - 0.256f);
+        m_uv[4] = new Vector2(0.504f, 1 - 0.998f);
+        m_uv[5] = new Vector2(0.999f, 1 - 0.751f);
+        m_uv[6] = new Vector2(0.994f, 1 - 0.255f);
+        m_uv[7] = new Vector2(0.497f, 0.5f);
+        m_uv[8] = new Vector2(0.04f, 1 - 0.256f);
+        m_uv[9] = new Vector2(0.497f, 0.5f);
+        m_uv[10] = new Vector2(0.994f, 1 - 0.255f);
+        m_uv[11] = new Vector2(0.5f, 1);
+
 
         //NORMALS (in case of we change to vertex lit)
         Vector3[] normals;
@@ -368,8 +381,6 @@ public class TileRenderer : MonoBehaviour
 
     public void SetTileColor(Color color)
     {
-        return; //TODO remove color bypass
-
         for (int i = 0; i != m_colors.Length; i++)
         {
             m_colors[i] = color;
@@ -598,19 +609,49 @@ public class TileRenderer : MonoBehaviour
 
     public void LiftUp()
     {
+        //if (m_tile is IceTile)
+        //{
+        //    IceTile iceTile = (IceTile)m_tile;
+        //    if (iceTile.m_blocked)
+        //        return;
+        //    else
+        //        iceTile.m_blocked = true;
+        //}
+        //else if (m_tile is TriggeredTile)
+        //{
+        //    TriggeredTile triggeredTile = (TriggeredTile)m_tile;
+        //    if (triggeredTile.m_isLiftUp)
+        //        return;
+        //    else
+        //        triggeredTile.m_isLiftUp = true;
+        //}
 
+        GameObjectAnimator tileAnimator = this.gameObject.AddComponent<GameObjectAnimator>();
+        tileAnimator.SetPosition(this.transform.localPosition);
+        tileAnimator.TranslateBy(new Vector3(0, Tile.TILE_DEFAULT_HEIGHT, 0), 0.3f, 0.5f * 90 / BrickRenderer.DEFAULT_ANGULAR_SPEED); 
     }
 
     public void LiftDown()
     {
+        //if (m_tile is TriggeredTile)
+        //{
+        //    TriggeredTile triggeredTile = (TriggeredTile)m_tile;
+        //    if (!triggeredTile.m_isLiftUp)
+        //        return;
+        //    else
+        //        triggeredTile.m_isLiftUp = false;
+        //}
 
+        GameObjectAnimator tileAnimator = this.gameObject.AddComponent<GameObjectAnimator>();
+        tileAnimator.SetPosition(this.transform.localPosition);
+        tileAnimator.TranslateBy(new Vector3(0, -Tile.TILE_DEFAULT_HEIGHT, 0), 0.3f, 0.5f * 90 / BrickRenderer.DEFAULT_ANGULAR_SPEED);
     }
 
     public void Invalidate()
     {
         UpdateTileHeight(GetTileHeight());
         UpdateTilePosition(m_tile.GetLocalPosition());
-        //UpdateTileColor();
+        UpdateTileColor();
         UpdateTileMaterial();
         UpdateTileDecal();
     }

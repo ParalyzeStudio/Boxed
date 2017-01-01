@@ -6,6 +6,7 @@ public class EditTilesSubMenu : LevelEditorMenu
     public TileEditingPanel m_tilesEditing;
     public ActionPanel m_checkpointsEditing;
     public SwitchesEditingPanel m_switchesEditing;
+    public ActionPanel m_iceTilesEditing;
 
     public void OnClickTiles()
     {
@@ -33,6 +34,15 @@ public class EditTilesSubMenu : LevelEditorMenu
         this.gameObject.SetActive(false);
         m_switchesEditing.gameObject.SetActive(true);
         m_switchesEditing.Init();
+    }
+
+    public void OnClickIceTiles()
+    {
+        m_parentEditor.m_editingMode = LevelEditor.EditingMode.ICE_TILES_EDITING;
+        m_parentEditor.m_activeEditingPanel = m_iceTilesEditing;
+        m_iceTilesEditing.m_parentMenu = this;
+        this.gameObject.SetActive(false);
+        m_iceTilesEditing.gameObject.SetActive(true);
     }
 
     public void OnClickBack()

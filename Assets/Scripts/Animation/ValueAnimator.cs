@@ -121,6 +121,11 @@ public class ValueAnimator : MonoBehaviour
         m_destroyObjectOnFinishTranslating = bDestroyOnFinish;
     }
 
+    public void TranslateBy(Vector3 positionDelta, float duration, float delay = 0.0f, InterpolationType interpolType = InterpolationType.LINEAR, bool bDestroyOnFinish = false)
+    {
+        TranslateTo(m_position + positionDelta, duration, delay, interpolType, bDestroyOnFinish);
+    }
+
     public void RotateBy(float byAngle, float duration, float delay = 0.0f, InterpolationType interpolType = InterpolationType.LINEAR)
     {
         m_rotating = true;

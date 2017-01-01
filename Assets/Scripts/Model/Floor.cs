@@ -47,15 +47,19 @@ public class Floor
             Tile tile = other.m_tiles[i];
             if (tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH) //do not deal with trigerred tiles there but preferably inside the Tile.State.SWITCH statement
                 continue;
-            if (tile.CurrentState == Tile.State.SWITCH)
+            else if (tile.CurrentState == Tile.State.ICE)
+            {
+                IceTile iceTile = new IceTile((IceTile) tile);
+                m_tiles[GetTileIndex(iceTile)] = iceTile;
+            }
+            else if (tile.CurrentState == Tile.State.SWITCH)
             {
                 SwitchTile switchTile = new SwitchTile((SwitchTile)tile);
 
                 for (int p = 0; p != switchTile.m_triggeredTiles.Count; p++)
                 {
                     TriggeredTile triggeredTile = switchTile.m_triggeredTiles[p];
-                    int triggeredTileIndex = GetTileIndex(triggeredTile);
-                    m_tiles[triggeredTileIndex] = triggeredTile;
+                    m_tiles[GetTileIndex(triggeredTile)] = triggeredTile;
                 }
 
                 //for (int p = 0; p != switchTile.m_triggeredTiles.Count; p++)
@@ -303,16 +307,19 @@ public class Floor
                     if (replacedTile.CurrentState == Tile.State.SWITCH)
                     {
                         tile = new SwitchTile((SwitchTile)replacedTile);
-                        tile.m_columnIndex = i;
-                        tile.m_lineIndex = j;
                         clampedSwitchTiles.Add((SwitchTile)tile);
+                    }
+                    else if (replacedTile.CurrentState == Tile.State.ICE)
+                    {
+                        tile = new IceTile((IceTile)replacedTile);
                     }
                     else if (replacedTile.CurrentState != Tile.State.TRIGGERED_BY_SWITCH)
                     {
                         tile = new Tile(replacedTile);
-                        tile.m_columnIndex = i;
-                        tile.m_lineIndex = j;
                     }
+
+                    tile.m_columnIndex = i;
+                    tile.m_lineIndex = j;
                 }
                 
                 int newTileIndex = i * newFloorHeight + j;
@@ -365,17 +372,20 @@ public class Floor
                 Tile tile = null;
                 if (replacedTile.CurrentState == Tile.State.SWITCH)
                 {
-                    tile = new SwitchTile((SwitchTile)replacedTile);
-                    tile.m_columnIndex = i;
-                    tile.m_lineIndex = j;
+                    tile = new SwitchTile((SwitchTile)replacedTile);                   
                     unclampedSwitchTiles.Add((SwitchTile)tile);
+                }
+                else if (replacedTile.CurrentState == Tile.State.ICE)
+                {
+                    tile = new IceTile((IceTile)replacedTile);
                 }
                 else if (replacedTile.CurrentState != Tile.State.TRIGGERED_BY_SWITCH)
                 {
                     tile = new Tile(replacedTile);
-                    tile.m_columnIndex = i;
-                    tile.m_lineIndex = j;
                 }
+
+                tile.m_columnIndex = i;
+                tile.m_lineIndex = j;
 
                 floor.m_tiles[i * floorSize + j] = tile;
             }
@@ -418,45 +428,152 @@ public class Floor
     **/
     public void AssignBlockedTiles()
     {
-        for (int i = 0; i != m_tiles.Length; i++)
+        //for (int i = 0; i != m_tiles.Length; i++)
+        //{
+        //    Tile tile = m_tiles[i];
+        //    //if (tile.CurrentState == Tile.State.NORMAL || 
+        //    //    tile.CurrentState == Tile.State.START || 
+        //    //    tile.CurrentState == Tile.State.FINISH ||
+        //    //    tile.CurrentState == Tile.State.ICE ||
+        //    //    tile.CurrentState == Tile.State.SWITCH ||
+        //    //    tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
+        //    //continue;
+
+        //    if (tile.CurrentState != Tile.State.DISABLED)
+        //        continue;
+
+        //    if (tile.m_columnIndex > 0 && tile.m_columnIndex < this.m_gridWidth - 1 && tile.m_lineIndex > 0 && tile.m_lineIndex < this.m_gridHeight - 1)
+        //    {
+        //        int linePreviousTileIndex = (tile.m_columnIndex - 1) * m_gridHeight + tile.m_lineIndex;
+        //        int lineNextTileIndex = (tile.m_columnIndex + 1) * m_gridHeight + tile.m_lineIndex;
+        //        Tile linePreviousTile = m_tiles[linePreviousTileIndex];
+        //        Tile lineNextTile = m_tiles[lineNextTileIndex];
+        //        Tile columnPreviousTile = m_tiles[i - 1];
+        //        Tile columnNextTile = m_tiles[i + 1];
+
+        //        int validNeighborsCount = 0;
+        //        if (linePreviousTile.CurrentState != Tile.State.DISABLED && linePreviousTile.CurrentState != Tile.State.BLOCKED)
+        //            validNeighborsCount++;
+        //        if (lineNextTile.CurrentState != Tile.State.DISABLED && lineNextTile.CurrentState != Tile.State.BLOCKED)
+        //            validNeighborsCount++;
+
+        //            //if (linePreviousTile.CurrentState != Tile.State.DISABLED && linePreviousTile.CurrentState != Tile.State.BLOCKED
+        //            //    &&
+        //            //    lineNextTile.CurrentState != Tile.State.DISABLED && lineNextTile.CurrentState == Tile.State.BLOCKED)
+        //            //if ((linePreviousTile.CurrentState == Tile.State.NORMAL || linePreviousTile.CurrentState == Tile.State.BLOCKED)
+        //            //    && 
+        //            //    (lineNextTile.CurrentState == Tile.State.NORMAL || lineNextTile.CurrentState == Tile.State.BLOCKED))
+        //            tile.CurrentState = Tile.State.BLOCKED;
+        //        else
+        //        {
+        //            Tile columnPreviousTile = m_tiles[i - 1];
+        //            Tile columnNextTile = m_tiles[i + 1];
+
+        //            if ((columnPreviousTile.CurrentState == Tile.State.NORMAL || columnPreviousTile.CurrentState == Tile.State.BLOCKED)
+        //                && 
+        //                (columnNextTile.CurrentState == Tile.State.NORMAL || columnNextTile.CurrentState == Tile.State.BLOCKED))
+        //                tile.CurrentState = Tile.State.BLOCKED;
+        //        }
+        //    }
+        //}
+    }
+
+    public void FindHoles()
+    {
+        bool[] holes = new bool[m_tiles.Length];
+
+        //traverse the floor column by column
+        for (int i = 0; i != m_gridWidth; i++)
         {
-            Tile tile = m_tiles[i];
-            if (tile.CurrentState == Tile.State.NORMAL || 
-                tile.CurrentState == Tile.State.START || 
-                tile.CurrentState == Tile.State.FINISH ||
-                tile.CurrentState == Tile.State.SWITCH ||
-                tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
-                continue;
-
-            if (tile.m_columnIndex > 0 && tile.m_columnIndex < this.m_gridWidth - 1 && tile.m_lineIndex > 0 && tile.m_lineIndex < this.m_gridHeight - 1)
+            int firstPlainTileIndex = -1;
+            int lastPlainTileIndex = -1;
+            for (int j = 0; j != m_gridHeight; j++)
             {
-                int linePreviousTileIndex = (tile.m_columnIndex - 1) * m_gridHeight + tile.m_lineIndex;
-                int lineNextTileIndex = (tile.m_columnIndex + 1) * m_gridHeight + tile.m_lineIndex;
-                Tile linePreviousTile = m_tiles[linePreviousTileIndex];
-                Tile lineNextTile = m_tiles[lineNextTileIndex];
-
-                if ((linePreviousTile.CurrentState == Tile.State.NORMAL || linePreviousTile.CurrentState == Tile.State.BLOCKED)
-                    && 
-                    (lineNextTile.CurrentState == Tile.State.NORMAL || lineNextTile.CurrentState == Tile.State.BLOCKED))
-                    tile.CurrentState = Tile.State.BLOCKED;
-                else
+                int tileIndex = i * m_gridHeight + j;
+                if (m_tiles[tileIndex].CurrentState != Tile.State.DISABLED)
                 {
-                    Tile columnPreviousTile = m_tiles[i - 1];
-                    Tile columnNextTile = m_tiles[i + 1];
+                    if (firstPlainTileIndex < 0)
+                        firstPlainTileIndex = j;
 
-                    if ((columnPreviousTile.CurrentState == Tile.State.NORMAL || columnPreviousTile.CurrentState == Tile.State.BLOCKED)
-                        && 
-                        (columnNextTile.CurrentState == Tile.State.NORMAL || columnNextTile.CurrentState == Tile.State.BLOCKED))
-                        tile.CurrentState = Tile.State.BLOCKED;
+                    lastPlainTileIndex = j;
                 }
             }
+
+            bool bPreviousTileWasDisabled = true;
+            bool bIsHole = false;
+            for (int j = firstPlainTileIndex; j != lastPlainTileIndex; j++)
+            {
+                int tileIndex = i * m_gridHeight + j;
+                Tile tile = m_tiles[tileIndex];
+                if (tile.CurrentState == Tile.State.NORMAL && bPreviousTileWasDisabled) //switch from hole to plain floor
+                {
+                    bPreviousTileWasDisabled = false;
+                    bIsHole = false;
+                }
+                else if (tile.CurrentState == Tile.State.DISABLED && !bPreviousTileWasDisabled) //switch from hole to plain floor
+                {
+                    bPreviousTileWasDisabled = true;
+                    bIsHole = true;
+                }
+
+                if (bIsHole)
+                    holes[tileIndex] = true;
+            }
+        }
+
+        //do the same line after line
+        for (int i = 0; i != m_gridHeight; i++)
+        {
+            int firstPlainTileIndex = -1;
+            int lastPlainTileIndex = -1;
+            for (int j = 0; j != m_gridHeight; j++)
+            {
+                int tileIndex = i * m_gridHeight + j;
+                if (m_tiles[tileIndex].CurrentState != Tile.State.DISABLED)
+                {
+                    if (firstPlainTileIndex < 0)
+                        firstPlainTileIndex = j;
+
+                    lastPlainTileIndex = j;
+                }
+            }
+
+            bool bPreviousTileWasDisabled = true;
+            bool bIsHole = false;
+            for (int j = firstPlainTileIndex; j != lastPlainTileIndex; j++)
+            {
+                int tileIndex = j * m_gridHeight + i;
+                if (holes[tileIndex]) //already set this tile as a hole
+                    continue;
+
+                Tile tile = m_tiles[tileIndex];
+                if (tile.CurrentState == Tile.State.NORMAL && bPreviousTileWasDisabled) //switch from hole to plain floor
+                {
+                    bPreviousTileWasDisabled = false;
+                    bIsHole = false;
+                }
+                else if (tile.CurrentState == Tile.State.DISABLED && !bPreviousTileWasDisabled) //switch from hole to plain floor
+                {
+                    bPreviousTileWasDisabled = true;
+                    bIsHole = true;
+                }
+
+                if (bIsHole)
+                    holes[tileIndex] = true;
+            }
+        }
+
+        for (int i = 0; i != holes.Length; i++)
+        {
+            if (holes[i])
+                m_tiles[i].CurrentState = Tile.State.BLOCKED;
         }
     }
 
     /**
     * Return floor edges that are visible from camera point of view and create a contour from them
     **/
-    public void FindVisibleContours(out List<Geometry.Edge> frontLeftContour, out List<Geometry.Edge> frontRightContour)
+    public void FindVisibleContours(out List<Geometry.Edge> frontLeftContour, out List<Geometry.Edge> frontRightContour, float tileScaleBias = 1.0f)
     {
         //traverse the floor and find the first tile with state NORMAL on each line
         frontLeftContour = new List<Geometry.Edge>();
@@ -471,8 +588,8 @@ public class Floor
                 if (tile == null)
                     continue;
 
-                Vector3 tileEdgePoint1 = tile.GetXZLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, 0.5f * tile.m_size);
-                Vector3 tileEdgePoint2 = tile.GetXZLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size);
+                Vector3 tileEdgePoint1 = tile.GetXZLocalPosition() + new Vector3(-0.5f * tile.m_size * tileScaleBias, 0, 0.5f * tile.m_size);
+                Vector3 tileEdgePoint2 = tile.GetXZLocalPosition() + new Vector3(-0.5f * tile.m_size * tileScaleBias, 0, -0.5f * tile.m_size);
 
                 frontLeftContour.Add(new Geometry.Edge(tileEdgePoint1, tileEdgePoint2));
             }
@@ -492,8 +609,8 @@ public class Floor
                 if (tile == null)
                     continue;
 
-                Vector3 tileEdgePoint1 = tile.GetXZLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size);
-                Vector3 tileEdgePoint2 = tile.GetXZLocalPosition() + new Vector3(0.5f * tile.m_size, 0, -0.5f * tile.m_size);
+                Vector3 tileEdgePoint1 = tile.GetXZLocalPosition() + new Vector3(-0.5f * tile.m_size, 0, -0.5f * tile.m_size * tileScaleBias);
+                Vector3 tileEdgePoint2 = tile.GetXZLocalPosition() + new Vector3(0.5f * tile.m_size, 0, -0.5f * tile.m_size * tileScaleBias);
 
                 frontRightContour.Add(new Geometry.Edge(tileEdgePoint1, tileEdgePoint2));
             }
@@ -502,7 +619,18 @@ public class Floor
 
     private List<Tile> FindTilesWithVisibleLeftFaceOnLine(int lineIndex)
     {
+        GameController.GameMode gameMode = GameController.GetInstance().m_gameMode;
         List<Tile> tiles = new List<Tile>();
+
+        if (gameMode == GameController.GameMode.LEVEL_EDITOR)
+        {
+            LevelEditor levelEditor = (LevelEditor) GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+            if (!levelEditor.m_isTestMenuShown)
+            {
+                tiles.Add(m_tiles[lineIndex]); //return the first tile on each line
+                return tiles;
+            }
+        }
 
         int i = 0; 
         while (i < m_gridWidth)
@@ -531,7 +659,18 @@ public class Floor
 
     private List<Tile> FindTilesWithVisibleRightFaceOnColumn(int columnIndex)
     {
+        GameController.GameMode gameMode = GameController.GetInstance().m_gameMode;
         List<Tile> tiles = new List<Tile>();
+
+        if (gameMode == GameController.GameMode.LEVEL_EDITOR)
+        {
+            LevelEditor levelEditor = (LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
+            if (!levelEditor.m_isTestMenuShown)
+            {
+                tiles.Add(m_tiles[columnIndex * m_gridHeight]); //return the first tile on each column
+                return tiles;
+            }
+        }
 
         int i = 0;
         while (i < m_gridHeight)

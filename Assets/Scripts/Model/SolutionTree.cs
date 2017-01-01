@@ -290,7 +290,6 @@ public class SolutionTree
             }
             else
             {
-                //Debug.Log("Moving pawn BACKWARD");
                 MovePawnBackward();
                 return true;
             }
@@ -352,35 +351,6 @@ public class SolutionTree
                 //Debug.Log("CYCLING");
                 m_currentNode.SetAsLeaf();
             }
-
-            //if (m_currentNode.m_distanceFromRoot == 9 &&
-            //    m_currentNode.m_direction == Brick.RollDirection.TOP &&
-            //    m_pawn.GetCoveredTilesCount() == 1 && m_pawn.CoveredTiles[0].m_columnIndex == 9 && m_pawn.CoveredTiles[0].m_lineIndex == 9)
-            //    Debug.Log("STOP");
-
-            //bool bCorrectDistance = (m_currentNode.m_distanceFromRoot == 4);
-            //bool bCorrectDirection = (m_currentNode.m_direction == Brick.RollDirection.TOP);
-            //bool bCorrectCoveredTiles = (m_pawn.m_coveredTiles.GetCount() == 1 && m_pawn.m_coveredTiles.GetFirstTile().m_columnIndex == 8 && m_pawn.m_coveredTiles.GetFirstTile().m_lineIndex == 6);
-            //bool bCorrectCoveredTiles = (
-            //                            m_pawn.GetCoveredTilesCount() == 2 
-            //                            &&
-            //                            (
-            //                            (
-            //                            m_pawn.CoveredTiles[0].m_columnIndex == 8 && m_pawn.CoveredTiles[0].m_lineIndex == 9 
-            //                            &&
-            //                            m_pawn.CoveredTiles[1].m_columnIndex == 7 && m_pawn.CoveredTiles[1].m_lineIndex == 9
-            //                            )
-            //                            ||
-            //                            (
-            //                            m_pawn.CoveredTiles[0].m_columnIndex == 7 && m_pawn.CoveredTiles[0].m_lineIndex == 9
-            //                            &&
-            //                            m_pawn.CoveredTiles[1].m_columnIndex == 8 && m_pawn.CoveredTiles[1].m_lineIndex == 9
-            //                            )
-            //                            )
-            //                            );
-
-            //if (bCorrectDistance && bCorrectDirection && bCorrectCoveredTiles)
-            //    Debug.Log("distance:" + m_currentNode.m_distanceFromRoot + " pawn.CoveredTiles[0] col:" + m_pawn.CoveredTiles[0].m_columnIndex + " line:" + m_pawn.CoveredTiles[0].m_lineIndex);
         }
     }
 
@@ -405,15 +375,15 @@ public class SolutionTree
 
 
         //rollback actions
-        if (m_pawn.m_coveredTiles.GetFirstTile() != null && m_pawn.m_coveredTiles.GetFirstTile().CurrentState == Tile.State.SWITCH)
+        if (m_pawn.m_coveredTiles.GetTileAtIndex(0) != null && m_pawn.m_coveredTiles.GetTileAtIndex(0).CurrentState == Tile.State.SWITCH)
         {
-            ((SwitchTile) m_pawn.m_coveredTiles.GetFirstTile()).Toggle();
+            ((SwitchTile) m_pawn.m_coveredTiles.GetTileAtIndex(0)).Toggle();
         }
         else
         {
-            if (m_pawn.m_coveredTiles.GetSecondTile() != null && m_pawn.m_coveredTiles.GetSecondTile().CurrentState == Tile.State.SWITCH)
+            if (m_pawn.m_coveredTiles.GetTileAtIndex(1) != null && m_pawn.m_coveredTiles.GetTileAtIndex(1).CurrentState == Tile.State.SWITCH)
             {
-                ((SwitchTile)m_pawn.m_coveredTiles.GetSecondTile()).Toggle();
+                ((SwitchTile)m_pawn.m_coveredTiles.GetTileAtIndex(1)).Toggle();
             }
         }
 
@@ -452,12 +422,12 @@ public class SolutionTree
             bool targetTileHasBeenReached = false;
             if (m_oneCoveredTileOnly)
             {
-                if (m_pawn.m_coveredTiles.GetCount() == 1 && m_pawn.m_coveredTiles.GetFirstTile().CurrentState == Tile.State.FINISH)
+                if (m_pawn.m_coveredTiles.GetCount() == 1 && m_pawn.m_coveredTiles.GetTileAtIndex(0).CurrentState == Tile.State.FINISH)
                     targetTileHasBeenReached = true;
             }
             else
             {
-                if ((m_pawn.m_coveredTiles.GetFirstTile() == m_targetTile || m_pawn.m_coveredTiles.GetSecondTile() == m_targetTile))
+                if ((m_pawn.m_coveredTiles.GetTileAtIndex(0) == m_targetTile || m_pawn.m_coveredTiles.GetTileAtIndex(1) == m_targetTile))
                     targetTileHasBeenReached = true;
             }
 
