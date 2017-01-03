@@ -344,6 +344,8 @@ public class Brick
             return;
         }
 
+        Debug.Log("Roll " + rollDirection);
+
         //Associate one vector to every direction
         Vector3 direction = GetVector3DirectionForRollingDirection(rollDirection);
         
@@ -404,18 +406,18 @@ public class Brick
             rotationEdge = currentFace.GetAdjacentFaceSharedEdge(adjacentFaceIdx);
             Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
 
-            if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME ||
-                GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR && rollResult == RollResult.VALID)
-            {
+            //if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME ||
+            //    GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR /*&& rollResult == RollResult.VALID*/)
+            //{
                 Quaternion brickRotation = Quaternion.AngleAxis(90, rotationAxis);
                 m_rotation *= brickRotation;
-            }
+            //}
 
-            if (rollResult == RollResult.VALID)
-            {
+            //if (rollResult == RollResult.VALID)
+            //{
                 //set the new index for the face touching the floor
                 m_downFaceIndex = rollToFace.m_index;
-            }
+            //}
         }
         else if (rollResult == RollResult.NO_TILE_TO_ROLL) //there is no tile on which we can land, just interrupt the rolling action
         {
@@ -582,6 +584,24 @@ public class Brick
     public void RemoveLastRolledOnTiles()
     {
         m_rolledOnTiles[--m_rolledOnTilesLastIndex] = null;
+    }
+
+    public CoveredTiles GetRolledOnTilesAtDistanceFromLast(int distance)
+    {
+        int lastTilesIndex = -1;
+        for (int i = 0; i != m_rolledOnTiles.Length; i++)
+        {
+            if (m_rolledOnTiles[i] == null)
+            {
+                lastTilesIndex = i - 1;
+                break;
+            }
+        }
+
+        if (lastTilesIndex >= distance)
+            return m_rolledOnTiles[lastTilesIndex - distance];
+        else
+            return null;
     }
 
     /**

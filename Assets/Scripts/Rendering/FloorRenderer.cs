@@ -49,8 +49,7 @@ public class FloorRenderer : MonoBehaviour
                 bTestingLevelInEditorMode = (GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR);
                 if (bTestingLevelInEditorMode)
                 {
-                    BaseGUI currentGUI = GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
-                    bTestingLevelInEditorMode = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI).m_isTestMenuShown;
+                    bTestingLevelInEditorMode = ((LevelEditor)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI).m_testMenu.m_testingLevel;
                 }
             }
             

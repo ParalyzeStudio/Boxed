@@ -276,6 +276,12 @@ public class SolutionTree
     public bool MovePawn()
     {
         Brick.RollDirection pawnNextMoveDirection = CanMovePawnForward();
+
+        if (pawnNextMoveDirection == Brick.RollDirection.BOTTOM_RIGHT)
+        {
+            int a = 1; a++;
+        }
+
         if (pawnNextMoveDirection != Brick.RollDirection.NONE)
         {
             MovePawnForward(pawnNextMoveDirection);
@@ -331,17 +337,16 @@ public class SolutionTree
         SolutionNode previousNode = m_currentNode;
         m_currentNode = nextNode;
         
-
         if (!PerformRolling(direction)) //dead node, revert the m_currentNode to the previous node and reset the state of the pawn to IDLE
         {
-            //Debug.Log("FAILED MOVING PAWN FORWARD in direction " + direction);
+            Debug.Log("FAILED MOVING PAWN FORWARD in direction " + direction);
 
             m_pawn.m_state = Brick.BrickState.IDLE;
             m_currentNode = previousNode;
         }
         else
         {
-            //Debug.Log("MOVED PAWN FORWARD with success in direction " + direction);
+            Debug.Log("MOVED PAWN FORWARD with success in direction " + direction);
 
             //add the covered tiles to the pawn list
             m_pawn.AddCurrentCoveredTilesToRolledOnTiles();
@@ -356,6 +361,8 @@ public class SolutionTree
 
     private void MovePawnBackward()
     {
+        Debug.Log("MovePawnBackward");
+
         Brick.RollDirection currentNodeDirection = m_currentNode.m_direction;
 
         //Find the opposite direction
@@ -375,19 +382,27 @@ public class SolutionTree
 
 
         //rollback actions
-        if (m_pawn.m_coveredTiles.GetTileAtIndex(0) != null && m_pawn.m_coveredTiles.GetTileAtIndex(0).CurrentState == Tile.State.SWITCH)
+        Tile[] currentCoveredTiles = m_pawn.m_coveredTiles.GetAsTruncatedArray();
+        //on switches
+        for (int i = 0; i != currentCoveredTiles.Length; i++)
         {
-            ((SwitchTile) m_pawn.m_coveredTiles.GetTileAtIndex(0)).Toggle();
+            if (currentCoveredTiles[i].CurrentState == Tile.State.SWITCH)
+                ((SwitchTile)currentCoveredTiles[i]).Toggle();
         }
-        else
+
+        //on ice tiles
+        Brick.CoveredTiles previousRolledOnTiles = m_pawn.GetRolledOnTilesAtDistanceFromLast(1);
+        if (previousRolledOnTiles != null)
         {
-            if (m_pawn.m_coveredTiles.GetTileAtIndex(1) != null && m_pawn.m_coveredTiles.GetTileAtIndex(1).CurrentState == Tile.State.SWITCH)
+            Tile[] previousCoveredTiles = previousRolledOnTiles.GetAsTruncatedArray();
+            for (int i = 0; i != previousCoveredTiles.Length; i++)
             {
-                ((SwitchTile)m_pawn.m_coveredTiles.GetTileAtIndex(1)).Toggle();
+                if (previousCoveredTiles[i].CurrentState == Tile.State.ICE)
+                    ((IceTile)previousCoveredTiles[i]).m_blocked = false;
             }
         }
 
-        //try to make the brick roll
+        //make the brick roll
         Brick.RollResult rollResult;
         Geometry.Edge rotationEdge;
         m_pawn.Roll(oppDirection, out rollResult, out rotationEdge);
