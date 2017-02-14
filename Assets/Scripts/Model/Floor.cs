@@ -313,9 +313,10 @@ public class Floor
                     {
                         tile = new IceTile((IceTile)replacedTile);
                     }
-                    else if (replacedTile.CurrentState != Tile.State.TRIGGERED_BY_SWITCH)
+                    else
                     {
                         tile = new Tile(replacedTile);
+                        tile.CurrentState = replacedTile.CurrentState;
                     }
 
                     tile.m_columnIndex = i;
@@ -379,9 +380,10 @@ public class Floor
                 {
                     tile = new IceTile((IceTile)replacedTile);
                 }
-                else if (replacedTile.CurrentState != Tile.State.TRIGGERED_BY_SWITCH)
+                else
                 {
                     tile = new Tile(replacedTile);
+                    tile.CurrentState = replacedTile.CurrentState;
                 }
 
                 tile.m_columnIndex = i;
@@ -526,9 +528,9 @@ public class Floor
         {
             int firstPlainTileIndex = -1;
             int lastPlainTileIndex = -1;
-            for (int j = 0; j != m_gridHeight; j++)
+            for (int j = 0; j != m_gridWidth; j++)
             {
-                int tileIndex = i * m_gridHeight + j;
+                int tileIndex = j * m_gridHeight + i;
                 if (m_tiles[tileIndex].CurrentState != Tile.State.DISABLED)
                 {
                     if (firstPlainTileIndex < 0)

@@ -26,6 +26,7 @@ public class ValueAnimator : MonoBehaviour
 
     //Variables to handle scaling
     protected bool m_scaling;
+    public Vector3 m_scale;
     protected Vector3 m_fromScale;
     protected Vector3 m_toScale;
     protected float m_scalingDuration;
@@ -175,7 +176,7 @@ public class ValueAnimator : MonoBehaviour
 
     public virtual void SetScale(Vector3 scale)
     {
-        this.transform.localScale = scale;
+        m_scale = scale;
         OnScaleChanged();
     }
 

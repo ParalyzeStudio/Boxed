@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class BillboardSprite : Quad
+public class BillboardQuad : Quad
 {
     protected Camera m_camera;
     protected Vector2 m_size;

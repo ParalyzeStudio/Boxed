@@ -344,7 +344,7 @@ public class Brick
             return;
         }
 
-        Debug.Log("Roll " + rollDirection);
+        //Debug.Log("Roll " + rollDirection);
 
         //Associate one vector to every direction
         Vector3 direction = GetVector3DirectionForRollingDirection(rollDirection);
@@ -406,18 +406,18 @@ public class Brick
             rotationEdge = currentFace.GetAdjacentFaceSharedEdge(adjacentFaceIdx);
             Vector3 rotationAxis = rotationEdge.m_pointB - rotationEdge.m_pointA;
 
-            //if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME ||
-            //    GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR /*&& rollResult == RollResult.VALID*/)
-            //{
+            if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME ||
+                GameController.GetInstance().m_gameMode == GameController.GameMode.LEVEL_EDITOR && rollResult == RollResult.VALID)
+            {
                 Quaternion brickRotation = Quaternion.AngleAxis(90, rotationAxis);
                 m_rotation *= brickRotation;
-            //}
+            }
 
-            //if (rollResult == RollResult.VALID)
-            //{
+            if (rollResult == RollResult.VALID)
+            {
                 //set the new index for the face touching the floor
                 m_downFaceIndex = rollToFace.m_index;
-            //}
+            }
         }
         else if (rollResult == RollResult.NO_TILE_TO_ROLL) //there is no tile on which we can land, just interrupt the rolling action
         {
@@ -478,7 +478,7 @@ public class Brick
                 {
                     if (nextTile2.CurrentState == Tile.State.DISABLED)
                         rollResult = RollResult.FALL;
-                    else if (nextTile1.IsBlocking())
+                    else if (nextTile2.IsBlocking())
                         return RollResult.NONE;
 
                     newCoveredTiles.SetTiles(nextTile1, nextTile2);
@@ -568,12 +568,6 @@ public class Brick
         
         //reset the tile state to IDLE
         m_state = Brick.BrickState.IDLE;
-
-        //Change the state of new covered tiles
-        //if (m_coveredTiles[0] != null && m_coveredTiles[0].CurrentState == Tile.State.DISABLED)
-        //    m_coveredTiles[0].CurrentState = Tile.State.SELECTED;
-        //if (m_coveredTiles[1] != null && m_coveredTiles[1].CurrentState == Tile.State.DISABLED)
-        //    m_coveredTiles[1].CurrentState = Tile.State.SELECTED;
     }
 
     public void AddCurrentCoveredTilesToRolledOnTiles()

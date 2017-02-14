@@ -14,8 +14,8 @@ public class BaseGUI : MonoBehaviour
         canvasGroupFade.m_opacity = 0;
         canvasGroupFade.FadeIn();
 
-        GradientBackground overlay = GameController.GetInstance().GetComponent<GUIManager>().m_overlay;
-        overlay.FadeOut(0.5f);
+        FSGradientBillboardQuad overlay = GameController.GetInstance().GetComponent<GUIManager>().m_overlay;
+        overlay.GetComponent<QuadAnimator>().FadeTo(0.0f, 1, 0.3f);
     }
 
     public virtual void Dismiss(bool bDestroyOnFinish = false)
@@ -23,8 +23,8 @@ public class BaseGUI : MonoBehaviour
         CanvasGroupFade canvasGroupFade = this.GetComponent<CanvasGroupFade>();
         canvasGroupFade.FadeOut(bDestroyOnFinish);
 
-        GradientBackground overlay = GameController.GetInstance().GetComponent<GUIManager>().m_overlay;
-        overlay.FadeIn(0.5f);
+        FSGradientBillboardQuad overlay = GameController.GetInstance().GetComponent<GUIManager>().m_overlay;
+        overlay.GetComponent<QuadAnimator>().FadeTo(1.0f, 0.5f);
     }
 
     public void DestroySelf()

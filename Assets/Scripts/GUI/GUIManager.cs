@@ -27,12 +27,9 @@ public class GUIManager : MonoBehaviour
     //public ThemeManager m_themeManager;
 
     //gradient background
-    public GradientBackground m_gradientBackgroundPfb;
-    public GradientBackground m_background { get; set; }
-
-    //fading overlay
-    public GradientBackground m_overlayPfb;
-    public GradientBackground m_overlay { get; set; }
+    public FSGradientBillboardQuad m_gradientQuadPfb;
+    public FSGradientBillboardQuad m_background { get; set; }
+    public FSGradientBillboardQuad m_overlay { get; set; }
 
     public void Init()
     {
@@ -48,11 +45,16 @@ public class GUIManager : MonoBehaviour
     public void ShowBackgroundForTheme(ThemeManager.Theme theme)
     {
         //show gradient background
-        m_background = Instantiate(m_gradientBackgroundPfb);
+        m_background = Instantiate(m_gradientQuadPfb);
         Color startColor = theme.m_backgroundGradientTopColor;
         Color endColor = theme.m_backgroundGradientBottomColor;
 
         m_background.Init(startColor, endColor);
+
+        Camera camera = Camera.main;
+        Vector3 cameraPosition = camera.gameObject.transform.position;
+        float distanceFromCamera = camera.farClipPlane - 1;
+        m_background.GetComponent<GameObjectAnimator>().SetPosition(cameraPosition + distanceFromCamera * camera.transform.forward);
     }
 
     /**
@@ -60,8 +62,8 @@ public class GUIManager : MonoBehaviour
     **/
     public void BuildGradientOverlay()
     {
-        m_overlay = Instantiate(m_overlayPfb);
-        GradientBackground background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
+        m_overlay = Instantiate(m_gradientQuadPfb);
+        FSGradientBillboardQuad background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
         m_overlay.Init(background.m_topColor, background.m_bottomColor);
         m_overlay.name = "Overlay";
 
@@ -69,11 +71,13 @@ public class GUIManager : MonoBehaviour
         m_overlay.m_bottomColor = new Color(m_overlay.m_bottomColor.r, m_overlay.m_bottomColor.g, m_overlay.m_bottomColor.b, 1);
         m_overlay.InvalidateColors();
 
-        //set the background at a long distance from camera so it is behind all scene elements
+        //set the overlay at a short distance from camera so it is in front of all scene elements
         Camera camera = Camera.main;
         Vector3 cameraPosition = camera.gameObject.transform.position;
-        float distanceFromCamera = camera.nearClipPlane + 10;
+        float distanceFromCamera = camera.nearClipPlane + 1;
         m_overlay.GetComponent<GameObjectAnimator>().SetPosition(cameraPosition + distanceFromCamera * camera.transform.forward);
+
+        Debug.Log("overlayPosition:" + (cameraPosition + distanceFromCamera * camera.transform.forward));
     }
 
     /**

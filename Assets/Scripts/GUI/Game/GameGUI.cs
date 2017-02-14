@@ -11,19 +11,23 @@ public class GameGUI : BaseGUI
     private bool m_solutionPanelActive;
     public Image m_solutionArrowPfb;
 
-    //actions count
+    //PAR score
+    public Image m_parScoreFill;
     public Text m_currentActionsCount;
     public Text m_targetActionsCount;
+    private int m_solutionMinLength;
 
     //confirm home window
     public ConfirmHomeWindow m_confirmHomeWindowPfb;
     public ConfirmHomeWindow m_confirmHomeWindow { get; set; }
 
+    //Tutorials
+    public Tutorial[] m_tutorials;
+    private int m_currentTutorialNumber; //the tutorial currently shown
+
     public void BuildForLevel(Level level)
     {
         m_level = level;
-        //if (m_overlay == null)
-        //    BuildGradientOverlay();
 
         //disable any displayed solution panel
         m_solutionPanelActive = false;
@@ -35,7 +39,7 @@ public class GameGUI : BaseGUI
 
         //actions count
         InitTargetActionsCount();
-        UpdateActionsCount();
+        UpdateParScore();
     }
     
 
@@ -104,13 +108,17 @@ public class GameGUI : BaseGUI
     private void InitTargetActionsCount()
     {
         Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
-        m_targetActionsCount.text = currentLevel.m_solution.Length.ToString();
-        m_targetActionsCount.color = GameController.GetInstance().GetComponent<ThemeManager>().GetSelectedTheme().m_highScoreColor;
+        m_solutionMinLength = currentLevel.m_solution.Length;
+        m_targetActionsCount.text = m_solutionMinLength.ToString();
     }
 
-    public void UpdateActionsCount()
+    public void UpdateParScore()
     {
-        m_currentActionsCount.text = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevelData.m_currentActionsCount.ToString();
+        LevelData levelData = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevelData;
+        float scoreRatio = Mathf.Clamp01(levelData.m_currentActionsCount / (float)m_solutionMinLength);
+        m_parScoreFill.fillAmount = scoreRatio;
+
+        m_currentActionsCount.text = levelData.m_currentActionsCount.ToString();
     }
 
     private Quaternion GetArrowRotationForDirection(Brick.RollDirection direction)
@@ -123,6 +131,53 @@ public class GameGUI : BaseGUI
             return Quaternion.identity;
         else
             return Quaternion.AngleAxis(270, Vector3.forward);
+    }
+
+    /**
+    * Show the first tutorial available for this level
+    **/
+    public bool ShowFirstTutorial()
+    {
+        int tutorialIndex = 0;
+        while (!ShowTutorial(m_tutorials[tutorialIndex]) && tutorialIndex < m_tutorials.Length)
+        {
+            tutorialIndex++;
+            if (tutorialIndex == m_tutorials.Length)
+                return false;
+        }
+
+        m_currentTutorialNumber = tutorialIndex + 1;
+        return true;
+    }
+
+    /**
+    * Show the next tutorial if available
+    **/
+    public bool ShowNextTutorial()
+    {
+        if (m_currentTutorialNumber < m_tutorials.Length)
+            return ShowTutorial(m_tutorials[m_currentTutorialNumber]);
+
+        return false;
+    }
+
+    public bool ShowTutorial(Tutorial tutorial)
+    {
+        //check if this tutorial matches the current level
+        int currentLevelNumber = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel.m_number;
+        if (tutorial.m_levelNumber == currentLevelNumber)
+        {
+            //PersistentDataManager persistentDataManager = GameController.GetInstance().GetComponent<PersistentDataManager>();
+            //if (currentLevelNumber > persistentDataManager.GetMaxLevelReached())
+            //{
+                Tutorial tutorialCopy = Instantiate(tutorial); //cannot use the prefab directly because of Unity denial
+                tutorialCopy.transform.SetParent(this.transform, false);
+            //}
+
+            return true;
+        }
+
+        return false;
     }
 
     public void OnClickRestart()
@@ -140,12 +195,5 @@ public class GameGUI : BaseGUI
     public void OnClickSolution()
     {
         ToggleSolution();
-    }
-
-    public void OnGUI()
-    {
-        GUI.depth = 1;
-        //Debug.Log("GameGUI >>> OnGUI()");
-        //Debug.Log("GameGUI depth:" + GUI.depth);
     }
 }

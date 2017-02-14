@@ -168,57 +168,7 @@ public class TileRenderer : MonoBehaviour
         }
 
         //UV
-        //if (m_tile.CurrentState == Tile.State.FINISH)
-        //{
-        //    GetComponent<MeshRenderer>().sharedMaterial.mainTexture.wrapMode = TextureWrapMode.Repeat;
-
-        //    int repeatCount = 2; //repeat the texture 2 times over the tile dimension
-        //    m_uv = new Vector2[12];
-        //    m_uv[0] = new Vector2(0, 0);
-        //    m_uv[1] = new Vector2(repeatCount, 0);
-        //    m_uv[2] = new Vector2(repeatCount, repeatCount / 2);
-        //    m_uv[3] = new Vector2(0, repeatCount / 2);
-
-        //    m_uv[4] = new Vector2(0, repeatCount / 2);
-        //    m_uv[5] = new Vector2(repeatCount, repeatCount / 2);
-        //    m_uv[6] = new Vector2(repeatCount, 0);
-        //    m_uv[7] = new Vector2(0, 0);
-
-        //    m_uv[8] = new Vector2(0, 0);
-        //    m_uv[9] = new Vector2(repeatCount, 0);
-        //    m_uv[10] = new Vector2(repeatCount, repeatCount);
-        //    m_uv[11] = new Vector2(0, repeatCount);
-        //}
-        //else
-        //    m_uv = new Vector2[m_hasContour ? 20 : 12];
-
-        m_uv = new Vector2[12];
-        //write hardcoded values based on the tile textures available under the Svenom_Tile_PNG\ folder
-        //m_uv[0] = new Vector2(0.162f, 0.347f);
-        //m_uv[1] = new Vector2(0.491f, 0.148f);
-        //m_uv[2] = new Vector2(0.497f, 0.438f);
-        //m_uv[3] = new Vector2(0.168f, 0.632f);
-        //m_uv[4] = new Vector2(0.491f, 0.148f);
-        //m_uv[5] = new Vector2(0.812f, 0.34f);
-        //m_uv[6] = new Vector2(0.816f, 0.629f);
-        //m_uv[7] = new Vector2(0.497f, 0.438f);
-        //m_uv[8] = new Vector2(0.168f, 0.632f);
-        //m_uv[9] = new Vector2(0.497f, 0.438f);
-        //m_uv[10] = new Vector2(0.816f, 0.629f);
-        //m_uv[11] = new Vector2(0.486f, 0.836f);
-        m_uv[0] = new Vector2(0, 1 - 0.752f);
-        m_uv[1] = new Vector2(0.504f, 1 - 0.998f);
-        m_uv[2] = new Vector2(0.497f, 0.5f);
-        m_uv[3] = new Vector2(0.04f, 1 - 0.256f);
-        m_uv[4] = new Vector2(0.504f, 1 - 0.998f);
-        m_uv[5] = new Vector2(0.999f, 1 - 0.751f);
-        m_uv[6] = new Vector2(0.994f, 1 - 0.255f);
-        m_uv[7] = new Vector2(0.497f, 0.5f);
-        m_uv[8] = new Vector2(0.04f, 1 - 0.256f);
-        m_uv[9] = new Vector2(0.497f, 0.5f);
-        m_uv[10] = new Vector2(0.994f, 1 - 0.255f);
-        m_uv[11] = new Vector2(0.5f, 1);
-
+        UpdateUVMap();
 
         //NORMALS (in case of we change to vertex lit)
         Vector3[] normals;
@@ -366,16 +316,14 @@ public class TileRenderer : MonoBehaviour
     }
 
     public void UpdateTileColor()
-    {      
-        ThemeManager.Theme currentTheme = GameController.GetInstance().GetComponent<ThemeManager>().GetSelectedTheme();
-        Color color = currentTheme.GetTileColorForTileState(m_tile.CurrentState);
+    {
+        Color color = GetColor();
         SetTileColor(color);
     }
 
     public void UpdateTileMaterial()
     {
-        ThemeManager.Theme currentTheme = GameController.GetInstance().GetComponent<ThemeManager>().GetSelectedTheme();
-        Material material = currentTheme.GetTileMaterialForTileState(m_tile.CurrentState);
+        Material material = GetMaterial();
         GetComponent<MeshRenderer>().sharedMaterial = material;        
     }
 
@@ -645,6 +593,56 @@ public class TileRenderer : MonoBehaviour
         GameObjectAnimator tileAnimator = this.gameObject.AddComponent<GameObjectAnimator>();
         tileAnimator.SetPosition(this.transform.localPosition);
         tileAnimator.TranslateBy(new Vector3(0, -Tile.TILE_DEFAULT_HEIGHT, 0), 0.3f, 0.5f * 90 / BrickRenderer.DEFAULT_ANGULAR_SPEED);
+    }
+
+    public Color GetColor()
+    {
+        ThemeManager.Theme currentTheme = GameController.GetInstance().GetComponent<ThemeManager>().GetSelectedTheme();
+        return currentTheme.GetTileColorForTileState(m_tile.CurrentState);
+    }
+
+    public Material GetMaterial()
+    {
+        ThemeManager themeManager = GameController.GetInstance().GetComponent<ThemeManager>();
+        ThemeManager.Theme currentTheme = themeManager.GetSelectedTheme();
+
+        return currentTheme.GetTileMaterialForTileState(m_tile.CurrentState);
+    }
+
+    public void UpdateUVMap()
+    {
+        m_uv = new Vector2[12];
+
+        if (m_tile.CurrentState == Tile.State.SWITCH || m_tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
+        {
+            m_uv[0] = new Vector2(0.162f, 0.347f);
+            m_uv[1] = new Vector2(0.491f, 0.148f);
+            m_uv[2] = new Vector2(0.497f, 0.438f);
+            m_uv[3] = new Vector2(0.168f, 0.632f);
+            m_uv[4] = new Vector2(0.491f, 0.148f);
+            m_uv[5] = new Vector2(0.812f, 0.34f);
+            m_uv[6] = new Vector2(0.816f, 0.629f);
+            m_uv[7] = new Vector2(0.497f, 0.438f);
+            m_uv[8] = new Vector2(0.168f, 0.632f);
+            m_uv[9] = new Vector2(0.497f, 0.438f);
+            m_uv[10] = new Vector2(0.816f, 0.629f);
+            m_uv[11] = new Vector2(0.486f, 0.836f);
+        }
+        else
+        {
+            m_uv[0] = new Vector2(0, 1 - 0.752f);
+            m_uv[1] = new Vector2(0.504f, 1 - 0.998f);
+            m_uv[2] = new Vector2(0.497f, 0.5f);
+            m_uv[3] = new Vector2(0.04f, 1 - 0.256f);
+            m_uv[4] = new Vector2(0.504f, 1 - 0.998f);
+            m_uv[5] = new Vector2(0.999f, 1 - 0.751f);
+            m_uv[6] = new Vector2(0.994f, 1 - 0.255f);
+            m_uv[7] = new Vector2(0.497f, 0.5f);
+            m_uv[8] = new Vector2(0.04f, 1 - 0.256f);
+            m_uv[9] = new Vector2(0.497f, 0.5f);
+            m_uv[10] = new Vector2(0.994f, 1 - 0.255f);
+            m_uv[11] = new Vector2(0.5f, 1);
+        }
     }
 
     public void Invalidate()

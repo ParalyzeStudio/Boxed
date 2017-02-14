@@ -8,6 +8,7 @@ public class PersistentDataManager : MonoBehaviour
 {
     public const string MUSIC_ON = "music_on";
     public const string SOUND_ON = "sound_on";
+    public const string MAX_LEVEL_REACHED = "max_level_reached";
 
     public void Start()
     {
@@ -43,6 +44,21 @@ public class PersistentDataManager : MonoBehaviour
     {
         int soundStatus = PlayerPrefs.GetInt(SOUND_ON, 1);
         return (soundStatus == 1);
+    }
+
+    public void SetMaxLevelReached(int levelNumber)
+    {
+        int previousMaxLevelReached = GetMaxLevelReached();
+        if (levelNumber > previousMaxLevelReached)
+        {
+            PlayerPrefs.SetInt(MAX_LEVEL_REACHED, levelNumber);
+            PlayerPrefs.Save();
+        }
+    }
+
+    public int GetMaxLevelReached()
+    {
+        return PlayerPrefs.GetInt(MAX_LEVEL_REACHED, 0);
     }
 
     /**

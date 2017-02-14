@@ -88,8 +88,8 @@ public class BrickController : MonoBehaviour
 
     void Update()
     {
-        //if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)
-        //{
+        if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)
+        {
             if (Input.GetKey(KeyCode.LeftArrow))
             {
                 RollBottomLeft();
@@ -106,6 +106,6 @@ public class BrickController : MonoBehaviour
             {
                 RollBottomRight();
             }
-        //}
+        }
     }
 }

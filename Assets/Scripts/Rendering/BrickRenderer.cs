@@ -184,7 +184,7 @@ public class BrickRenderer : MonoBehaviour
 
                     //update the GameGUI
                     GameGUI gameGUI = (GameGUI)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
-                    gameGUI.UpdateActionsCount();
+                    gameGUI.UpdateParScore();
                 }
             }
             else
@@ -430,16 +430,16 @@ public class BrickRenderer : MonoBehaviour
             }
         }
 
-        if (m_brick.m_coveredTiles.GetCount() == 1)
-        {
-            if (m_brick.m_coveredTiles.GetTileAtIndex(0).CurrentState == Tile.State.TRAP)
-                Explode();
-        }
-        else
-        {
-            if (m_brick.m_coveredTiles.GetTileAtIndex(0).CurrentState == Tile.State.TRAP || m_brick.m_coveredTiles.GetTileAtIndex(1).CurrentState == Tile.State.TRAP)
-                Explode();
-        }
+        //if (m_brick.m_coveredTiles.GetCount() == 1)
+        //{
+        //    if (m_brick.m_coveredTiles.GetTileAtIndex(0).CurrentState == Tile.State.TRAP)
+        //        Explode();
+        //}
+        //else
+        //{
+        //    if (m_brick.m_coveredTiles.GetTileAtIndex(0).CurrentState == Tile.State.TRAP || m_brick.m_coveredTiles.GetTileAtIndex(1).CurrentState == Tile.State.TRAP)
+        //        Explode();
+        //}
     }
 
     /**

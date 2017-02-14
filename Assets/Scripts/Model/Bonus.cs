@@ -8,6 +8,8 @@ using UnityEngine;
 [Serializable]
 public class Bonus
 {
+    public bool m_alive;
+
     public Bonus()
     {
 

@@ -1,12 +1,10 @@
 ﻿using UnityEngine;
 
 /**
-* Use this class to render a background image with vertical gradient
+* Use this class to render a full screen, camera-facing quad mesh
 **/
-public class GradientBackground : BillboardSprite
+public class FSGradientBillboardQuad : BillboardQuad
 {
-    //public Color m_topColor { get; set; }
-    //public Color m_bottomColor { get; set; }
     public Color m_topColor;
     public Color m_bottomColor;
     private Color m_prevTopColor;
@@ -19,7 +17,7 @@ public class GradientBackground : BillboardSprite
     
     private const float HUE_VARIATION_SPEED = 60.0f;
 
-    GameObjectAnimator m_backgroundAnimator;
+    QuadAnimator m_animator;
     Transform m_cameraTransform;
 
     //Color variation
@@ -59,9 +57,8 @@ public class GradientBackground : BillboardSprite
 
         InvalidateColors();
 
-        m_size = ScreenUtils.GetScreenSize();
-        
-        m_backgroundAnimator = this.GetComponent<GameObjectAnimator>();
+        m_animator = this.GetComponent<QuadAnimator>();
+        m_animator.SetOpacity(1);
         m_cameraTransform = m_camera.transform;
     }
 
@@ -93,29 +90,29 @@ public class GradientBackground : BillboardSprite
         m_elapsedTime = 0;
     }
 
-    public void FadeIn(float duration, float delay = 0.0f)
-    {
-        m_colorVariating = true;
-        m_topFromColor = m_topColor;
-        m_bottomFromColor = m_bottomColor;
-        m_topToColor = new Color(m_topColor.r, m_topColor.g, m_topColor.b, 1);
-        m_bottomToColor = new Color(m_bottomColor.r, m_bottomColor.g, m_bottomColor.b, 1);
-        m_duration = duration;
-        m_delay = delay;
-        m_elapsedTime = 0;
-    }
+    //public void FadeIn(float duration, float delay = 0.0f)
+    //{
+    //    m_colorVariating = true;
+    //    m_topFromColor = m_topColor;
+    //    m_bottomFromColor = m_bottomColor;
+    //    m_topToColor = new Color(m_topColor.r, m_topColor.g, m_topColor.b, 1);
+    //    m_bottomToColor = new Color(m_bottomColor.r, m_bottomColor.g, m_bottomColor.b, 1);
+    //    m_duration = duration;
+    //    m_delay = delay;
+    //    m_elapsedTime = 0;
+    //}
 
-    public void FadeOut(float duration, float delay = 0.0f)
-    {
-        m_colorVariating = true;
-        m_topFromColor = m_topColor;
-        m_bottomFromColor = m_bottomColor;
-        m_topToColor = new Color(m_topColor.r, m_topColor.g, m_topColor.b, 0);
-        m_bottomToColor = new Color(m_bottomColor.r, m_bottomColor.g, m_bottomColor.b, 0);
-        m_duration = duration;
-        m_delay = delay;
-        m_elapsedTime = 0;
-    }
+    //public void FadeOut(float duration, float delay = 0.0f)
+    //{
+    //    m_colorVariating = true;
+    //    m_topFromColor = m_topColor;
+    //    m_bottomFromColor = m_bottomColor;
+    //    m_topToColor = new Color(m_topColor.r, m_topColor.g, m_topColor.b, 0);
+    //    m_bottomToColor = new Color(m_bottomColor.r, m_bottomColor.g, m_bottomColor.b, 0);
+    //    m_duration = duration;
+    //    m_delay = delay;
+    //    m_elapsedTime = 0;
+    //}
 
     protected virtual void UpdateColor(float dt)
     {
@@ -163,7 +160,7 @@ public class GradientBackground : BillboardSprite
         }
     }
 
-    public void Update()
+    public override void Update()
     {
         float dt = Time.deltaTime;
         
@@ -178,7 +175,7 @@ public class GradientBackground : BillboardSprite
             m_bottomColor = m_endHSV.ToRGBA();
         }
 
-        UpdateColor(dt);
+        //UpdateColor(dt);
 
        
         if (m_prevTopColor != m_topColor || m_prevBottomColor != m_bottomColor)
@@ -189,14 +186,18 @@ public class GradientBackground : BillboardSprite
     {
         base.LateUpdate();
 
-        if (m_backgroundAnimator != null)
-        {
-            m_size = ScreenUtils.GetScreenSize();
-            m_backgroundAnimator.SetScale(new Vector3(m_size.x, m_size.y, 1));
+        if (m_animator != null)
+        {           
+            Vector2 screenSize = ScreenUtils.GetScreenSize();
+            if (screenSize != m_size)
+            {
+                m_size = screenSize;
+                m_animator.SetScale(new Vector3(m_size.x, m_size.y, 1));
+            }
 
-            Vector3 cameraPosition = m_cameraTransform.position;
-            float distanceFromCamera = m_camera.farClipPlane - 1;
-            m_backgroundAnimator.SetPosition(cameraPosition + distanceFromCamera * m_camera.transform.forward);
+            //Vector3 cameraPosition = m_cameraTransform.position;
+            //float distanceFromCamera = m_camera.farClipPlane - 1;
+            //m_animator.SetPosition(cameraPosition + distanceFromCamera * m_camera.transform.forward);
         }
     }
 

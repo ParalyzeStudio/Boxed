@@ -42,7 +42,6 @@ public class ThemeManager : MonoBehaviour
         public Color m_backgroundGradientTopColor;
         public Color m_backgroundGradientBottomColor;
         public Color m_floorSupportColor;
-        public Color m_highScoreColor;
 
         //materials for every type of tile
         public Material m_defaultTileMaterial;
@@ -67,7 +66,6 @@ public class ThemeManager : MonoBehaviour
             m_backgroundGradientTopColor = other.m_backgroundGradientTopColor;
             m_backgroundGradientBottomColor = other.m_backgroundGradientBottomColor;
             m_floorSupportColor = other.m_floorSupportColor;
-            m_highScoreColor = other.m_highScoreColor;
         }
 
         public Material GetTileMaterialForTileState(Tile.State state)
@@ -133,11 +131,6 @@ public class ThemeManager : MonoBehaviour
             {
                 bValuesHaveChanged = true;
                 m_prevFloorSupportColor = m_floorSupportColor;
-            }
-            if (m_highScoreColor != m_prevHighScoreColor)
-            {
-                bValuesHaveChanged = true;
-                m_prevHighScoreColor = m_highScoreColor;
             }
             if (m_defaultTileMaterial != m_prevDefaultTileMaterial)
             {
@@ -211,8 +204,6 @@ public class ThemeManager : MonoBehaviour
 
         if (gameMode == GameController.GameMode.GAME)
         {
-            ((GameGUI)guiManager.m_currentGUI).m_targetActionsCount.color = selectedTheme.m_highScoreColor;
-
             //materials
             Tile[] floorTiles = GameController.GetInstance().m_floorRenderer.m_floorData.Tiles;
             for (int i = 0; i != floorTiles.Length; i++)

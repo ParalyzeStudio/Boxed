@@ -7,7 +7,18 @@ public class Quad : MonoBehaviour
     public Vector4 m_textureRange { get; set; }
     public TextureWrapMode m_textureWrapMode { get; set; }
 
-    public Color[] m_colors { get; set; }
+    private bool m_uvDirty;
+
+    private Color[] m_colors;
+    public Color[] Colors
+    {
+        get
+        {
+            return m_colors;
+        }
+    }
+
+    private bool m_colorsDirty;
 
     //public void Start()
     //{
@@ -57,7 +68,7 @@ public class Quad : MonoBehaviour
         else
         {
             //Set default white value for colors array
-            SetColors(new Color[4] { Color.white, Color.white, Color.white, Color.white });
+            SetColors(new Color[4] { Color.white, Color.white, Color.white, Color.white },  true);
         }
     }
 
@@ -66,9 +77,8 @@ public class Quad : MonoBehaviour
         GetComponent<MeshRenderer>().sharedMaterial = material;
     }
 
-    protected void UpdateUVs()
+    public void UpdateUV()
     {
-        Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
         Vector2[] uvs = new Vector2[4];
 
         uvs[0] = new Vector2(m_textureRange.x, m_textureRange.y + m_textureRange.w); //top-left
@@ -76,13 +86,18 @@ public class Quad : MonoBehaviour
         uvs[2] = new Vector2(m_textureRange.x, m_textureRange.y); //bottom-left
         uvs[3] = new Vector2(m_textureRange.x + m_textureRange.z, m_textureRange.y); //bottom-right
 
-        mesh.uv = uvs;
+        GetComponent<MeshFilter>().sharedMesh.uv = uvs;
+
+        m_uvDirty = false;
     }
 
-    public void SetTextureRange(Vector4 textureRange)
+    public void SetTextureRange(Vector4 textureRange, bool bUpdateMesh = true)
     {
         m_textureRange = textureRange;
-        UpdateUVs();
+        if (bUpdateMesh)
+            UpdateUV();
+        else
+            m_uvDirty = true;
     }
 
     //public void SetSize(Vector2 size)
@@ -107,9 +122,32 @@ public class Quad : MonoBehaviour
             renderer.sharedMaterial.mainTexture.wrapMode = texWrapMode;
     }
 
-    public void SetColors(Color[] colors)
+    public void SetColors(Color[] colors, bool bUpdateMesh = true)
     {
         m_colors = colors;
-        GetComponent<MeshFilter>().sharedMesh.colors = colors;
+        if (bUpdateMesh)
+        {
+            m_colorsDirty = false;
+            GetComponent<MeshFilter>().sharedMesh.colors = colors;
+        }
+        else
+            m_colorsDirty = true;
+    }
+
+    public void RefreshMesh()
+    {
+        if (m_colorsDirty)
+        {
+            SetColors(m_colors);
+        }
+        if (m_uvDirty)
+        {
+            UpdateUV();
+        }
+    }
+
+    public virtual void Update()
+    {
+        RefreshMesh();
     }
 }

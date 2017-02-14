@@ -85,7 +85,7 @@ public class FloorSupportRenderer : MonoBehaviour
         m_triangles.AddRange(indices);
 
         Camera mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
-        GradientBackground background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
+        FSGradientBillboardQuad background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
         Color vertex3Color = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(blVertex + this.transform.position));
         Color vertex4Color = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(brVertex + this.transform.position));
 
@@ -109,7 +109,7 @@ public class FloorSupportRenderer : MonoBehaviour
     public void InvalidateGradientBottomColor()
     {
         Camera mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
-        GradientBackground background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
+        FSGradientBillboardQuad background = GameController.GetInstance().GetComponent<GUIManager>().m_background;
         for (int i = 0; i != m_colors.Count; i += 4)
         {
             m_colors[i + 2] = background.GetColorAtViewportPosition(mainCamera.WorldToViewportPoint(m_vertices[i + 2] + this.transform.position)); ;

@@ -141,7 +141,6 @@ public class GameController : MonoBehaviour
         RenderFloor(level.m_floor);
         BuildBrick(level);
         TeleportBrick(); //drop animation when level begins
-
         
         Tile finishTile = level.m_floor.GetFinishTile();
         TileRenderer finishTileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(finishTile);
@@ -183,6 +182,11 @@ public class GameController : MonoBehaviour
         GetComponent<GUIManager>().DisplayGameGUIForLevel(level);
 
         m_gameStatus = GameStatus.IDLE;
+
+        //show tutorial if relevant by searching for a tutorial matching this level
+        GameGUI gameGUI = ((GameGUI)GetComponent<GUIManager>().m_currentGUI);
+        if (!gameGUI.ShowFirstTutorial())
+            m_gameStatus = GameStatus.RUNNING;
     }
 
     private void StartNextLevel()
@@ -254,7 +258,6 @@ public class GameController : MonoBehaviour
     {
         if (m_defeat || m_brickRenderer.IsFalling())
         {
-            Debug.Log("DEFEAT");
             m_defeat = true;
             m_gameStatus = GameStatus.DEFEAT;
         }
@@ -262,6 +265,7 @@ public class GameController : MonoBehaviour
         {
             if (m_victory || m_brickRenderer.IsOnFinishTile())
             {
+                Debug.Log("victory");
                 m_victory = true;
                 m_gameStatus = GameStatus.VICTORY;
             }
@@ -289,7 +293,11 @@ public class GameController : MonoBehaviour
                     currentLevelData.SaveToFile();
                 }
 
-                Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
+                Level currentLevel = GetInstance().GetComponent<LevelManager>().m_currentLevel;
+
+                PersistentDataManager persistentDataManager = GetComponent<PersistentDataManager>();
+                persistentDataManager.SetMaxLevelReached(currentLevel.m_number);
+                
                 int nextLevelNumber = currentLevel.m_number + 1;
                 GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
 
