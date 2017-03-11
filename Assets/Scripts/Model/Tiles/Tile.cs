@@ -6,8 +6,8 @@ public class Tile
 {
     public float m_size { get; set; } //tile dimension along x and z
 
-    private const float TILE_SIZE = 1.0f;
-    public const float TILE_DEFAULT_HEIGHT = 1.0f;
+    private const float TILE_SIZE = 1.0f; //tile dimension along x and z
+    public const float TILE_HEIGHT = 1.0f; //tile dimension along y
 
     public enum State
     {
@@ -81,11 +81,11 @@ public class Tile
     {
         float tilePositionY;
         if (CurrentState == State.BLOCKED)
-            tilePositionY = 0.5f * TILE_DEFAULT_HEIGHT;
+            tilePositionY = 0.5f * TILE_HEIGHT;
         else if (CurrentState == State.TRIGGERED_BY_SWITCH)
         {
             if (((TriggeredTile)this).m_isLiftUp)
-                tilePositionY = 0.5f * TILE_DEFAULT_HEIGHT;
+                tilePositionY = 0.5f * TILE_HEIGHT;
             else
                 tilePositionY = 0;
         }

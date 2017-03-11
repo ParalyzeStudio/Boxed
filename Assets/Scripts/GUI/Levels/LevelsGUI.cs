@@ -23,12 +23,12 @@ public class LevelsGUI : BaseGUI
     public Text m_chapterNumberText;
     public Button m_prevChapterBtn;
     public Button m_nextChapterBtn;
-
-    public int m_chapterNumber { get; set; }
+    
+    private PersistentDataManager m_persistentDataManager;
     
     public override void Show()
     {
-        SetChapterNumber(1);
+        SetChapterNumber(GetPersistentDataManager().GetCurrentChapterIndex() + 1);
 
         //m_slotsRendered = false;
         //m_slotNumbers = GetSlotNumbers();
@@ -47,6 +47,11 @@ public class LevelsGUI : BaseGUI
             LevelSlot slot = Instantiate(m_levelSlotPfb);
             slot.Init(this, i);
             slot.transform.SetParent(m_lines[i / numSlotsPerLine].transform, false);
+
+            //animate every slot by scaling them up with increasing delay
+            GUIImageAnimator slotAnimator = slot.GetComponent<GUIImageAnimator>();
+            slotAnimator.SetScale(Vector3.zero);
+            slotAnimator.ScaleTo(Vector3.one, 0.3f, i * 0.04f);
         }
 
         //m_slotsHolder = new GameObject("SlotsHolder");
@@ -104,7 +109,7 @@ public class LevelsGUI : BaseGUI
 
     public void SetChapterNumber(int chapterNumber)
     {
-        m_chapterNumber = chapterNumber;
+        GetPersistentDataManager().SetCurrentChapterIndex(chapterNumber - 1);
         m_chapterNumberText.text = "Chapter " + chapterNumber.ToString();
 
         if (chapterNumber == 1)
@@ -208,6 +213,7 @@ public class LevelsGUI : BaseGUI
 
     public void OnClickBack()
     {
+        GetPersistentDataManager().SavePrefs();
         Dismiss(true);
         //GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(DestroySlots, 0.5f);
         GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(GameController.GetInstance().StartMainMenu, 0.5f);
@@ -215,9 +221,10 @@ public class LevelsGUI : BaseGUI
 
     public void OnClickPreviousChapter()
     {
-        if (m_chapterNumber > 1)
+        int chapterNumber = m_persistentDataManager.GetCurrentChapterIndex() + 1;
+        if (chapterNumber > 1)
         {
-            SetChapterNumber(m_chapterNumber - 1);
+            SetChapterNumber(chapterNumber - 1);
             OnClickChapterButton();
 
         }
@@ -225,9 +232,10 @@ public class LevelsGUI : BaseGUI
 
     public void OnClickNextChapter()
     {
-        if (m_chapterNumber < LevelManager.NUM_CHAPTERS)
+        int chapterNumber = m_persistentDataManager.GetCurrentChapterIndex() + 1;
+        if (chapterNumber < LevelManager.NUM_CHAPTERS)
         {
-            SetChapterNumber(m_chapterNumber + 1);
+            SetChapterNumber(chapterNumber + 1);
             OnClickChapterButton();
         }
     }
@@ -242,9 +250,10 @@ public class LevelsGUI : BaseGUI
         //callFuncHandler.AddCallFuncInstance(fadeAnimator.FadeIn, 0.5f);
 
         //Theme for new chapter
+        int chapterIndex = GetPersistentDataManager().GetCurrentChapterIndex();
         ThemeManager themeManager = GameController.GetInstance().GetComponent<ThemeManager>();
-        ThemeManager.Theme nextTheme = themeManager.m_themes[m_chapterNumber - 1];
-        themeManager.m_selectedThemeIndex = m_chapterNumber - 1;
+        ThemeManager.Theme nextTheme = themeManager.m_themes[chapterIndex];
+        themeManager.m_selectedThemeIndex = chapterIndex;
 
         Color overlayTopColor = nextTheme.m_backgroundGradientTopColor;
         Color overlayBottomColor = nextTheme.m_backgroundGradientBottomColor;
@@ -287,4 +296,12 @@ public class LevelsGUI : BaseGUI
     //            RenderSlots();
     //    }
     //}
+
+    public PersistentDataManager GetPersistentDataManager()
+    {
+        if (m_persistentDataManager == null)
+            m_persistentDataManager = GameController.GetInstance().GetComponent<PersistentDataManager>();
+
+        return m_persistentDataManager;
+    }
 }

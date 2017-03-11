@@ -25,6 +25,10 @@ public class GameGUI : BaseGUI
     public Tutorial[] m_tutorials;
     private int m_currentTutorialNumber; //the tutorial currently shown
 
+    //inter-level screeen
+    public GUIImageAnimator m_interLevelScreen;
+    private bool m_interLevelScreenShown;
+
     public void BuildForLevel(Level level)
     {
         m_level = level;
@@ -40,6 +44,8 @@ public class GameGUI : BaseGUI
         //actions count
         InitTargetActionsCount();
         UpdateParScore();
+
+        m_interLevelScreenShown = false;
     }
     
 
@@ -180,6 +186,30 @@ public class GameGUI : BaseGUI
         return false;
     }
 
+    public void ShowInterLevelScreen()
+    {
+        if (!m_interLevelScreenShown)
+        {
+            m_interLevelScreenShown = true;
+
+            float screenHeight = m_interLevelScreen.GetComponent<Image>().rectTransform.rect.height;
+            Debug.Log(m_interLevelScreen.GetComponent<Image>().rectTransform.localPosition);
+            m_interLevelScreen.SyncPositionFromTransform();
+            m_interLevelScreen.TranslateBy(new Vector3(0, -screenHeight, 0), 1.5f, 0, ValueAnimator.InterpolationType.HERMITE2);
+        }
+    }
+
+    public void DismissInterLevelScreen()
+    {
+        if (m_interLevelScreenShown)
+        {
+            m_interLevelScreenShown = false;
+
+            float screenHeight = m_interLevelScreen.GetComponent<Image>().rectTransform.rect.height;
+            m_interLevelScreen.TranslateBy(new Vector3(0, screenHeight, 0), 1.5f, 0, ValueAnimator.InterpolationType.HERMITE2);
+        }
+    }
+
     public void OnClickRestart()
     {
         Dismiss();
@@ -188,8 +218,13 @@ public class GameGUI : BaseGUI
 
     public void OnClickHome()
     {
-        m_confirmHomeWindow = Instantiate(m_confirmHomeWindowPfb);
-        m_confirmHomeWindow.transform.SetParent(GameController.GetInstance().GetComponent<GUIManager>().m_canvas.transform, false);
+        //m_confirmHomeWindow = Instantiate(m_confirmHomeWindowPfb);
+        //m_confirmHomeWindow.transform.SetParent(GameController.GetInstance().GetComponent<GUIManager>().m_canvas.transform, false);
+
+        if (!m_interLevelScreenShown)
+            ShowInterLevelScreen();
+        else
+            DismissInterLevelScreen();
     }
 
     public void OnClickSolution()

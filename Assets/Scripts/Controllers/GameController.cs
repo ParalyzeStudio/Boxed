@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
@@ -27,12 +28,11 @@ public class GameController : MonoBehaviour
 
     public void Start()
     {
-        //cache levels
-        LevelManager levelManager = this.GetComponent<LevelManager>();
-        levelManager.CacheLevels();
-
         //init the camera
         GameObject.FindGameObjectWithTag("MainCamera").GetComponent<IsometricCameraController>().Init();
+
+        //init the level manager
+        GetComponent<LevelManager>().Init();
 
         //init the theme manager
         //GetComponent<ThemeManager>().Init();
@@ -189,10 +189,12 @@ public class GameController : MonoBehaviour
             m_gameStatus = GameStatus.RUNNING;
     }
 
-    private void StartNextLevel()
+    public bool StartNextLevel()
     {
         int nextLevelNumber = GetComponent<LevelManager>().m_currentLevel.m_number + 1;
         StartGameForLevelNumber(nextLevelNumber);
+
+        return true;
     }
 
     public void RestartLevel()
@@ -272,6 +274,28 @@ public class GameController : MonoBehaviour
         }
     }
 
+    /**
+    * Reset the game
+    **/
+    public void ResetGame()
+    {
+        //reset the last level reached
+        PersistentDataManager persistentDataManager = GameController.GetInstance().GetComponent<PersistentDataManager>();
+        persistentDataManager.SetMaxLevelReached(0, true);
+
+        //reset data for every level
+        GetComponent<LevelManager>().CreateOrOverwriteAllLevelData();
+    }
+
+    private IEnumerator ShowInterlevelScreenAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        
+        ((GameGUI)GetGUIManager().m_currentGUI).ShowInterLevelScreen();
+
+        yield return null;
+    }
+
     public GUIManager GetGUIManager()
     {
         if (m_guiManager == null)
@@ -296,14 +320,13 @@ public class GameController : MonoBehaviour
                 Level currentLevel = GetInstance().GetComponent<LevelManager>().m_currentLevel;
 
                 PersistentDataManager persistentDataManager = GetComponent<PersistentDataManager>();
-                persistentDataManager.SetMaxLevelReached(currentLevel.m_number);
-                
                 int nextLevelNumber = currentLevel.m_number + 1;
-                GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
+                persistentDataManager.SetMaxLevelReached(nextLevelNumber); //we reached the next level               
+                //GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
+                IEnumerator interlevelScreenRoutine = ShowInterlevelScreenAfterDelay(1.0f);
+                StartCoroutine(interlevelScreenRoutine);
 
                 m_gameStatus = GameStatus.IDLE;
-                GetComponent<CallFuncHandler>().AddCallFuncInstance(ClearLevel, 1.5f);
-                GetComponent<CallFuncHandler>().AddCallFuncInstance(StartNextLevel, 1.55f);
             }
             else if (m_gameStatus == GameStatus.DEFEAT)
             {

@@ -33,7 +33,7 @@ public class FloorRenderer : MonoBehaviour
         m_floorData = floor;
 
         //TMP Offset the floor so it is centered in the screen
-        this.transform.position = new Vector3(-0.5f * floor.m_gridWidth, -0.5f * Tile.TILE_DEFAULT_HEIGHT, -0.5f * floor.m_gridHeight);
+        this.transform.position = new Vector3(-0.5f * floor.m_gridWidth, -0.5f * Tile.TILE_HEIGHT, -0.5f * floor.m_gridHeight);
 
         //Build a square grid with odd dimensions around the origin
         m_tileRenderers = new TileRenderer[floor.Tiles.Length];
@@ -76,8 +76,8 @@ public class FloorRenderer : MonoBehaviour
         {
             m_floorSupport.name = "Support";
             m_floorSupport.transform.parent = this.transform;
-            m_floorSupport.transform.localPosition = new Vector3(0, -0.5f * Tile.TILE_DEFAULT_HEIGHT, 0);
-            m_floorSupport.Render(floor);
+            m_floorSupport.transform.localPosition = Vector3.zero;
+            m_floorSupport.Render(floor, false);
         }
     }
 

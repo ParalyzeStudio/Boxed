@@ -96,7 +96,7 @@ public class ValueAnimator : MonoBehaviour
         m_destroyObjectOnFinishFading = bDestroyObjectOnFinish;
     }
 
-    public void ScaleTo(Vector3 toScale, float duration, float delay = 0.0f, InterpolationType interpolType = InterpolationType.LINEAR)
+    public void ScaleTo(Vector3 toScale, float duration, float delay = 0.0f, InterpolationType interpolType = InterpolationType.LINEAR, bool bDestroyOnFinish = false)
     {
         m_scaling = true;
         m_fromScale = this.transform.localScale;
@@ -105,6 +105,7 @@ public class ValueAnimator : MonoBehaviour
         m_scalingDelay = delay;
         m_scalingElapsedTime = 0;
         m_scalingInterpolationType = interpolType;
+        m_destroyObjectOnFinishFading = bDestroyOnFinish;
     }
 
     public void TranslateTo(Vector3 toPosition, float duration, float delay = 0.0f, InterpolationType interpolType = InterpolationType.LINEAR, bool bDestroyOnFinish = false)
@@ -178,6 +179,11 @@ public class ValueAnimator : MonoBehaviour
     {
         m_scale = scale;
         OnScaleChanged();
+    }
+
+    public virtual void SyncPositionFromTransform()
+    {
+        m_position = gameObject.transform.localPosition;
     }
 
     public virtual void SetPosition(Vector3 position)
@@ -459,7 +465,7 @@ public class ValueAnimator : MonoBehaviour
     private float CalculateDeltaForInterpolationType(float t1, float t2, float L, float amp, InterpolationType interpolationType)
     {
         if (interpolationType == InterpolationType.LINEAR)
-            return amp * (Linear(t2/ L) - Linear(t1/ L));
+            return amp * (Linear(t2 / L) - Linear(t1 / L));
         else if (interpolationType == InterpolationType.SINUSOIDAL)
             return amp * (Sinusoidal(t2 / L) - Sinusoidal(t1 / L));
         else if (interpolationType == InterpolationType.HERMITE1)

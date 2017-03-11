@@ -62,20 +62,12 @@ public class FSGradientBillboardQuad : BillboardQuad
         m_cameraTransform = m_camera.transform;
     }
 
-    public void InvalidateColors()
+    public virtual void InvalidateColors()
     {
         SetColors(new Color[4] { m_topColor, m_topColor, m_bottomColor, m_bottomColor });
 
         m_prevTopColor = m_topColor;
         m_prevBottomColor = m_bottomColor;
-
-        //invalidate the color of the support if any
-        FloorRenderer floorRenderer = GameController.GetInstance().m_floorRenderer;
-        if (floorRenderer != null)
-        {
-            FloorSupportRenderer supportRenderer = floorRenderer.GetComponentInChildren<FloorSupportRenderer>();
-            supportRenderer.InvalidateGradientBottomColor();
-        }
     }
 
     public void ChangeColorsTo(Color topToColor, Color bottomToColor, float duration, float delay = 0.0f)
@@ -156,6 +148,8 @@ public class FSGradientBillboardQuad : BillboardQuad
                 }
 
                 InvalidateColors();
+
+                Debug.Log("variating colors");
             }
         }
     }
@@ -175,7 +169,7 @@ public class FSGradientBillboardQuad : BillboardQuad
             m_bottomColor = m_endHSV.ToRGBA();
         }
 
-        //UpdateColor(dt);
+        UpdateColor(dt);
 
        
         if (m_prevTopColor != m_topColor || m_prevBottomColor != m_bottomColor)

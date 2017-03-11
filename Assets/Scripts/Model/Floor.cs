@@ -100,6 +100,21 @@ public class Floor
     }
     
     /**
+    * Return the number of valid tiles on this floor
+    **/
+    public int GetSurfaceSize()
+    {
+        int size = 0;
+        for (int i = 0; i != m_tiles.Length; i++)
+        {
+            if (m_tiles[i].CurrentState != Tile.State.DISABLED)
+                size++;
+        }
+
+        return size;
+    }
+
+    /**
     * Return the index of the tile in the global tiles array, given the line and the column of this tile inside the grid
     **/
     public int GetTileIndexForColumnLine(int columnIndex, int lineIndex)
@@ -148,6 +163,11 @@ public class Floor
         }
 
         return null;
+    }
+
+    public float GetTileSize()
+    {
+        return m_tiles[0].m_size;
     }
 
     //public List<Bonus> GetBonuses()
@@ -234,7 +254,7 @@ public class Floor
     **/
     static public Geometry.Edge GetCommonEdgeForConsecutiveTiles(Tile tile1, Tile tile2)
     {
-        Vector3 edgeMiddle = 0.5f * (tile2.GetWorldPosition() + tile1.GetWorldPosition()) + new Vector3(0, 0.5f * Tile.TILE_DEFAULT_HEIGHT, 0);
+        Vector3 edgeMiddle = 0.5f * (tile2.GetWorldPosition() + tile1.GetWorldPosition()) + new Vector3(0, 0.5f * Tile.TILE_HEIGHT, 0);
         Vector3 edgeDirection = tile2.GetWorldPosition() - tile1.GetWorldPosition();
         edgeDirection = Quaternion.AngleAxis(90, Vector3.up) * edgeDirection;
 

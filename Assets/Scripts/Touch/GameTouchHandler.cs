@@ -238,7 +238,7 @@ public class GameTouchHandler : TouchHandler
         //Build a ray starting from camera near clip plane mouse world space position
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         float rayDistance;
-        Vector3 planePosition = GameController.GetInstance().m_floorRenderer.transform.position + new Vector3(0, 0.5f * Tile.TILE_DEFAULT_HEIGHT, 0);
+        Vector3 planePosition = GameController.GetInstance().m_floorRenderer.transform.position + new Vector3(0, 0.5f * Tile.TILE_HEIGHT, 0);
         Plane floorPlane = new Plane(Vector3.up, planePosition);
 
         if (floorPlane.Raycast(ray, out rayDistance))

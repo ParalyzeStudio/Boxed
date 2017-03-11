@@ -9,23 +9,29 @@ public class PersistentDataManager : MonoBehaviour
     public const string MUSIC_ON = "music_on";
     public const string SOUND_ON = "sound_on";
     public const string MAX_LEVEL_REACHED = "max_level_reached";
+    public const string FIRST_LAUNCH = "first_launch"; //tells if this is the application first launch that follows a fresh install
+    public const string CURRENT_CHAPTER_INDEX = "current_chapter_index";
 
-    public void Start()
+    private bool m_prefsDirty; //has one of the above prefs been modified and a save onto the disk is necessary at some point
+
+    public void Awake()
     {
-        //Create the folder hierarchy if it does not exists
-        string path = Application.persistentDataPath + "/LevelData";
-        if (!Directory.Exists(path))
-        {
-            Directory.CreateDirectory(path);
-        }
-
-        //RecreateAllLevelData();
+        m_prefsDirty = false;
     }
 
-    public void SetMusicStatus(bool bMusicOn)
+    //public void DebugLogValues()
+    //{
+    //    Debug.Log("MUSIC_ON " + IsMusicOn());
+    //    Debug.Log("SOUND_ON " + IsSoundOn());
+    //    Debug.Log("MAX_LEVEL_REACHED " + GetMaxLevelReached());
+    //    Debug.Log("FIRST_LAUNCH " + IsFirstLaunch());
+    //    Debug.Log("CURRENT_CHAPTER_INDEX " + GetCurrentChapterIndex());
+    //}
+
+    public void SetMusicOn(bool bMusicOn)
     {
         PlayerPrefs.SetInt(MUSIC_ON, bMusicOn ? 1 : 0);
-        PlayerPrefs.Save();
+        m_prefsDirty = true;
     }
 
     public bool IsMusicOn()
@@ -34,10 +40,10 @@ public class PersistentDataManager : MonoBehaviour
         return (musicStatus == 1);
     }
 
-    public void SetSoundActive(bool bSoundOn)
+    public void SetSoundOn(bool bSoundOn)
     {
         PlayerPrefs.SetInt(SOUND_ON, bSoundOn ? 1 : 0);
-        PlayerPrefs.Save();
+        m_prefsDirty = true;
     }
 
     public bool IsSoundOn()
@@ -46,14 +52,14 @@ public class PersistentDataManager : MonoBehaviour
         return (soundStatus == 1);
     }
 
-    public void SetMaxLevelReached(int levelNumber)
+    public void SetMaxLevelReached(int levelNumber, bool forced = false)
     {
         int previousMaxLevelReached = GetMaxLevelReached();
-        if (levelNumber > previousMaxLevelReached)
-        {
-            PlayerPrefs.SetInt(MAX_LEVEL_REACHED, levelNumber);
-            PlayerPrefs.Save();
-        }
+        if (!forced && levelNumber <= previousMaxLevelReached)
+            return;
+
+        PlayerPrefs.SetInt(MAX_LEVEL_REACHED, levelNumber);
+        m_prefsDirty = true;
     }
 
     public int GetMaxLevelReached()
@@ -61,10 +67,42 @@ public class PersistentDataManager : MonoBehaviour
         return PlayerPrefs.GetInt(MAX_LEVEL_REACHED, 0);
     }
 
+    public bool IsFirstLaunch()
+    {
+        return PlayerPrefs.HasKey(FIRST_LAUNCH);
+    }
+
+    public void SetFirstLaunchDone()
+    {
+        PlayerPrefs.SetInt(FIRST_LAUNCH, 1);
+        m_prefsDirty = true;
+    }
+
+    public int GetCurrentChapterIndex()
+    {
+        return PlayerPrefs.GetInt(CURRENT_CHAPTER_INDEX, 0);
+    }
+
+    public void SetCurrentChapterIndex(int index)
+    {
+        PlayerPrefs.SetInt(CURRENT_CHAPTER_INDEX, index);
+        m_prefsDirty = true;
+    }
+
+    /**
+    * Save prefs stored in memory onto disk if necessary
+    **/
+    public void SavePrefs()
+    {
+        if (m_prefsDirty)
+            PlayerPrefs.Save();
+    }
+
     /**
     * Use this function to recreate all LevelData files from Level files contained inside the PublishedLevels folder
+    * Use this only for DEBUG purpose 
     **/
-    public void RecreateAllLevelData()
+    public void RecreateAllLevelDataForPublishedLevels()
     {
         LevelManager levelManager = GetComponent<LevelManager>();
         List<Level> publishedLevels = levelManager.GetAllPublishedLevelsFromDisk();

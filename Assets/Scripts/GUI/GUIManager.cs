@@ -149,10 +149,7 @@ public class GUIManager : MonoBehaviour
     {
         //DestroyCurrentGUI();
 
-        Debug.Log("overlayTopColor:" + m_overlay.m_topColor + " overlayBottomColor:" + m_overlay.m_bottomColor);
-
         LevelsGUI levels = Instantiate(m_levelsGUIPfb);
-        levels.SetChapterNumber(1);
         levels.transform.SetParent(m_canvas.transform, false);
         m_currentGUI = levels;
 

@@ -210,20 +210,20 @@ public class SolutionTree
         SolutionNode[] path = ExtractPathFromNode(leafNode);
 
         //build a dummy brick that will roll on this path
-        Brick pawn = new Brick();
-        pawn.PlaceOnTiles(m_startTiles);
+        //Brick pawn = new Brick();
+        //pawn.PlaceOnTiles(m_startTiles);
 
         //count how many bonuses are traversed
         int bonusTilesCount = m_bonusTiles.Count;
         bool[] bonusTilesCoveredState = new bool[bonusTilesCount];
         int bonusTilesCoveredCount = 0;
 
-        Brick.CoveredTiles coveredTiles = pawn.m_coveredTiles;
+        Brick.CoveredTiles coveredTiles = new Brick.CoveredTiles(m_startTiles);
 
         //check the start tiles
         for (int p = 0; p != bonusTilesCount; p++)
         {
-            if (!bonusTilesCoveredState[p] && pawn.m_coveredTiles.ContainsBonus(m_bonusTiles[p].AttachedBonus))
+            if (!bonusTilesCoveredState[p] && coveredTiles.ContainsBonus(m_bonusTiles[p].AttachedBonus))
             {
                 bonusTilesCoveredState[p] = true;
                 bonusTilesCoveredCount++;
@@ -238,7 +238,7 @@ public class SolutionTree
 
             for (int p = 0; p != bonusTilesCount; p++)
             {
-                if (!bonusTilesCoveredState[p] && pawn.m_coveredTiles.ContainsBonus(m_bonusTiles[p].AttachedBonus))
+                if (!bonusTilesCoveredState[p] && coveredTiles.ContainsBonus(m_bonusTiles[p].AttachedBonus))
                 {
                     bonusTilesCoveredState[p] = true;
                     bonusTilesCoveredCount++;
@@ -416,6 +416,8 @@ public class SolutionTree
     {
         IncrementProcessedNodesCount();
 
+        Brick.CoveredTiles previousCoveredTiles = m_pawn.m_coveredTiles;
+
         //try to make the brick roll
         Brick.RollResult rollResult;
         Geometry.Edge rotationEdge;
@@ -462,6 +464,10 @@ public class SolutionTree
             }
 
             return true;
+        }
+        else if (rollResult == Brick.RollResult.FALL) //roll back some operations
+        {
+            m_pawn.m_coveredTiles = previousCoveredTiles;
         }
 
         return false;

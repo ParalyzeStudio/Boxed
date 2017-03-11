@@ -385,11 +385,11 @@ public class Brick
                 }
             }
 
-            if (rollResult == RollResult.VALID)
-            {
+            //if (rollResult == RollResult.VALID)
+            //{
                 //replace the old covered tiles by new ones
                 m_coveredTiles = newCoveredTiles;
-            }
+            //}
 
             //Determine which of the 4 adjacent faces the rollToFace is equal to        
             int adjacentFaceIdx = -1;

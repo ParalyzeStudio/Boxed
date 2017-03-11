@@ -40,8 +40,26 @@ public class LevelManager : MonoBehaviour
     public Level m_currentLevel { get; set; }
     public LevelData m_currentLevelData { get; set; }
 
-    public void Start()
+    public void Init()
     {
+        //cache levels written on disk into memory
+        CacheLevels();
+
+        //Create the LevelData/ folder hierarchy if it does not exists
+        string path = Application.persistentDataPath + "/LevelData";
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+
+        //initialize one LevelData for every file
+        PersistentDataManager pDataManager = GameController.GetInstance().GetComponent<PersistentDataManager>();
+        if (pDataManager.IsFirstLaunch())
+        {
+            pDataManager.SetFirstLaunchDone();
+            CreateOrOverwriteAllLevelData();
+        }
+
         //RepublishAllLevelsForUpgrade();
     }
 
@@ -150,9 +168,9 @@ public class LevelManager : MonoBehaviour
     **/
     public List<Level> GetLevelsFromResources()
     {
-        List<Level> levels = new List<Level>();
-
-        for (int i = 0; i != 100; i++)
+        int levelsCount = NUM_CHAPTERS * NUM_LEVELS_PER_CHAPTER;
+        List<Level> levels = new List<Level>(levelsCount);        
+        for (int i = 0; i != levelsCount; i++)
         {
             string levelLocalPath = "Levels/Level_" + Level.GetNumberAsString(i + 1);
             Object levelObject = Resources.Load(levelLocalPath);
@@ -194,6 +212,31 @@ public class LevelManager : MonoBehaviour
 
             if (loadedLevel.m_number == level.m_number)
                 File.Delete(levelFilenames[i]);
+        }
+    }
+
+    /**
+    * Create or recreate one LevelData file for each Level in this game
+    * That will overwrite any existing file so be cautious
+    **/
+    public void CreateOrOverwriteAllLevelData()
+    {
+        int levelsCount = NUM_CHAPTERS * NUM_LEVELS_PER_CHAPTER;
+
+        //Destroy old data if any
+        string levelDataPath = Application.persistentDataPath + "/LevelData";
+        string[] files = Directory.GetFiles(levelDataPath);
+
+        foreach (string file in files)
+        {
+            File.Delete(file);
+        }
+
+        //create new one
+        for (int i = 0; i != levelsCount; i++)
+        {
+            LevelData levelData = new LevelData(i + 1);
+            levelData.SaveToFile();
         }
     }
 }

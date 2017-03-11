@@ -84,7 +84,7 @@ public class TileRenderer : MonoBehaviour
             contourThicknessRatio = 0;
         else
             contourThicknessRatio = 0.06f;
-        BuildFaces(Tile.TILE_DEFAULT_HEIGHT, contourThicknessRatio);
+        BuildFaces(Tile.TILE_HEIGHT, contourThicknessRatio);
 
         Invalidate();
 
@@ -96,7 +96,7 @@ public class TileRenderer : MonoBehaviour
     * Build faces for this tile. The top face can have a contour on it, just set bDrawContourOnTopFace to true in this case and set a contourThicknessRatio
     * between 0 and 1, 0 meaning zero-thickness (no contour) and 1 meaning 0.5f * tile.m_size thickness
     **/
-    protected void BuildFaces(float height = Tile.TILE_DEFAULT_HEIGHT, float contourThicknessRatio = TILE_DEFAULT_CONTOUR_THICKNESS)
+    protected void BuildFaces(float height = Tile.TILE_HEIGHT, float contourThicknessRatio = TILE_DEFAULT_CONTOUR_THICKNESS)
     {
         m_hasContour = (contourThicknessRatio > 0);
         m_hasContour = false; //TODO remove contour on textured tiles
@@ -284,7 +284,7 @@ public class TileRenderer : MonoBehaviour
 
     public void SetContourThicknessRatio(float ratio, bool bUpdateMeshDirectly = true)
     {
-        float tileHeight = Tile.TILE_DEFAULT_HEIGHT;
+        float tileHeight = Tile.TILE_HEIGHT;
         if (m_tile.CurrentState == Tile.State.BLOCKED)
             tileHeight *= 2;
 
@@ -307,7 +307,7 @@ public class TileRenderer : MonoBehaviour
 
     public void UpdateTileHeight(float height)
     {
-        this.transform.localScale = new Vector3(1, GetTileHeight() / Tile.TILE_DEFAULT_HEIGHT, 1);
+        this.transform.localScale = new Vector3(1, GetTileHeight() / Tile.TILE_HEIGHT, 1);
     }
 
     public void UpdateTilePosition(Vector3 position)
@@ -390,7 +390,7 @@ public class TileRenderer : MonoBehaviour
 
     private float GetTileHeight()
     {
-        float tileHeight = Tile.TILE_DEFAULT_HEIGHT;
+        float tileHeight = Tile.TILE_HEIGHT;
         if (m_tile.CurrentState == Tile.State.BLOCKED)
             tileHeight *= 2;
         else if (m_tile.CurrentState == Tile.State.TRIGGERED_BY_SWITCH)
@@ -521,7 +521,7 @@ public class TileRenderer : MonoBehaviour
 
         GameObjectAnimator glowSquareAnimator = glowSquare.GetComponent<GameObjectAnimator>();
         glowSquareAnimator.UpdatePivotPoint(Vector3.zero);
-        glowSquareAnimator.SetPosition(new Vector3(0, 0.5f * Tile.TILE_DEFAULT_HEIGHT + 0.0001f, 0));
+        glowSquareAnimator.SetPosition(new Vector3(0, 0.5f * Tile.TILE_HEIGHT + 0.0001f, 0));
         glowSquareAnimator.SetScale(new Vector3(1.33f, 1.33f, 1.33f));
         glowSquareAnimator.ScaleTo(new Vector3(1.4f, 1.4f, 1.4f), 0.5f);
         glowSquareAnimator.SetOpacity(1.0f);
@@ -548,7 +548,7 @@ public class TileRenderer : MonoBehaviour
 
         GlowSquareAnimator glowSquareAnimator = glowSquare.GetComponent<GlowSquareAnimator>();
         glowSquareAnimator.UpdatePivotPoint(Vector3.zero);
-        glowSquareAnimator.SetPosition(new Vector3(0, 0.5f * Tile.TILE_DEFAULT_HEIGHT + 0.0001f, 0));
+        glowSquareAnimator.SetPosition(new Vector3(0, 0.5f * Tile.TILE_HEIGHT + 0.0001f, 0));
         glowSquareAnimator.SetScale(new Vector3(1.4f, 1.4f, 1.4f));
         glowSquareAnimator.ScaleTo(Vector3.zero, 3.0f);
         glowSquareAnimator.SetOpacity(0);
@@ -576,7 +576,7 @@ public class TileRenderer : MonoBehaviour
 
         GameObjectAnimator tileAnimator = this.gameObject.AddComponent<GameObjectAnimator>();
         tileAnimator.SetPosition(this.transform.localPosition);
-        tileAnimator.TranslateBy(new Vector3(0, Tile.TILE_DEFAULT_HEIGHT, 0), 0.3f, 0.5f * 90 / BrickRenderer.DEFAULT_ANGULAR_SPEED); 
+        tileAnimator.TranslateBy(new Vector3(0, Tile.TILE_HEIGHT, 0), 0.3f, 0.5f * 90 / BrickRenderer.DEFAULT_ANGULAR_SPEED); 
     }
 
     public void LiftDown()
@@ -592,7 +592,7 @@ public class TileRenderer : MonoBehaviour
 
         GameObjectAnimator tileAnimator = this.gameObject.AddComponent<GameObjectAnimator>();
         tileAnimator.SetPosition(this.transform.localPosition);
-        tileAnimator.TranslateBy(new Vector3(0, -Tile.TILE_DEFAULT_HEIGHT, 0), 0.3f, 0.5f * 90 / BrickRenderer.DEFAULT_ANGULAR_SPEED);
+        tileAnimator.TranslateBy(new Vector3(0, -Tile.TILE_HEIGHT, 0), 0.3f, 0.5f * 90 / BrickRenderer.DEFAULT_ANGULAR_SPEED);
     }
 
     public Color GetColor()

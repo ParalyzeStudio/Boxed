@@ -17,6 +17,14 @@ public class ThemeManager : MonoBehaviour
     public Theme[] m_themes;
     public int m_selectedThemeIndex { get; set; }
 
+    public void Start()
+    {
+        for (int i = 0; i != m_themes.Length; i++)
+        {
+            m_themes[i].SyncPrivateParameters();
+        }
+    }
+
     //public void Init()
     //{
     //    //m_theme1 = new Theme();
@@ -61,13 +69,6 @@ public class ThemeManager : MonoBehaviour
 
         public Theme() { }
 
-        public Theme(Theme other)
-        {
-            m_backgroundGradientTopColor = other.m_backgroundGradientTopColor;
-            m_backgroundGradientBottomColor = other.m_backgroundGradientBottomColor;
-            m_floorSupportColor = other.m_floorSupportColor;
-        }
-
         public Material GetTileMaterialForTileState(Tile.State state)
         {
             if (state == Tile.State.NORMAL)
@@ -80,6 +81,20 @@ public class ThemeManager : MonoBehaviour
                 return m_iceTileMaterial;
             else
                 return m_defaultTileMaterial;
+        }
+
+        /**
+        * Sync the public and private parameters of this theme, copying public ones into private ones
+        **/
+        public void SyncPrivateParameters()
+        {
+            m_prevBackgroundGradientBottomColor = m_backgroundGradientBottomColor;
+            m_prevBackgroundGradientTopColor = m_backgroundGradientTopColor;
+            m_prevFloorSupportColor = m_floorSupportColor;
+            m_prevDefaultTileMaterial = m_defaultTileMaterial;
+            m_prevSwitchTileMaterial = m_switchTileMaterial;
+            m_prevTriggeredTileMaterial = m_triggeredTileMaterial;
+            m_prevIceTileMaterial = m_iceTileMaterial;
         }
 
         public Color GetTileColorForTileState(Tile.State state)
@@ -114,7 +129,7 @@ public class ThemeManager : MonoBehaviour
             //    return m_finishTileColor;
         }
 
-        public bool UpdateValues()
+        public bool ParametersAreDirty()
         {
             bool bValuesHaveChanged = false;
             if (m_backgroundGradientTopColor != m_prevBackgroundGradientTopColor)
@@ -199,8 +214,11 @@ public class ThemeManager : MonoBehaviour
         guiManager.m_background.m_bottomColor = selectedTheme.m_backgroundGradientBottomColor;
 
         GameController.GameMode gameMode = GameController.GetInstance().m_gameMode;
+        //if (gameMode == GameController.GameMode.GAME || gameMode == GameController.GameMode.LEVEL_EDITOR)
+        //    GameController.GetInstance().m_floorRenderer.m_floorSupport.m_mainColor = selectedTheme.m_floorSupportColor;
+
         if (gameMode == GameController.GameMode.GAME || gameMode == GameController.GameMode.LEVEL_EDITOR)
-            GameController.GetInstance().m_floorRenderer.m_floorSupport.m_mainColor = selectedTheme.m_floorSupportColor;
+            GameController.GetInstance().m_floorRenderer.m_floorSupport.SetColor(selectedTheme.m_floorSupportColor);
 
         if (gameMode == GameController.GameMode.GAME)
         {
@@ -250,7 +268,7 @@ public class ThemeManager : MonoBehaviour
 
     public void Update()
     {
-        if (m_themes[m_selectedThemeIndex].UpdateValues())
+        if (m_themes[m_selectedThemeIndex].ParametersAreDirty())
             InvalidateSelectedTheme();
 
         //if (m_theme != m_prevTheme)
