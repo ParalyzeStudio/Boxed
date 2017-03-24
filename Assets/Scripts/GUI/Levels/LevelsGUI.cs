@@ -215,8 +215,8 @@ public class LevelsGUI : BaseGUI
     {
         GetPersistentDataManager().SavePrefs();
         Dismiss(true);
-        //GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(DestroySlots, 0.5f);
-        GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(GameController.GetInstance().StartMainMenu, 0.5f);
+
+        StartCoroutine(GameController.GetInstance().StartMainMenu(0.5f));
     }
 
     public void OnClickPreviousChapter()

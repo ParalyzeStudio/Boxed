@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class LevelSlot : MonoBehaviour
@@ -32,7 +33,7 @@ public class LevelSlot : MonoBehaviour
 
     private void Disable(bool bNullLevel)
     {
-        m_interactable = bNullLevel;
+        m_interactable = !bNullLevel;
 
         //TileColors colors = GameController.GetInstance().GetComponent<GUIManager>().m_themes.m_currentTheme.m_defaultTileColors;
 
@@ -78,11 +79,16 @@ public class LevelSlot : MonoBehaviour
     {
         if (m_interactable)
         {
+            GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel = m_level;
+
             m_parentGUI.GetPersistentDataManager().SavePrefs();
 
             //LevelsGUI levelsGUI = (LevelsGUI)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
             //levelsGUI.OnSlotClick(this);
-            GameController.GetInstance().StartGameForLevel(m_level);
+
+            IEnumerator interlevelScreenCoroutine = GameController.GetInstance().ShowInterlevelScreenAfterDelay(0, GameController.GameStatus.IDLE);
+            StartCoroutine(interlevelScreenCoroutine);
+            //GameController.GetInstance().StartGameForLevel(m_level);
         }
     }
 }

@@ -7,7 +7,7 @@ public class GUIImageAnimator : ValueAnimator
 
     public override void SyncPositionFromTransform()
     {       
-        m_position = GetImageComponent().rectTransform.localPosition;
+        m_position = GetImageComponent().rectTransform.anchoredPosition;
     }
 
     public override void OnScaleChanged()

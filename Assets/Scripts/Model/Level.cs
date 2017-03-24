@@ -497,6 +497,22 @@ public class Level
         return "Level_" + GetNumberAsString(this.m_number);
     }
 
+    /**
+    * Return the relative number of this level [1 - NUM_LEVELS_PER_CHAPTER]
+    **/
+    public int GetChapterRelativeNumber()
+    {
+        return ((m_number - 1) % LevelManager.NUM_LEVELS_PER_CHAPTER) + 1;
+    }
+
+    /**
+    * Return the index of the chapter that contains this level
+    **/
+    public int GetChapterIndex()
+    {
+        return (m_number - 1) / LevelManager.NUM_LEVELS_PER_CHAPTER;
+    }
+
     ///
     /// DYNAMIC DATA//
     ///

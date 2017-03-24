@@ -486,13 +486,14 @@ public class BrickRenderer : MonoBehaviour
         AssembleBrick2();
 
         //FX_TeleportIN
-        ParticleSystem teleportInFX = Instantiate(m_teleportInFX);
-        teleportInFX.transform.position = transform.localPosition + new Vector3(0.5f * Brick.BRICK_BASIS_DIMENSION, 0, 0.5f * Brick.BRICK_BASIS_DIMENSION);
-        teleportInFX.Play();
+        //ParticleSystem teleportInFX = Instantiate(m_teleportInFX);
+        //teleportInFX.transform.position = transform.localPosition + new Vector3(0.5f * Brick.BRICK_BASIS_DIMENSION, 0, 0.5f * Brick.BRICK_BASIS_DIMENSION);
+        //teleportInFX.Play();
     }
 
     public void OnFinishTeleportation()
     {
+        Debug.Log("OnFinishTeleportation");
         m_brickTeleporting = false;
 
         Tile landedTile = m_brick.m_coveredTiles.GetTileAtIndex(0);

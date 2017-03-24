@@ -48,7 +48,7 @@ public class GameController : MonoBehaviour
         }
         else if (m_gameMode == GameMode.MAIN_MENU)
         {
-            StartMainMenu();
+            StartCoroutine(StartMainMenu(0));
         }
         else if (m_gameMode == GameMode.LEVELS)
         {
@@ -79,12 +79,16 @@ public class GameController : MonoBehaviour
         this.GetComponent<GUIManager>().DisplayLevelEditorGUI();
     }
 
-    public void StartMainMenu()
+    public IEnumerator StartMainMenu(float delay)
     {
+        yield return new WaitForSeconds(delay);
+
         m_gameMode = GameMode.MAIN_MENU;
 
         //Show whole gui (title + buttons)
         GetComponent<GUIManager>().DisplayMainMenuGUI();
+
+        yield return null;
     }
 
     public void StartLevels()
@@ -168,8 +172,8 @@ public class GameController : MonoBehaviour
 
     public void StartGameForLevel(Level level)
     {
-        m_victory = false;
-        m_defeat = false;
+        //m_victory = false;
+        //m_defeat = false;
 
         m_gameMode = GameMode.GAME;
 
@@ -195,12 +199,6 @@ public class GameController : MonoBehaviour
         StartGameForLevelNumber(nextLevelNumber);
 
         return true;
-    }
-
-    public void RestartLevel()
-    {
-        ClearLevel();
-        StartGameForLevel(GetComponent<LevelManager>().m_currentLevel);
     }
 
     public void RenderFloor(Floor floor)
@@ -247,31 +245,43 @@ public class GameController : MonoBehaviour
         IDLE, //the game has not started yet, controls are disabled
         RUNNING, //game is running normally
         VICTORY, //game has ended on a victory
-        DEFEAT //game has ended on a defeat
+        DEFEAT, //game has ended on a defeat
+        RETRY, //player has clicked on the retry button, interrupting the current game leaving it in ambiguous state
+        PAUSED //game is paused
     }
 
     public GameStatus m_gameStatus { get; set; }
 
     //cache the values of defeat or victory so we do not have to check the game status again if one of this case already happened
-    private bool m_defeat;
-    private bool m_victory;
+    //private bool m_defeat;
+    //private bool m_victory;
 
     private void CheckForVictoryDefeat()
     {
-        if (m_defeat || m_brickRenderer.IsFalling())
+        if (m_gameStatus == GameStatus.RUNNING)
         {
-            m_defeat = true;
-            m_gameStatus = GameStatus.DEFEAT;
-        }
-        else
-        {
-            if (m_victory || m_brickRenderer.IsOnFinishTile())
+            if (m_brickRenderer.IsFalling())
+                m_gameStatus = GameStatus.DEFEAT;
+            else if (m_brickRenderer.IsOnFinishTile())
             {
-                Debug.Log("victory");
-                m_victory = true;
                 m_gameStatus = GameStatus.VICTORY;
             }
         }
+
+        //if (m_defeat || m_brickRenderer.IsFalling())
+        //{
+        //    m_defeat = true;
+        //    m_gameStatus = GameStatus.DEFEAT;
+        //}
+        //else
+        //{
+        //    if (m_victory || m_brickRenderer.IsOnFinishTile())
+        //    {
+        //        Debug.Log("victory");
+        //        m_victory = true;
+        //        m_gameStatus = GameStatus.VICTORY;
+        //    }
+        //}
     }
 
     /**
@@ -287,11 +297,12 @@ public class GameController : MonoBehaviour
         GetComponent<LevelManager>().CreateOrOverwriteAllLevelData();
     }
 
-    private IEnumerator ShowInterlevelScreenAfterDelay(float delay)
+    public IEnumerator ShowInterlevelScreenAfterDelay(float delay, GameStatus gameStatus)
     {
-        yield return new WaitForSeconds(delay);
-        
-        ((GameGUI)GetGUIManager().m_currentGUI).ShowInterLevelScreen();
+        if (delay > 0)
+            yield return new WaitForSeconds(delay);
+
+        GetGUIManager().ShowInterLevelScreen(gameStatus);
 
         yield return null;
     }
@@ -323,7 +334,7 @@ public class GameController : MonoBehaviour
                 int nextLevelNumber = currentLevel.m_number + 1;
                 persistentDataManager.SetMaxLevelReached(nextLevelNumber); //we reached the next level               
                 //GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
-                IEnumerator interlevelScreenRoutine = ShowInterlevelScreenAfterDelay(1.0f);
+                IEnumerator interlevelScreenRoutine = ShowInterlevelScreenAfterDelay(1.0f, GameStatus.VICTORY);
                 StartCoroutine(interlevelScreenRoutine);
 
                 m_gameStatus = GameStatus.IDLE;
@@ -332,9 +343,12 @@ public class GameController : MonoBehaviour
             {
                 m_gameStatus = GameStatus.IDLE;
 
-                GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
-                GetComponent<CallFuncHandler>().AddCallFuncInstance(ClearLevel, 1.5f);
-                GetComponent<CallFuncHandler>().AddCallFuncInstance(RestartLevel, 2.0f);
+                IEnumerator interlevelScreenRoutine = ShowInterlevelScreenAfterDelay(0.4f, GameStatus.DEFEAT);
+                StartCoroutine(interlevelScreenRoutine);
+
+                //GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
+                //GetComponent<CallFuncHandler>().AddCallFuncInstance(ClearLevel, 1.5f);
+                //GetComponent<CallFuncHandler>().AddCallFuncInstance(RestartLevel, 2.0f);
             }
             else if (m_gameStatus == GameStatus.RUNNING)
             {

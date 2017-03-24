@@ -7,7 +7,7 @@ public class ConfirmHomeWindow : MonoBehaviour
         GameGUI gameGUI = (GameGUI) GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
         gameGUI.Dismiss(true);
         GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(GameController.GetInstance().ClearLevel, 0.5f);
-        GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(GameController.GetInstance().StartMainMenu, 0.5f);
+        StartCoroutine(GameController.GetInstance().StartMainMenu(0.5f));
 
         Destroy(this.gameObject);
         gameGUI.m_confirmHomeWindow = null;

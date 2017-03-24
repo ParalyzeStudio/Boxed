@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class GUIManager : MonoBehaviour
@@ -19,6 +20,10 @@ public class GUIManager : MonoBehaviour
 
     //end screen
     public EndScreenGUI m_endScreenGUIPfb;
+    
+    //inter-level screeen
+    public InterLevelScreen m_interLevelScreenPfb;
+    private InterLevelScreen m_interLevelScreen;
 
     //currently displayed GUI
     public BaseGUI m_currentGUI { get; set; }
@@ -38,8 +43,8 @@ public class GUIManager : MonoBehaviour
         
         ShowBackgroundForTheme(GameController.GetInstance().GetComponent<ThemeManager>().GetSelectedTheme());
 
-        if (m_overlay == null)
-            BuildGradientOverlay();
+        //if (m_overlay == null)
+        //    BuildGradientOverlay();
     }
 
     public void ShowBackgroundForTheme(ThemeManager.Theme theme)
@@ -76,8 +81,6 @@ public class GUIManager : MonoBehaviour
         Vector3 cameraPosition = camera.gameObject.transform.position;
         float distanceFromCamera = camera.nearClipPlane + 1;
         m_overlay.GetComponent<GameObjectAnimator>().SetPosition(cameraPosition + distanceFromCamera * camera.transform.forward);
-
-        Debug.Log("overlayPosition:" + (cameraPosition + distanceFromCamera * camera.transform.forward));
     }
 
     /**
@@ -158,23 +161,27 @@ public class GUIManager : MonoBehaviour
 
     public void DisplayGameGUIForLevel(Level level)
     {
-        GameGUI game;
+        GameGUI gameGUI;
         if (m_currentGUI is GameGUI)
         {
-            game = (GameGUI)m_currentGUI;
-            game.BuildForLevel(level);
+            gameGUI = (GameGUI)m_currentGUI;
+            gameGUI.BuildForLevel(level);
         }
         else
         {
             DestroyCurrentGUI();
 
-            game = Instantiate(m_gameGUIPfb);
-            game.transform.SetParent(m_canvas.transform, false);
-            game.BuildForLevel(level);
-            m_currentGUI = game;
+            gameGUI = Instantiate(m_gameGUIPfb);
+            gameGUI.transform.SetParent(m_canvas.transform, false);
+            gameGUI.BuildForLevel(level);
+            m_currentGUI = gameGUI;
+
+            //Reorder interlevel screen in front
+            if (m_interLevelScreen != null)
+                m_interLevelScreen.transform.SetAsLastSibling();
         }
 
-        game.Show();
+        gameGUI.Show();
 
         //GameGUI game = Instantiate(m_gameGUIPfb);
         //game.transform.SetParent(m_canvas.transform, false);
@@ -198,6 +205,26 @@ public class GUIManager : MonoBehaviour
         m_currentGUI.Dismiss();
     }
     
+    public void ShowInterLevelScreen(GameController.GameStatus gameStatus)
+    {
+        if (m_interLevelScreen == null)
+        {
+            m_interLevelScreen = Instantiate(m_interLevelScreenPfb);
+            m_interLevelScreen.transform.SetAsLastSibling();
+        }
+
+        m_interLevelScreen.transform.SetParent(m_canvas.transform, false);
+
+        IEnumerator showCoroutine = m_interLevelScreen.ShowForGameStatus(gameStatus);
+        StartCoroutine(showCoroutine);
+    }
+
+    public void DismissInterLevelScreen()
+    {
+        IEnumerator dismissCoroutine = m_interLevelScreen.Dismiss();
+        StartCoroutine(dismissCoroutine);
+    }
+
     public void DestroyCurrentGUI()
     {
         if (m_currentGUI != null)

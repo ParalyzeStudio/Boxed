@@ -104,11 +104,13 @@ public class FloorSupportRenderer : MonoBehaviour
 
                 //create the column structure
                 m_columns[i - offset] = new Column(columnCubes, tileRenderer);
+
+                if (i - offset == surfaceSize - 1)
+                    break;
             }
             else
             {
-                if (++offset == cubeCount)
-                    break;
+                ++offset;
             }
         }
         

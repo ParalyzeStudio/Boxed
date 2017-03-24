@@ -10,34 +10,54 @@ public class PolygonEmitter : MonoBehaviour
     public Image m_squarePolygonPfb;
     public Image m_circlePolygonPfb;
 
-    public bool m_active; //is this emitter active
-    public float m_fadeInDuration = 0.75f;
+    public bool m_active = true; //is this emitter active
     public float m_emissionPeriod = 0.5f;
     public float m_lifespan = 2.0f;
-    public bool m_warmUp; //use this if you want to some polygons on the field before actually emitting new ones
+    public float m_emissionDelay = 0.0f;
+    public float m_startScale = 1.0f;
+    public float m_endScale = 2.0f;
 
-    private List<Image> m_polygons; //the polygons currently active
+    public PolygonType m_polygonType;
+    public enum PolygonType
+    {
+        CIRCLE,
+        SQUARE
+    }
 
     //private const float BASE_POLYGON_FADEIN_DURATION = 0.75f;
     //private const float POLYGON_EMISSION_PERIOD = 0.5f;
     //private const float POLYGON_LIFESPAN = 2.0f;
 
-    public void Reset()
+    public void Start()
     {
-        m_active = false;
-    
-        //destroy active
+        IEnumerator loopSquaresCoroutine = LoopSquares(m_emissionDelay);
+        StartCoroutine(loopSquaresCoroutine);
     }
 
     private void EmitPolygon()
     {
-        Image poly = Instantiate(m_squarePolygonPfb);
+        Image pfb;
+        switch (m_polygonType)
+        {
+            case PolygonType.CIRCLE:
+                pfb = m_circlePolygonPfb;
+                break;
+            case PolygonType.SQUARE:
+                pfb = m_squarePolygonPfb;
+                break;
+            default:
+                pfb = m_circlePolygonPfb;
+                break;
+        }
+
+        Image poly = Instantiate(pfb);
+        poly.gameObject.SetActive(true);
         poly.gameObject.SetActive(true);
         poly.transform.SetParent(this.transform, false);
         GUIImageAnimator animator = poly.GetComponent<GUIImageAnimator>();
-        animator.SetScale(0.5f * Vector3.one);
+        animator.SetScale(m_startScale * Vector3.one);
         animator.FadeTo(0.0f, m_lifespan);
-        animator.ScaleTo(2.0f * Vector3.one, m_lifespan, 0, ValueAnimator.InterpolationType.LINEAR, true); //delete the polygon when animation ends
+        animator.ScaleTo(m_endScale * Vector3.one, m_lifespan, 0, ValueAnimator.InterpolationType.LINEAR, true); //delete the polygon when animation ends
     }
 
     /**

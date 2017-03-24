@@ -139,6 +139,17 @@ public class LevelManager : MonoBehaviour
     }
 
     /**
+    * Return the direct next level of the current one
+    **/
+    public Level GetNextLevel()
+    {
+        if (m_currentLevel.m_number < m_levels.Count)
+            return m_levels[m_currentLevel.m_number];
+
+        return null;
+    }
+
+    /**
     * Typically when app is launched we cache all levels obtained from disk in a list
     **/
     public void CacheLevels()
