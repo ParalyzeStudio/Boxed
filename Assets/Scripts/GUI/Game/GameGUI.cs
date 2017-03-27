@@ -196,14 +196,14 @@ public class GameGUI : BaseGUI
 
     public void OnClickHome()
     {
-        if (m_pauseMenu == null)
-        {
+        //if (m_pauseMenu == null)
+        //{
             m_pauseMenu = Instantiate(m_pauseMenuPfb);
             m_pauseMenu.transform.SetParent(GameController.GetInstance().GetGUIManager().m_canvas.transform, false);
             m_pauseMenu.Show();
 
             GameController.GetInstance().m_gameStatus = GameController.GameStatus.PAUSED;
-        }
+        //}
     }
 
     public void OnClickSolution()

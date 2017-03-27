@@ -208,10 +208,9 @@ public class GUIManager : MonoBehaviour
     public void ShowInterLevelScreen(GameController.GameStatus gameStatus)
     {
         if (m_interLevelScreen == null)
-        {
             m_interLevelScreen = Instantiate(m_interLevelScreenPfb);
-            m_interLevelScreen.transform.SetAsLastSibling();
-        }
+
+        m_interLevelScreen.transform.SetAsLastSibling();
 
         m_interLevelScreen.transform.SetParent(m_canvas.transform, false);
 
@@ -223,6 +222,12 @@ public class GUIManager : MonoBehaviour
     {
         IEnumerator dismissCoroutine = m_interLevelScreen.Dismiss();
         StartCoroutine(dismissCoroutine);
+    }
+
+    public void DestroyInterLevelScreen()
+    {
+        if (m_interLevelScreen != null)
+            Destroy(m_interLevelScreen.gameObject);
     }
 
     public void DestroyCurrentGUI()

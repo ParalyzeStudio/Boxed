@@ -28,6 +28,11 @@ public class GameController : MonoBehaviour
 
     public void Start()
     {
+        //AdBuddiz
+        AdBuddizBinding.SetTestModeActive();
+        AdBuddizBinding.SetAndroidPublisherKey("c89af728-2208-49e6-a5de-8e9f7185a8a1");
+        AdBuddizBinding.CacheAds();
+
         //init the camera
         GameObject.FindGameObjectWithTag("MainCamera").GetComponent<IsometricCameraController>().Init();
 
@@ -139,16 +144,25 @@ public class GameController : MonoBehaviour
         }
     }
 
-    public void StartLevel(Level level)
+    public void BuildLevel(Level level)
     {
         BuildBonusesHolder();
         RenderFloor(level.m_floor);
         BuildBrick(level);
-        TeleportBrick(); //drop animation when level begins
+    }
+
+    public void StartLevel(Level level)
+    {
+        //TeleportBrick(); //drop animation when level begins
         
-        Tile finishTile = level.m_floor.GetFinishTile();
-        TileRenderer finishTileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(finishTile);
-        finishTileRenderer.GenerateGlowSquaresOnFinishTile();
+        //Tile finishTile = level.m_floor.GetFinishTile();
+        //TileRenderer finishTileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(finishTile);
+        //finishTileRenderer.GenerateGlowSquaresOnFinishTile();
+    }
+
+    public void BuildGameForLevelNumber(int levelNumber)
+    {
+        BuildGameForLevel(GetComponent<LevelManager>().GetLevelForNumber(levelNumber));        
     }
 
     /**
@@ -170,6 +184,11 @@ public class GameController : MonoBehaviour
         }
     }
 
+    public void BuildGameForLevel(Level level)
+    {
+
+    }
+
     public void StartGameForLevel(Level level)
     {
         //m_victory = false;
@@ -181,6 +200,7 @@ public class GameController : MonoBehaviour
         levelManager.m_currentLevel = level;
         levelManager.m_currentLevelData = LevelData.LoadFromFile(level.m_number);
         levelManager.m_currentLevelData.m_currentActionsCount = 0;
+        BuildLevel(level);
         StartLevel(level);
         
         GetComponent<GUIManager>().DisplayGameGUIForLevel(level);

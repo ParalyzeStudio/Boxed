@@ -105,6 +105,12 @@ public class InterLevelScreen : MonoBehaviour
         m_state = State.SET;
 
         GameController.GetInstance().ClearLevel();
+
+        //AdBuddiz
+        AdBuddizBinding.ShowAd();
+
+        //Unity ADS
+        //GameController.GetInstance().GetComponent<AdManager>().TryToPlayAd();
     }
 
     /**

@@ -10,20 +10,18 @@ public class AdManager : MonoBehaviour
 #endif
 
     private int m_lastAdCount;
-    private const int AD_FREQUENCY = 5;
+    private const int AD_FREQUENCY = 1;
 
     /**
     * Call that method to play an ad
     **/ 
     public void TryToPlayAd()
-    {
-        if (m_lastAdCount > AD_FREQUENCY)
+    {        
+        if (++m_lastAdCount >= AD_FREQUENCY)
         {
             m_lastAdCount = 0;
-            Play();
+            StartCoroutine("Play");
         }
-        else
-            m_lastAdCount++;
     }
 
     private IEnumerator Play()
@@ -34,12 +32,11 @@ public class AdManager : MonoBehaviour
             Advertisement.Initialize(gameId, enableTestMode);
         }
 #endif
-        
+
         while (!Advertisement.isInitialized || !Advertisement.IsReady())
         {
             yield return new WaitForSeconds(0.5f);
         }
-        
         Advertisement.Show();
     }
 }

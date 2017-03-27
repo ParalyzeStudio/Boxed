@@ -124,9 +124,10 @@ public class PauseMenu : MonoBehaviour
         QuadAnimator overlayAnimator = guiManager.m_overlay.GetComponent<QuadAnimator>();
         overlayAnimator.FadeTo(0.0f, 0.5f, 0, ValueAnimator.InterpolationType.LINEAR, true);
 
-        DestroyAfterDelay(0.5f);
-        //GameController.GetInstance().GetGUIManager().DestroyCurrentGUI();
-                
+        StartCoroutine(DestroyAfterDelay(0.5f));
+        GameController.GetInstance().GetGUIManager().DestroyCurrentGUI();
+        GameController.GetInstance().GetGUIManager().DestroyInterLevelScreen();
+
         StartCoroutine(GameController.GetInstance().StartMainMenu(0.5f));
     }
 
@@ -229,8 +230,9 @@ public class PauseMenu : MonoBehaviour
     private void DismissElement(CanvasGroupFade element, float delay = 0.0f)
     {
         //translate the button
-        GUIImageAnimator buttonAnimator = element.GetComponent<GUIImageAnimator>();
-        buttonAnimator.TranslateBy(new Vector3(0, ELEMENT_TRANSLATION_LENGTH, 0), ELEMENT_ANIMATION_DURATION, delay);
+        GUIImageAnimator elementAnimator = element.GetComponent<GUIImageAnimator>();
+        elementAnimator.SyncPositionFromTransform();
+        elementAnimator.TranslateBy(new Vector3(0, ELEMENT_TRANSLATION_LENGTH, 0), ELEMENT_ANIMATION_DURATION, delay);
 
         //fade in the button
         element.FadeTo(0.0f, ELEMENT_ANIMATION_DURATION, delay);
@@ -241,6 +243,7 @@ public class PauseMenu : MonoBehaviour
         yield return new WaitForSeconds(delay);
 
         GUIImageAnimator elementAnimator = element.GetComponent<GUIImageAnimator>();
+        elementAnimator.SyncPositionFromTransform();
         elementAnimator.SetPosition(elementAnimator.GetPosition() - new Vector3(0, ELEMENT_TRANSLATION_LENGTH, 0));
         element.gameObject.SetActive(false);
 
@@ -251,6 +254,7 @@ public class PauseMenu : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
+        Debug.Log("Destroy game object");
         Destroy(this.gameObject);
 
         yield return null;
