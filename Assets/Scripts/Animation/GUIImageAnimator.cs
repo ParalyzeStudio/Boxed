@@ -7,12 +7,12 @@ public class GUIImageAnimator : ValueAnimator
 
     public override void SyncPositionFromTransform()
     {       
-        m_position = GetImageComponent().rectTransform.anchoredPosition;
+        m_position = GetComponent<RectTransform>().anchoredPosition;
     }
 
     public override void OnScaleChanged()
     {
-        GetImageComponent().rectTransform.localScale = m_scale;
+        GetComponent<RectTransform>().localScale = m_scale;
     }
 
     public override void OnOpacityChanged()
@@ -26,9 +26,8 @@ public class GUIImageAnimator : ValueAnimator
     public override void OnPositionChanged()
     {
         base.OnPositionChanged();
-        GetImageComponent().rectTransform.anchoredPosition = new Vector2(m_position.x, m_position.y);
+        GetComponent<RectTransform>().anchoredPosition = new Vector2(m_position.x, m_position.y);
     }
-
 
     private Image GetImageComponent()
     {

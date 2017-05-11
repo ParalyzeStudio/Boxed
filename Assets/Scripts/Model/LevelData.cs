@@ -6,29 +6,28 @@ using UnityEngine;
 [Serializable]
 public class LevelData
 {
-    public bool m_done; //has the level already been won in the past
-    public bool m_reachedBestScore; //has the level been won with reaching the lowest actions count
-
-    public int m_currentActionsCount; //when playing a level, store here the current count of actions
-
     private int m_levelNumber;
+    public int m_movesCount; //the lowest moves count the player has reached so far, if level has not been played yet set it to 0 
+    public bool m_solutionPurchased; //has the player purchased the solution of this level and made it available
 
     public LevelData(int levelNumber)
     {
         m_levelNumber = levelNumber;
-        m_currentActionsCount = 0;
-        m_done = false;
-        m_reachedBestScore = false;
+        m_movesCount = 0;
     }
 
     public bool SaveToFile()
     {
         BinaryFormatter bf = new BinaryFormatter();
 
+        string folderPath = Application.persistentDataPath + "/LevelData";
+        if (!Directory.Exists(folderPath))
+            Directory.CreateDirectory(folderPath);
+
         FileStream fs = null;
         try
         {
-            string filePath = Application.persistentDataPath + "/LevelData/level_" + m_levelNumber + ".dat";
+            string filePath = folderPath  + "/level_" + m_levelNumber + ".dat";
             fs = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
         }
         catch (System.Exception e)
@@ -49,7 +48,11 @@ public class LevelData
     {
         LevelData levelData = null;
 
-        string filePath = Application.persistentDataPath + "/LevelData/level_" + levelNumber + ".dat";
+        string folderPath = Application.persistentDataPath + "/LevelData";
+        if (!Directory.Exists(folderPath))
+            Directory.CreateDirectory(folderPath);
+
+        string filePath = folderPath  + "/level_" + levelNumber + ".dat";
         if (File.Exists(filePath))
         {
             BinaryFormatter bf = new BinaryFormatter();

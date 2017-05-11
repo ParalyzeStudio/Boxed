@@ -148,8 +148,6 @@ public class FSGradientBillboardQuad : BillboardQuad
                 }
 
                 InvalidateColors();
-
-                Debug.Log("variating colors");
             }
         }
     }

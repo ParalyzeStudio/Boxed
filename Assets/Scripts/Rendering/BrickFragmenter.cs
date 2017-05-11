@@ -195,7 +195,6 @@ public class BrickFragmenter : MonoBehaviour
         m_colorsDirty = true;
 
         Invalidate();
-        mesh.RecalculateBounds();
         mesh.RecalculateNormals();
 
         //build a child game object that will hold this mesh

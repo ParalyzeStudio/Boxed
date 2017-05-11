@@ -22,8 +22,12 @@ public class GUIManager : MonoBehaviour
     public EndScreenGUI m_endScreenGUIPfb;
     
     //inter-level screeen
-    public InterLevelScreen m_interLevelScreenPfb;
-    private InterLevelScreen m_interLevelScreen;
+    //public InterLevelScreen m_interLevelScreenPfb;
+    //private InterLevelScreen m_interLevelScreen;
+
+    //inter-level window
+    public InterLevelWindow m_interLevelWindowPfb;
+    private InterLevelWindow m_interLevelWindow;
 
     //currently displayed GUI
     public BaseGUI m_currentGUI { get; set; }
@@ -122,10 +126,37 @@ public class GUIManager : MonoBehaviour
         return false;
     }
 
+    public void RebuildGUI()
+    {
+        DestroyCurrentGUI(); //get rid of the old displayed GUI group
+        GameController.GameMode gameMode = GameController.GetInstance().m_gameMode;
+
+        switch (gameMode)
+        {
+            case GameController.GameMode.MAIN_MENU:
+                DisplayMainMenuGUI();
+                break;
+            case GameController.GameMode.LEVELS:
+                DisplayLevelsGUI();
+                break;
+            case GameController.GameMode.GAME:
+                DisplayGameGUI();
+                break;
+            case GameController.GameMode.END_SCREEN:
+                DisplayEndScreenGUI();
+                break;
+            case GameController.GameMode.LEVEL_EDITOR:
+                DisplayLevelEditorGUI();
+                break;
+            default:
+                break;
+        }
+    }
+
     /**
     * Render the level editor GUI element that contains all menus/windows to easily create a level
     **/
-    public void DisplayLevelEditorGUI()
+    private void DisplayLevelEditorGUI()
     {
         //build the level editor object
         LevelEditor levelEditor = Instantiate(m_levelEditorPfb);
@@ -137,10 +168,8 @@ public class GUIManager : MonoBehaviour
         levelEditor.Show();        
     }
 
-    public void DisplayMainMenuGUI()
+    private void DisplayMainMenuGUI()
     {
-        //DestroyCurrentGUI();
-
         MainMenuGUI mainMenu = Instantiate(m_mainMenuGUIPfb);
         mainMenu.transform.SetParent(m_canvas.transform, false);
         m_currentGUI = mainMenu;
@@ -148,10 +177,8 @@ public class GUIManager : MonoBehaviour
         mainMenu.Show();
     }
 
-    public void DisplayLevelsGUI()
+    private void DisplayLevelsGUI()
     {
-        //DestroyCurrentGUI();
-
         LevelsGUI levels = Instantiate(m_levelsGUIPfb);
         levels.transform.SetParent(m_canvas.transform, false);
         m_currentGUI = levels;
@@ -159,13 +186,15 @@ public class GUIManager : MonoBehaviour
         levels.Show();
     }
 
-    public void DisplayGameGUIForLevel(Level level)
+    private void DisplayGameGUI()
     {
+        Level currentLevel = GameController.GetInstance().GetLevelManager().m_currentLevel;
+
         GameGUI gameGUI;
         if (m_currentGUI is GameGUI)
         {
             gameGUI = (GameGUI)m_currentGUI;
-            gameGUI.BuildForLevel(level);
+            gameGUI.BuildForLevel(currentLevel);
         }
         else
         {
@@ -173,12 +202,12 @@ public class GUIManager : MonoBehaviour
 
             gameGUI = Instantiate(m_gameGUIPfb);
             gameGUI.transform.SetParent(m_canvas.transform, false);
-            gameGUI.BuildForLevel(level);
+            gameGUI.BuildForLevel(currentLevel);
             m_currentGUI = gameGUI;
 
             //Reorder interlevel screen in front
-            if (m_interLevelScreen != null)
-                m_interLevelScreen.transform.SetAsLastSibling();
+            if (m_interLevelWindow != null)
+                m_interLevelWindow.transform.SetAsLastSibling();
         }
 
         gameGUI.Show();
@@ -191,7 +220,7 @@ public class GUIManager : MonoBehaviour
         //game.Show();
     }
 
-    public void DisplayEndScreenGUI()
+    private void DisplayEndScreenGUI()
     {
         EndScreenGUI endScreen = Instantiate(m_endScreenGUIPfb);
         endScreen.transform.SetParent(m_canvas.transform, false);
@@ -200,34 +229,47 @@ public class GUIManager : MonoBehaviour
         endScreen.Show();
     }
 
-    public void DismissCurrentGUI()
+    //public void ShowInterLevelScreen(GameController.GameStatus gameStatus)
+    //{
+    //    if (m_interLevelScreen == null)
+    //        m_interLevelScreen = Instantiate(m_interLevelScreenPfb);
+
+    //    m_interLevelScreen.transform.SetAsLastSibling();
+
+    //    m_interLevelScreen.transform.SetParent(m_canvas.transform, false);
+
+    //    StartCoroutine(m_interLevelScreen.ShowForGameStatus(gameStatus));
+    //}
+
+    public void ShowInterLevelWindow(GameController.GameStatus gameStatus)
     {
-        m_currentGUI.Dismiss();
-    }
-    
-    public void ShowInterLevelScreen(GameController.GameStatus gameStatus)
-    {
-        if (m_interLevelScreen == null)
-            m_interLevelScreen = Instantiate(m_interLevelScreenPfb);
+        if (m_interLevelWindow == null)
+            m_interLevelWindow = Instantiate(m_interLevelWindowPfb);
 
-        m_interLevelScreen.transform.SetAsLastSibling();
-
-        m_interLevelScreen.transform.SetParent(m_canvas.transform, false);
-
-        IEnumerator showCoroutine = m_interLevelScreen.ShowForGameStatus(gameStatus);
-        StartCoroutine(showCoroutine);
-    }
-
-    public void DismissInterLevelScreen()
-    {
-        IEnumerator dismissCoroutine = m_interLevelScreen.Dismiss();
-        StartCoroutine(dismissCoroutine);
+        m_interLevelWindow.transform.SetAsLastSibling();
+        m_interLevelWindow.transform.SetParent(m_canvas.transform, false);               
+        m_interLevelWindow.Show(gameStatus);
     }
 
-    public void DestroyInterLevelScreen()
+    //public void DismissInterLevelScreen()
+    //{
+    //    StartCoroutine(m_interLevelScreen.Dismiss());
+    //}
+
+    public void DismissInterLevelWindow()
     {
-        if (m_interLevelScreen != null)
-            Destroy(m_interLevelScreen.gameObject);
+        m_interLevelWindow.Dismiss();
+    }
+
+    //public void DestroyInterLevelScreen()
+    //{
+    //    if (m_interLevelScreen != null)
+    //        Destroy(m_interLevelScreen.gameObject);
+    //}
+
+    public void DestroyInterLevelWindow()
+    {
+        //StartCoroutine(m_interLevelWindow.Dismiss());
     }
 
     public void DestroyCurrentGUI()

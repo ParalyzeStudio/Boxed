@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+[RequireComponent(typeof(CanvasGroup))]
 public class CanvasGroupFade : ValueAnimator
 {
     public override void SetOpacity(float fOpacity, bool bPassOnChildren = true)

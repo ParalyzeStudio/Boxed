@@ -20,7 +20,6 @@ public class GameGUI : BaseGUI
 
     //pause menu
     public PauseMenu m_pauseMenuPfb;
-    private PauseMenu m_pauseMenu;
 
     //confirm home window
     public ConfirmHomeWindow m_confirmHomeWindowPfb;
@@ -61,7 +60,7 @@ public class GameGUI : BaseGUI
 
     public void BuildSolution()
     {
-        Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
+        Level currentLevel = GameController.GetInstance().GetLevelManager().m_currentLevel;
         Brick.RollDirection[] solution = currentLevel.m_solution;
         int numArrows = solution.Length;
         int maxArrowsPerLine = 20;
@@ -112,18 +111,18 @@ public class GameGUI : BaseGUI
 
     private void InitTargetActionsCount()
     {
-        Level currentLevel = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
+        Level currentLevel = GameController.GetInstance().GetLevelManager().m_currentLevel;
         m_solutionMinLength = currentLevel.m_solution.Length;
         m_targetActionsCount.text = m_solutionMinLength.ToString();
     }
 
     public void UpdateParScore()
     {
-        LevelData levelData = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevelData;
-        float scoreRatio = Mathf.Clamp01(levelData.m_currentActionsCount / (float)m_solutionMinLength);
+        int currentMovesCount = GameController.GetInstance().m_currentMovesCount;
+        float scoreRatio = Mathf.Clamp01(currentMovesCount / (float)m_solutionMinLength);
         m_parScoreFill.fillAmount = scoreRatio;
 
-        m_currentActionsCount.text = levelData.m_currentActionsCount.ToString();
+        m_currentActionsCount.text = currentMovesCount.ToString();
     }
 
     private Quaternion GetArrowRotationForDirection(Brick.RollDirection direction)
@@ -169,7 +168,7 @@ public class GameGUI : BaseGUI
     public bool ShowTutorial(Tutorial tutorial)
     {
         //check if this tutorial matches the current level
-        int currentLevelNumber = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel.m_number;
+        int currentLevelNumber = GameController.GetInstance().GetLevelManager().m_currentLevel.m_number;
         if (tutorial.m_levelNumber == currentLevelNumber)
         {
             //PersistentDataManager persistentDataManager = GameController.GetInstance().GetComponent<PersistentDataManager>();
@@ -189,21 +188,19 @@ public class GameGUI : BaseGUI
     {
         //Dismiss();
         GameController.GetInstance().m_gameStatus = GameController.GameStatus.RETRY;
-        IEnumerator interlevelScreenCoroutine = GameController.GetInstance().ShowInterlevelScreenAfterDelay(0, GameController.GameStatus.RETRY); //simply show the interlevel screen without updating the current level
-        StartCoroutine(interlevelScreenCoroutine);
-        //GameController.GetInstance().GetComponent<CallFuncHandler>().AddCallFuncInstance(GameController.GetInstance().RestartLevel, 0.5f);
+        GameController.GetInstance().GetGUIManager().ShowInterLevelWindow(GameController.GameStatus.RETRY);//simply show the interlevel screen without updating the current level
     }
 
     public void OnClickHome()
     {
-        //if (m_pauseMenu == null)
-        //{
-            m_pauseMenu = Instantiate(m_pauseMenuPfb);
-            m_pauseMenu.transform.SetParent(GameController.GetInstance().GetGUIManager().m_canvas.transform, false);
-            m_pauseMenu.Show();
+        if (GameController.GetInstance().m_gameStatus == GameController.GameStatus.RUNNING)
+        {
+            PauseMenu pauseMenu = Instantiate(m_pauseMenuPfb);
+            pauseMenu.transform.SetParent(GameController.GetInstance().GetGUIManager().m_canvas.transform, false);
+            pauseMenu.Show(pauseMenu.m_mainWindowContent, true);
 
             GameController.GetInstance().m_gameStatus = GameController.GameStatus.PAUSED;
-        //}
+        }
     }
 
     public void OnClickSolution()

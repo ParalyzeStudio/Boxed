@@ -107,7 +107,7 @@ public class InterLevelScreen : MonoBehaviour
         GameController.GetInstance().ClearLevel();
 
         //AdBuddiz
-        AdBuddizBinding.ShowAd();
+        //AdBuddizBinding.ShowAd();
 
         //Unity ADS
         //GameController.GetInstance().GetComponent<AdManager>().TryToPlayAd();
@@ -126,7 +126,7 @@ public class InterLevelScreen : MonoBehaviour
     **/
     private void UpdateLevelTitle()
     {
-        Level level = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel;
+        Level level = GameController.GetInstance().GetLevelManager().m_currentLevel;
         m_nextLevelTitle.text = (level.GetChapterIndex() + 1) + " - " + level.GetChapterRelativeNumber();
     }
 
@@ -159,7 +159,7 @@ public class InterLevelScreen : MonoBehaviour
         if (m_state != State.SET)
             return;
 
-        LevelManager levelManager = GameController.GetInstance().GetComponent<LevelManager>();
+        LevelManager levelManager = GameController.GetInstance().GetLevelManager();
         if (m_gameStatus == GameController.GameStatus.VICTORY)
         {
             if (m_showingResults)

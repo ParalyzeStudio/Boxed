@@ -15,7 +15,7 @@ public class PublishedLevelsWindow : LevelsListWindow
         DisableLoadButton();
         DisableUpDownButtons();
 
-        List<Level> publishedLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllPublishedLevelsFromDisk();
+        List<Level> publishedLevels = GameController.GetInstance().GetLevelManager().GetAllPublishedLevelsFromDisk();
         BuildLevelItemsForLevels(publishedLevels);
         InvalidateItemList();
     }
@@ -100,7 +100,7 @@ public class PublishedLevelsWindow : LevelsListWindow
     **/
     private void RepublishReorderedItems()
     {
-        LevelManager levelManager = GameController.GetInstance().GetComponent<LevelManager>();
+        LevelManager levelManager = GameController.GetInstance().GetLevelManager();
 
         List<Level> reorderedLevels = new List<Level>();
         //First find level items that have been reordered

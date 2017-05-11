@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,13 +14,10 @@ public class LevelsGUI : BaseGUI
     public Text m_levelSlotNumberPfb;
     public LevelSlot m_levelSlotPfb;
 
-    //private LevelSlot[] m_slots;
-    //private Text[] m_slotNumbers;
-    //private LevelSlot m_clickedSlot;
-    //private GameObject m_slotsHolder;
-    //private bool m_slotsRendered;
+    private LevelSlot[] m_slots;
 
-    //public GameObject m_slotNumbersHolder;
+    public Button m_backBtn;
+
     public Text m_chapterNumberText;
     public Button m_prevChapterBtn;
     public Button m_nextChapterBtn;
@@ -30,47 +28,64 @@ public class LevelsGUI : BaseGUI
     {
         SetChapterNumber(GetPersistentDataManager().GetCurrentChapterIndex() + 1);
 
-        //m_slotsRendered = false;
-        //m_slotNumbers = GetSlotNumbers();
+        //Slots
+        StartCoroutine(BuildSlots());
 
-        BuildSlots();
-
-        base.Show();
+        //back button
+        GUIImageAnimator backButtonAnimator = m_backBtn.GetComponent<GUIImageAnimator>();
+        backButtonAnimator.SyncPositionFromTransform();
+        backButtonAnimator.SetPosition(backButtonAnimator.GetPosition() - new Vector3(150, 0, 0));
+        backButtonAnimator.TranslateBy(new Vector3(150, 0, 0), 0.3f);
+        backButtonAnimator.SetOpacity(0);
+        backButtonAnimator.FadeTo(1.0f, 0.5f);
     }
 
-    private void BuildSlots()
+    private IEnumerator BuildSlots()
     {
         int numSlotsPerLine = 5;
 
+        m_slots = new LevelSlot[NUM_SLOTS];
         for (int i = 0; i != NUM_SLOTS; i++)
         {
-            LevelSlot slot = Instantiate(m_levelSlotPfb);
-            slot.Init(this, i);
-            slot.transform.SetParent(m_lines[i / numSlotsPerLine].transform, false);
-
-            //animate every slot by scaling them up with increasing delay
-            GUIImageAnimator slotAnimator = slot.GetComponent<GUIImageAnimator>();
+            m_slots[i] = Instantiate(m_levelSlotPfb);
+            m_slots[i].Init(this, i);
+            GUIImageAnimator slotAnimator = m_slots[i].GetComponent<GUIImageAnimator>();
             slotAnimator.SetScale(Vector3.zero);
-            slotAnimator.ScaleTo(Vector3.one, 0.3f, i * 0.04f);
+            slotAnimator.SetOpacity(0);
+            m_slots[i].transform.SetParent(m_lines[i / numSlotsPerLine].transform, false);
+            yield return new WaitForEndOfFrame(); //build only one slot per frame to avoid small lagging
         }
 
-        //m_slotsHolder = new GameObject("SlotsHolder");
+        OnFinishBuildingSlots();
+    }
 
-        //ThemeManager.Theme currentTheme = GameController.GetInstance().GetComponent<ThemeManager>().GetSelectedTheme();
+    private void OnFinishBuildingSlots()
+    {
+        StartCoroutine(ShowSlots());
+    }
 
-        //m_slots = new LevelSlot[NUM_SLOTS];
-        //for (int i = 0; i != NUM_SLOTS; i++)
-        //{
-        //    LevelSlot slot = Instantiate(m_levelSlotPfb);
-        //    slot.Init(this, i);
+    private IEnumerator ShowSlots()
+    {
+        for (int i = 0; i != NUM_SLOTS; i++)
+        {
+            //animate every slot by scaling them up with increasing delay
+            GUIImageAnimator slotAnimator = m_slots[i].GetComponent<GUIImageAnimator>();
+            slotAnimator.ScaleTo(Vector3.one, 0.3f);
+            slotAnimator.FadeTo(1.0f, 0.3f);
+            yield return new WaitForSeconds(0.04f);
+        }
+    }
 
-        //    Vector3 worldPosition = GetWorldPositionForSlot(m_slotNumbers[i]);
-        //    slot.transform.parent = m_slotsHolder.transform;
-        //    slot.transform.position = worldPosition;
-        //    m_slots[i] = slot;
-        //}
-
-        //m_slotsRendered = true;
+    private IEnumerator DismissSlots()
+    {
+        for (int i = 0; i != NUM_SLOTS; i++)
+        {
+            //animate every slot by scaling them up with increasing delay
+            GUIImageAnimator slotAnimator = m_slots[i].GetComponent<GUIImageAnimator>();
+            slotAnimator.ScaleTo(Vector3.zero, 0.3f);
+            slotAnimator.FadeTo(0, 0.3f);
+            yield return new WaitForSeconds(0.04f);
+        }
     }
 
     //private Text[] GetSlotNumbers()
@@ -214,7 +229,8 @@ public class LevelsGUI : BaseGUI
     public void OnClickBack()
     {
         GetPersistentDataManager().SavePrefs();
-        Dismiss(true);
+
+        StartCoroutine(DismissSlots());
 
         StartCoroutine(GameController.GetInstance().StartMainMenu(0.5f));
     }
@@ -246,28 +262,29 @@ public class LevelsGUI : BaseGUI
         //fadeAnimator.FadeOut();
 
         ////Fade in new slots after a certain delay
-        CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
+        //CallFuncHandler callFuncHandler = GameController.GetInstance().GetComponent<CallFuncHandler>();
         //callFuncHandler.AddCallFuncInstance(fadeAnimator.FadeIn, 0.5f);
 
         //Theme for new chapter
-        int chapterIndex = GetPersistentDataManager().GetCurrentChapterIndex();
         ThemeManager themeManager = GameController.GetInstance().GetComponent<ThemeManager>();
-        ThemeManager.Theme nextTheme = themeManager.m_themes[chapterIndex];
-        themeManager.m_selectedThemeIndex = chapterIndex;
+        ThemeManager.Theme theme = themeManager.GetSelectedTheme();
 
-        Color overlayTopColor = nextTheme.m_backgroundGradientTopColor;
-        Color overlayBottomColor = nextTheme.m_backgroundGradientBottomColor;
+        Color overlayTopColor = theme.m_backgroundGradientTopColor;
+        Color overlayBottomColor = theme.m_backgroundGradientBottomColor;
 
         //background
         GUIManager guiManager = GameController.GetInstance().GetComponent<GUIManager>();
         guiManager.m_background.ChangeColorsTo(overlayTopColor, overlayBottomColor, 0.5f);
 
-        //overlay        
-        overlayTopColor.a = 0;
-        overlayBottomColor.a = 0;
-        guiManager.m_overlay.m_topColor = overlayTopColor;
-        guiManager.m_overlay.m_bottomColor = overlayBottomColor;
-        guiManager.m_overlay.InvalidateColors();
+        //overlay     
+        if (guiManager.m_overlay != null)
+        {
+            overlayTopColor.a = 0;
+            overlayBottomColor.a = 0;
+            guiManager.m_overlay.m_topColor = overlayTopColor;
+            guiManager.m_overlay.m_bottomColor = overlayBottomColor;
+            guiManager.m_overlay.InvalidateColors();
+        }
 
         //Update levels on each slot
         //InvalidateLevelsOnSlots();

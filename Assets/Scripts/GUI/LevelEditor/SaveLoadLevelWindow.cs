@@ -27,7 +27,7 @@ public class SaveLoadLevelWindow : LevelsListWindow
         DisableButton(ButtonID.ID_SAVE_LEVEL);
         DisableButton(ButtonID.ID_LOAD_LEVEL);
 
-        List<Level> editedLevels = GameController.GetInstance().GetComponent<LevelManager>().GetAllEditedLevelsFromDisk();
+        List<Level> editedLevels = GameController.GetInstance().GetLevelManager().GetAllEditedLevelsFromDisk();
         BuildLevelItemsForLevels(editedLevels);
 
         //Add a empty slot to save another level

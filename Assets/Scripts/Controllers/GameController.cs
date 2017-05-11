@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿//#define START_FROM_SCENE //use this to start from one particular scene defined inside the inspector
+
+using System.Collections;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
@@ -10,7 +12,8 @@ public class GameController : MonoBehaviour
     public FloorRenderer m_floorRenderer { get; set; }
     public GameObject m_bonuses { get; set; } //use this object to hold bonus objects
 
-    private GUIManager m_guiManager; //maybe to speed up a bit instead of calling GetComponent<>
+    private GUIManager m_guiManager; //to speed up a bit instead of calling GetComponent<>
+    private LevelManager m_levelManager; //to speed up a bit instead of calling GetComponent<>
 
     public enum GameMode
     {
@@ -26,47 +29,55 @@ public class GameController : MonoBehaviour
 
     private static GameController s_instance;
 
+    //variables linked to the current played level
+    public int m_currentMovesCount { get; set; } //the current count of moves the player has done so far
+
     public void Start()
     {
+        Debug.Log(">>>>GameController Start");
+
         //AdBuddiz
-        AdBuddizBinding.SetTestModeActive();
-        AdBuddizBinding.SetAndroidPublisherKey("c89af728-2208-49e6-a5de-8e9f7185a8a1");
-        AdBuddizBinding.CacheAds();
+        //AdBuddizBinding.SetTestModeActive();
+        //AdBuddizBinding.SetAndroidPublisherKey("c89af728-2208-49e6-a5de-8e9f7185a8a1");
+        //AdBuddizBinding.CacheAds();
 
         //init the camera
         GameObject.FindGameObjectWithTag("MainCamera").GetComponent<IsometricCameraController>().Init();
 
         //init the level manager
-        GetComponent<LevelManager>().Init();
+        GetLevelManager().Init();
 
         //init the theme manager
         //GetComponent<ThemeManager>().Init();
 
         //init the GUI manager
-        GetComponent<GUIManager>().Init();
+        GetGUIManager().Init();
 
-        //m_gameMode = GameMode.MAIN_MENU;
-
+#if START_FROM_SCENE
         if (m_gameMode == GameMode.LEVEL_EDITOR)
         {
-            EnterLevelEditor();
+            StartCoroutine(EnterLevelEditor());
         }
         else if (m_gameMode == GameMode.MAIN_MENU)
         {
-            StartCoroutine(StartMainMenu(0));
+            StartCoroutine(StartMainMenu());
         }
         else if (m_gameMode == GameMode.LEVELS)
         {
-            StartLevels();
+            StartCoroutine(StartLevels());
         }
         else if (m_gameMode == GameMode.END_SCREEN)
         {
-            ShowEndScreen();
+            StartCoroutine(ShowEndScreen());
         }
         else
         {
             StartGameForLevelNumber(m_levelToStartInGameMode);
         }
+#else
+        m_gameMode = GameMode.MAIN_MENU;
+        StartCoroutine(StartMainMenu());
+#endif
     }
 
     public static GameController GetInstance()
@@ -77,37 +88,50 @@ public class GameController : MonoBehaviour
         return s_instance;
     }
 
-    public void EnterLevelEditor()
+    public IEnumerator EnterLevelEditor(float delay = 0)
     {
+        if (delay > 0)
+            yield return new WaitForSeconds(delay);
+
         m_gameMode = GameMode.LEVEL_EDITOR;
-
-        this.GetComponent<GUIManager>().DisplayLevelEditorGUI();
-    }
-
-    public IEnumerator StartMainMenu(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-
-        m_gameMode = GameMode.MAIN_MENU;
-
-        //Show whole gui (title + buttons)
-        GetComponent<GUIManager>().DisplayMainMenuGUI();
+        GetGUIManager().RebuildGUI();
 
         yield return null;
     }
 
-    public void StartLevels()
+    public IEnumerator StartMainMenu(float delay = 0)
     {
-        m_gameMode = GameMode.LEVELS;
-        
-        GetComponent<GUIManager>().DisplayLevelsGUI();
+        if (delay > 0)
+            yield return new WaitForSeconds(delay);
+
+        Debug.Log(">>>>StartMainMenu");
+
+        m_gameMode = GameMode.MAIN_MENU;
+        GetGUIManager().RebuildGUI();
+
+        yield return null;
     }
 
-    public void ShowEndScreen()
+    public IEnumerator StartLevels(float delay = 0)
     {
-        m_gameMode = GameMode.END_SCREEN;
+        if (delay > 0)
+            yield return new WaitForSeconds(delay);
 
-        GetComponent<GUIManager>().DisplayEndScreenGUI();
+        m_gameMode = GameMode.LEVELS;
+        GetGUIManager().RebuildGUI();
+
+        yield return null;
+    }
+
+    public IEnumerator ShowEndScreen(float delay = 0)
+    {
+        if (delay > 0)
+            yield return new WaitForSeconds(delay);
+
+        m_gameMode = GameMode.END_SCREEN;
+        GetGUIManager().RebuildGUI();
+
+        yield return null;
     }
 
     public void ClearLevel()
@@ -153,8 +177,8 @@ public class GameController : MonoBehaviour
 
     public void StartLevel(Level level)
     {
-        //TeleportBrick(); //drop animation when level begins
-        
+        TeleportBrick(); //drop animation when level begins
+
         //Tile finishTile = level.m_floor.GetFinishTile();
         //TileRenderer finishTileRenderer = GameController.GetInstance().m_floorRenderer.GetRendererForTile(finishTile);
         //finishTileRenderer.GenerateGlowSquaresOnFinishTile();
@@ -162,7 +186,7 @@ public class GameController : MonoBehaviour
 
     public void BuildGameForLevelNumber(int levelNumber)
     {
-        BuildGameForLevel(GetComponent<LevelManager>().GetLevelForNumber(levelNumber));        
+        BuildGameForLevel(GetLevelManager().GetLevelForNumber(levelNumber));        
     }
 
     /**
@@ -170,7 +194,7 @@ public class GameController : MonoBehaviour
     **/
     private bool StartGameForLevelNumber(int levelNumber)
     {
-        Level level = GetComponent<LevelManager>().GetLevelForNumber(levelNumber);
+        Level level = GetLevelManager().GetLevelForNumber(levelNumber);
         if (level != null)
         {
             StartGameForLevel(level);
@@ -179,7 +203,7 @@ public class GameController : MonoBehaviour
         else
         {
             GetGUIManager().DestroyCurrentGUI();
-            ShowEndScreen();
+            StartCoroutine(ShowEndScreen());
             return false;
         }
     }
@@ -196,14 +220,12 @@ public class GameController : MonoBehaviour
 
         m_gameMode = GameMode.GAME;
 
-        LevelManager levelManager = GetComponent<LevelManager>();
+        LevelManager levelManager = GetLevelManager();
         levelManager.m_currentLevel = level;
-        levelManager.m_currentLevelData = LevelData.LoadFromFile(level.m_number);
-        levelManager.m_currentLevelData.m_currentActionsCount = 0;
         BuildLevel(level);
         StartLevel(level);
         
-        GetComponent<GUIManager>().DisplayGameGUIForLevel(level);
+        GetGUIManager().RebuildGUI();
 
         m_gameStatus = GameStatus.IDLE;
 
@@ -215,7 +237,7 @@ public class GameController : MonoBehaviour
 
     public bool StartNextLevel()
     {
-        int nextLevelNumber = GetComponent<LevelManager>().m_currentLevel.m_number + 1;
+        int nextLevelNumber = GetLevelManager().m_currentLevel.m_number + 1;
         StartGameForLevelNumber(nextLevelNumber);
 
         return true;
@@ -314,15 +336,25 @@ public class GameController : MonoBehaviour
         persistentDataManager.SetMaxLevelReached(0, true);
 
         //reset data for every level
-        GetComponent<LevelManager>().CreateOrOverwriteAllLevelData();
+        GetLevelManager().CreateOrOverwriteAllLevelData();
     }
 
-    public IEnumerator ShowInterlevelScreenAfterDelay(float delay, GameStatus gameStatus)
+    //public IEnumerator ShowInterlevelScreenAfterDelay(float delay, GameStatus gameStatus)
+    //{
+    //    if (delay > 0)
+    //        yield return new WaitForSeconds(delay);
+
+    //    GetGUIManager().ShowInterLevelScreen(gameStatus);
+
+    //    yield return null;
+    //}
+
+    public IEnumerator ShowInterlevelWindowAfterDelay(float delay, GameStatus gameStatus)
     {
         if (delay > 0)
             yield return new WaitForSeconds(delay);
 
-        GetGUIManager().ShowInterLevelScreen(gameStatus);
+        GetGUIManager().ShowInterLevelWindow(gameStatus);
 
         yield return null;
     }
@@ -335,40 +367,29 @@ public class GameController : MonoBehaviour
         return m_guiManager;
     }
 
+    public LevelManager GetLevelManager()
+    {
+        if (m_levelManager == null)
+            m_levelManager = GetComponent<LevelManager>();
+
+        return m_levelManager;
+    }
+
     public void Update()
     {
         if (m_gameMode == GameMode.GAME)
         {
             if (m_gameStatus == GameStatus.VICTORY)
             {
-                LevelData currentLevelData = GameController.GetInstance().GetComponent<LevelManager>().m_currentLevelData;
-                if (!currentLevelData.m_done)
-                {
-                    currentLevelData.m_done = true;
-                    currentLevelData.SaveToFile();
-                }
-
-                Level currentLevel = GetInstance().GetComponent<LevelManager>().m_currentLevel;
-
-                PersistentDataManager persistentDataManager = GetComponent<PersistentDataManager>();
-                int nextLevelNumber = currentLevel.m_number + 1;
-                persistentDataManager.SetMaxLevelReached(nextLevelNumber); //we reached the next level               
-                //GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
-                IEnumerator interlevelScreenRoutine = ShowInterlevelScreenAfterDelay(1.0f, GameStatus.VICTORY);
-                StartCoroutine(interlevelScreenRoutine);
-
                 m_gameStatus = GameStatus.IDLE;
+
+                StartCoroutine(ShowInterlevelWindowAfterDelay(1.0f, GameStatus.VICTORY));
             }
             else if (m_gameStatus == GameStatus.DEFEAT)
             {
                 m_gameStatus = GameStatus.IDLE;
-
-                IEnumerator interlevelScreenRoutine = ShowInterlevelScreenAfterDelay(0.4f, GameStatus.DEFEAT);
-                StartCoroutine(interlevelScreenRoutine);
-
-                //GetComponent<CallFuncHandler>().AddCallFuncInstance(GetComponent<GUIManager>().DismissCurrentGUI, 1.0f);
-                //GetComponent<CallFuncHandler>().AddCallFuncInstance(ClearLevel, 1.5f);
-                //GetComponent<CallFuncHandler>().AddCallFuncInstance(RestartLevel, 2.0f);
+                
+                StartCoroutine(ShowInterlevelWindowAfterDelay(0.4f, GameStatus.DEFEAT));
             }
             else if (m_gameStatus == GameStatus.RUNNING)
             {

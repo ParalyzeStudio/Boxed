@@ -180,7 +180,7 @@ public class BrickRenderer : MonoBehaviour
                 if (GameController.GetInstance().m_gameMode == GameController.GameMode.GAME)
                 {
                     //increment the actions count
-                    GameController.GetInstance().GetComponent<LevelManager>().m_currentLevelData.m_currentActionsCount++;
+                    GameController.GetInstance().m_currentMovesCount++;
 
                     //update the GameGUI
                     GameGUI gameGUI = (GameGUI)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
@@ -472,18 +472,18 @@ public class BrickRenderer : MonoBehaviour
     {
         m_brickTeleporting = true;
 
-        //float dropHeight = 4.0f * Brick.BRICK_BASIS_DIMENSION;
-        //Vector3 brickFinalPosition = transform.localPosition;
-        //transform.localPosition += new Vector3(0, dropHeight, 0);
+        float dropHeight = 4.0f * Brick.BRICK_BASIS_DIMENSION;
+        Vector3 brickFinalPosition = transform.localPosition;
+        transform.localPosition += new Vector3(0, dropHeight, 0);
 
-        //float dropDuration = 0.5f;
+        float dropDuration = 0.5f;
 
-        //BrickAnimator brickAnimator = GetComponent<BrickAnimator>();
-        //brickAnimator.UpdatePivotPoint(Vector3.zero);
-        //brickAnimator.TranslateTo(brickFinalPosition, dropDuration, 0, ValueAnimator.InterpolationType.HERMITE1, false);
+        BrickAnimator brickAnimator = GetComponent<BrickAnimator>();
+        brickAnimator.UpdatePivotPoint(Vector3.zero);
+        brickAnimator.TranslateTo(brickFinalPosition, dropDuration, 0, ValueAnimator.InterpolationType.HERMITE1, false);
 
         //Assemble the brick with small glow cubes
-        AssembleBrick2();
+        //AssembleBrick2();
 
         //FX_TeleportIN
         //ParticleSystem teleportInFX = Instantiate(m_teleportInFX);

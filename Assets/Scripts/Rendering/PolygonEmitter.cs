@@ -65,15 +65,18 @@ public class PolygonEmitter : MonoBehaviour
     **/
     private IEnumerator LoopSquares(float delay)
     {
-        yield return new WaitForSeconds(delay);
+        if (delay > 0)
+            yield return new WaitForSeconds(delay);
 
-        while (m_active)
+        while (true)
         {
-            EmitPolygon();
-
-            yield return new WaitForSeconds(m_emissionPeriod);
+            if (m_active)
+            {
+                EmitPolygon();
+                yield return new WaitForSeconds(m_emissionPeriod);
+            }
+            else
+                yield return null;
         }
-
-        yield return null;
     }
 }

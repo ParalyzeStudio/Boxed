@@ -15,7 +15,8 @@ public class ThemeManager : MonoBehaviour
     //private ThemeID m_prevThemeID;
 
     public Theme[] m_themes;
-    public int m_selectedThemeIndex { get; set; }
+
+    private PersistentDataManager m_persistentDataManager;
 
     public void Start()
     {
@@ -172,9 +173,12 @@ public class ThemeManager : MonoBehaviour
         }
     }
     
+    /**
+    * Return the theme associated to this chapter
+    **/
     public Theme GetSelectedTheme()
     {
-        return m_themes[m_selectedThemeIndex];
+        return m_themes[GetPersistentDataManager().GetCurrentChapterIndex()];
     }
 
     public Theme GetThemeForNumber(int number)
@@ -205,7 +209,7 @@ public class ThemeManager : MonoBehaviour
         //replace theme variables values inside inspector$
         //m_selectedTheme = m_themes[(int)m_themeID];
 
-        Theme selectedTheme = m_themes[m_selectedThemeIndex];
+        Theme selectedTheme = GetSelectedTheme();
 
         //update the scene elements to match the currently selected theme
         //colors
@@ -229,6 +233,14 @@ public class ThemeManager : MonoBehaviour
                 floorTiles[i].m_tileStateDirty = true;
             }
         }
+    }
+
+    private PersistentDataManager GetPersistentDataManager()
+    {
+        if (m_persistentDataManager == null)
+            m_persistentDataManager = GameController.GetInstance().GetComponent<PersistentDataManager>();
+
+        return m_persistentDataManager;
     }
 
     /**
@@ -268,12 +280,7 @@ public class ThemeManager : MonoBehaviour
 
     public void Update()
     {
-        if (m_themes[m_selectedThemeIndex].ParametersAreDirty())
-            InvalidateSelectedTheme();
-
-        //if (m_theme != m_prevTheme)
-        //{
-        //    InvalidateTheme();
-        //}
+        //if (GetSelectedTheme().ParametersAreDirty())
+        //    InvalidateSelectedTheme();
     }
 }

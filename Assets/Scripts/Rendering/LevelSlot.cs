@@ -25,7 +25,7 @@ public class LevelSlot : MonoBehaviour
         int localLevelNumber = m_index + 1;
         int chapterIndex = m_parentGUI.GetPersistentDataManager().GetCurrentChapterIndex();
         int absoluteLevelNumber = chapterIndex * LevelManager.NUM_LEVELS_PER_CHAPTER + localLevelNumber;
-        m_level = GameController.GetInstance().GetComponent<LevelManager>().GetLevelForNumber(absoluteLevelNumber);
+        m_level = GameController.GetInstance().GetLevelManager().GetLevelForNumber(absoluteLevelNumber);
 
         m_levelNumberText.text = localLevelNumber.ToString();
         Invalidate();
@@ -65,10 +65,8 @@ public class LevelSlot : MonoBehaviour
             Disable(true);
         else
         {
-            LevelData levelData = LevelData.LoadFromFile(m_level.m_number);
-            if (levelData == null)
-                Disable(true);
-            else if (!levelData.m_done)
+            LevelData levelData = GameController.GetInstance().GetLevelManager().GetLevelDataForLevel(m_level);
+            if (levelData.m_movesCount == 0)
                 Disable(false);
             else
                 Enable();
@@ -79,15 +77,14 @@ public class LevelSlot : MonoBehaviour
     {
         if (m_interactable)
         {
-            GameController.GetInstance().GetComponent<LevelManager>().m_currentLevel = m_level;
+            GameController.GetInstance().GetLevelManager().m_currentLevel = m_level;
 
             m_parentGUI.GetPersistentDataManager().SavePrefs();
 
             //LevelsGUI levelsGUI = (LevelsGUI)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
             //levelsGUI.OnSlotClick(this);
-
-            IEnumerator interlevelScreenCoroutine = GameController.GetInstance().ShowInterlevelScreenAfterDelay(0, GameController.GameStatus.IDLE);
-            StartCoroutine(interlevelScreenCoroutine);
+            
+            StartCoroutine(GameController.GetInstance().ShowInterlevelWindowAfterDelay(0, GameController.GameStatus.IDLE));
             //GameController.GetInstance().StartGameForLevel(m_level);
         }
     }
