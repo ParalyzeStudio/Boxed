@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Brick
 {
@@ -369,6 +370,7 @@ public class Brick
         //Tile[] newCoveredTiles = new Tile[2];
         CoveredTiles newCoveredTiles = new CoveredTiles();
         rollResult = CanRoll(currentFace, rollToFace, rollDirection, out newCoveredTiles);
+
         if (rollResult == RollResult.VALID || rollResult == RollResult.FALL)
         {
             //set the state of the brick to ROLLING
@@ -383,7 +385,7 @@ public class Brick
                 {
                     ((IceTile)previousCoveredTile).m_blocked = true;
                 }
-            }
+            }           
 
             //if (rollResult == RollResult.VALID)
             //{
@@ -472,6 +474,8 @@ public class Brick
             {
                 if (nextTile1.IsBlocking())
                     return RollResult.NONE;
+                else if (nextTile1.CurrentState == Tile.State.DISABLED)
+                    rollResult = RollResult.FALL;
 
                 Tile nextTile2 = floor.GetNextTileForDirection(nextTile1, rollDirection);
                 if (nextTile2 != null)
@@ -496,6 +500,7 @@ public class Brick
                 //find the tile next to m_coveredTile[0] or m_coveredTile[1] in the rolling direction
                 Tile coveredTile1 = m_coveredTiles.GetTileAtIndex(0);
                 Tile coveredTile2 = m_coveredTiles.GetTileAtIndex(1);
+
                 Tile nextTile = floor.GetNextTileForDirection(coveredTile1, rollDirection);
                 if (nextTile != null)
                 {
@@ -536,7 +541,7 @@ public class Brick
                     if (nextTile1.IsBlocking() || nextTile2.IsBlocking())
                         return RollResult.NONE;
                     else if (nextTile1.CurrentState == Tile.State.DISABLED || nextTile2.CurrentState == Tile.State.DISABLED)
-                        return RollResult.FALL;
+                        rollResult =  RollResult.FALL;
 
                     newCoveredTiles.SetTiles(nextTile1, nextTile2);
                 }
@@ -603,18 +608,21 @@ public class Brick
     * There is an exception to this rule, as we are allowed to cycle if we rolled on a tile that adds something to the gameplay (bonus, switch...)
     * So we need to check if the covered tiles inside a cycle contains such a tile
     **/
-    public bool IsCycling(int distanceFromRoot)
+    public bool IsCycling(int distanceFromRoot, out List<CoveredTiles> cycle)
     {
+        cycle = new List<CoveredTiles>();
+
         if (distanceFromRoot < 2)
             return false;
 
         int index = distanceFromRoot;
-        CoveredTiles coveredTiles = m_rolledOnTiles[index];
+        CoveredTiles lastCoveredTiles = m_rolledOnTiles[index];
         
         int minDistanceForCycling = 2; //we need at least to move the brick twice to obtain a minimum cycle
-        bool bCycleContainsBonuses = false;
+        //bool bCycleContainsBonuses = false;
         while (index >= 0)
         {
+            //skip the first occurences until we reach the minimum cycle length
             if (minDistanceForCycling > 0)
             {
                 minDistanceForCycling--;
@@ -624,14 +632,31 @@ public class Brick
 
             CoveredTiles tiles = m_rolledOnTiles[index];
 
-            if (!bCycleContainsBonuses && tiles.ContainsBonus()) //no need to check if this node contains a bonus if we already checked it positively before
-                bCycleContainsBonuses = true;
+            //if (!bCycleContainsBonuses && tiles.ContainsBonus()) //no need to check if this node contains a bonus if we already checked it positively before
+            //    bCycleContainsBonuses = true;
 
-            bool bCycling = coveredTiles.ShareSameTiles(tiles);
+            //bool bCycling = coveredTiles.ShareSameTiles(tiles);
+            //if (bCycling)
+            //{
+            //    //check if it contains bonus. If not we consider that the cycle is useless and the path containing this cycle can be removed
+            //    return !bCycleContainsBonuses;
+            //}
+
+            bool bCycling = lastCoveredTiles.ShareSameTiles(tiles);
             if (bCycling)
             {
-                //check if it contains bonus. If not we consider that the cycle is useless and the path containing this cycle can be removed
-                return !bCycleContainsBonuses;
+                //build the cycle
+                for (int i = distanceFromRoot - 1; i > index; i--)
+                {
+                    cycle.Add(m_rolledOnTiles[i]);
+                }
+
+                //for (int i = distanceFromRoot; i >= index; i--)
+                //{
+                //    cycle.Add(m_rolledOnTiles[i]);
+                //}               
+
+                return true;
             }
 
             index--;

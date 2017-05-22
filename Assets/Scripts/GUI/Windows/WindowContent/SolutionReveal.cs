@@ -6,12 +6,12 @@ public class SolutionReveal : GameWindowElement
     public GameObject m_solutionLineArrows;
     public GameObject m_solutionLineSquares;
     private bool m_solutionDisplayUseSquares = true;
-    
+
     private const int SOLUTION_MAX_ICONS_PER_LINE = 15;
 
     public override void Show()
     {
-       BuildSolution();
+        BuildSolution();
 
         base.Show();
     }
@@ -89,10 +89,10 @@ public class SolutionReveal : GameWindowElement
                 iconTransform.rotation = Quaternion.Euler(0, 0, -90);
                 break;
             case Brick.RollDirection.BOTTOM_LEFT:
-                iconTransform.rotation = Quaternion.Euler(0, 0, 180);
+                iconTransform.rotation = Quaternion.Euler(0, 0, 90);
                 break;
             case Brick.RollDirection.BOTTOM_RIGHT:
-                iconTransform.rotation = Quaternion.Euler(0, 0, 90);
+                iconTransform.rotation = Quaternion.Euler(0, 0, 180);
                 break;
         }
 

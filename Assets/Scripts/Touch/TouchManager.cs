@@ -7,10 +7,10 @@ public class TouchManager : MonoBehaviour
 
     public bool m_touchDeactivated { get; set; }
 
-#if UNITY_IPHONE || UNITY_ANDROID || UNITY_WINRT || UNITY_BLACKBERRY //touch devices
-    protected int m_touchCount;
-#elif UNITY_STANDALONE || UNITY_WEBPLAYER
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_EDITOR
     protected bool m_mouseButtonPressed;
+#elif UNITY_IPHONE || UNITY_ANDROID || UNITY_WINRT || UNITY_BLACKBERRY //touch devices
+    protected int m_touchCount;   
 #endif
 
     public Vector2 m_prevPointerLocation { get; set; }
@@ -26,10 +26,11 @@ public class TouchManager : MonoBehaviour
 
     public void Awake()
     {
-#if UNITY_IPHONE || UNITY_ANDROID || UNITY_WINRT || UNITY_BLACKBERRY //touch devices
-        m_touchCount = 0;
-#elif UNITY_STANDALONE || UNITY_WEBPLAYER
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_EDITOR
         m_mouseButtonPressed = false;
+#elif UNITY_IPHONE || UNITY_ANDROID || UNITY_WINRT || UNITY_BLACKBERRY //touch devices
+         m_touchCount = 0;
+       
 #endif
     }
 
@@ -43,37 +44,7 @@ public class TouchManager : MonoBehaviour
 
         PointerEventType eventType = PointerEventType.NONE;
         Vector2 pointerLocation = Vector2.zero;
-#if UNITY_IPHONE || UNITY_ANDROID || UNITY_WINRT || UNITY_BLACKBERRY //touch devices
-        if (Input.touchCount == 1)
-        {
-            Touch touch = Input.GetTouch(0);
-            pointerLocation = touch.position;
-
-            if (m_touchCount == 0) //first press = OnPointerDown
-            {
-                eventType = PointerEventType.POINTER_DOWN;
-                m_prevPointerLocation = pointerLocation;
-            }
-            else //other presses = OnPointerMove
-            {
-                m_pointerDeltaLocation = pointerLocation - m_prevPointerLocation;
-                if (m_pointerDeltaLocation.sqrMagnitude >= MOVE_EPSILON)
-                {
-                    eventType = PointerEventType.POINTER_MOVE;
-                    m_prevPointerLocation = pointerLocation;
-                }
-            }
-        }
-        else if (Input.touchCount == 0)
-        {
-            if (m_touchCount == 1) //we switched from a press state to a release state
-            {
-                eventType = PointerEventType.POINTER_UP;
-            }
-        }
-        m_touchCount = Input.touchCount;
-#elif UNITY_STANDALONE || UNITY_WEBPLAYER //devices with mouse
-
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_EDITOR
         if (Input.GetMouseButton(0))
         {
             pointerLocation = Input.mousePosition;
@@ -102,8 +73,37 @@ public class TouchManager : MonoBehaviour
                 m_mouseButtonPressed = false;
             }
         }
+#elif UNITY_IPHONE || UNITY_ANDROID || UNITY_WINRT || UNITY_BLACKBERRY //touch devices
+        if (Input.touchCount == 1)
+        {
+            Touch touch = Input.GetTouch(0);
+            pointerLocation = touch.position;
+
+            if (m_touchCount == 0) //first press = OnPointerDown
+            {
+                eventType = PointerEventType.POINTER_DOWN;
+                m_prevPointerLocation = pointerLocation;
+            }
+            else //other presses = OnPointerMove
+            {
+                m_pointerDeltaLocation = pointerLocation - m_prevPointerLocation;
+                if (m_pointerDeltaLocation.sqrMagnitude >= MOVE_EPSILON)
+                {
+                    eventType = PointerEventType.POINTER_MOVE;
+                    m_prevPointerLocation = pointerLocation;
+                }
+            }
+        }
+        else if (Input.touchCount == 0)
+        {
+            if (m_touchCount == 1) //we switched from a press state to a release state
+            {
+                eventType = PointerEventType.POINTER_UP;
+            }
+        }
+        m_touchCount = Input.touchCount;        
 #endif
-        
+
         if (eventType != PointerEventType.NONE)
         {
             //If GUI does not process the current mouse position, pass the pointer event to the GameTouchHandler

@@ -94,13 +94,6 @@ public class GUIManager : MonoBehaviour
     {
         GameController.GameMode gameMode = GameController.GetInstance().m_gameMode;
 
-        if (gameMode == GameController.GameMode.GAME)
-        {
-            GameGUI gameGUI = (GameGUI)m_currentGUI;
-            if (gameGUI.m_confirmHomeWindow != null)
-                return true;
-        }
-
         Button[] childButtons = m_canvas.GetComponentsInChildren<Button>();
         for (int i = 0; i != childButtons.Length; i++)
         {
@@ -110,18 +103,6 @@ public class GUIManager : MonoBehaviour
                 return true;
             }
         }
-
-        //Transform[] childTransforms = m_canvas.GetComponentsInChildren<Transform>();
-        //for (int i = 0; i != childTransforms.Length; i++)
-        //{
-        //    RectTransform tf = childTransforms[i].GetComponent<RectTransform>();
-        //    if (tf == m_currentGUI.transform || tf == m_canvas.transform)
-        //        continue;
-        //    if (RectTransformUtility.RectangleContainsScreenPoint(tf, pointerLocation))
-        //    {
-        //        return true;
-        //    }
-        //}
 
         return false;
     }

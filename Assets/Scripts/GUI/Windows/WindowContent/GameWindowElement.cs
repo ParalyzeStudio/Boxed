@@ -8,18 +8,17 @@ public class GameWindowElement : CanvasGroupFade
     public float m_animationDelay = 0;
 
     private const float ELEMENT_TRANSLATION_LENGTH = 100.0f;
-    public const float ELEMENT_ANIMATION_DURATION = 0.2f;
+    public const float ELEMENT_ANIMATION_DURATION = 0.4f;
 
     public virtual void Show()
     {
         //translate the button
-        GUIImageAnimator elementAnimator = GetComponent<GUIImageAnimator>();
-        elementAnimator.SyncPositionFromTransform();
-        elementAnimator.SetPosition(elementAnimator.GetPosition() - new Vector3(0, ELEMENT_TRANSLATION_LENGTH, 0));
-        elementAnimator.TranslateBy(new Vector3(0, ELEMENT_TRANSLATION_LENGTH, 0), m_animationDuration, m_animationDelay);
+        //GUIImageAnimator elementAnimator = GetComponent<GUIImageAnimator>();
+        //elementAnimator.SyncPositionFromTransform();
+        //elementAnimator.SetPosition(elementAnimator.GetPosition() - new Vector3(0, ELEMENT_TRANSLATION_LENGTH, 0));
+        //elementAnimator.TranslateBy(new Vector3(0, ELEMENT_TRANSLATION_LENGTH, 0), m_animationDuration, m_animationDelay);
 
         //fade in the button
-        SetOpacity(0);
         FadeTo(1.0f, m_animationDuration, m_animationDelay);
     }
 

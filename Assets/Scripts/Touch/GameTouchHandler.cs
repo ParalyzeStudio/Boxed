@@ -194,7 +194,7 @@ public class GameTouchHandler : TouchHandler
         }
         else if (tileSelectionMode == TileEditingPanel.TileSelectionMode.DESELECT)
         {
-            if (raycastTile.CurrentState == Tile.State.NORMAL)
+            if (raycastTile.CurrentState == Tile.State.NORMAL || raycastTile.CurrentState == Tile.State.BLOCKED)
             {
                 raycastTile.CurrentState = Tile.State.DISABLED;
 

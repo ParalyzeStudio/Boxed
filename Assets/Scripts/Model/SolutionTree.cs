@@ -13,7 +13,8 @@ public class SolutionTree
     public Tile[] m_startTiles; //the tile that serves as start point for or tree
     public Tile m_targetTile; //the tile that serves as target for the search of solutions
 
-    public List<Tile> m_bonusTiles;
+    public List<Tile> m_bonusTiles; //a copy of the tiles holding bonuses
+    public HashSet<Tile> m_traversedBonusTiles;
 
     public Brick m_pawn; //the brick serving as a pawn
     public SolutionNode m_currentNode; //the node the pawn is currently on
@@ -38,7 +39,8 @@ public class SolutionTree
         m_targetTile = targetTile;
         m_oneCoveredTileOnly = oneCoveredTileOnly;
         m_successNodes = new List<SolutionNode>();
-        m_isSolved = false;
+        m_isSolved = false;        
+        m_traversedBonusTiles = new HashSet<Tile>();
 
         m_processedNodesCount = 0;
         m_validNodesCount = 0;
@@ -115,11 +117,21 @@ public class SolutionTree
 
         //construct a root node with arbitrary direction (does not matter there)
         m_currentNode = new SolutionNode(Brick.RollDirection.BOTTOM_LEFT, null, 0);
-        
+
+        int maxMoves = 100000;
+        int movesCount = 0;
         while (!(m_stopWhenTreeIsSolved && m_isSolved))
         {
             if (!MovePawn())
                 break;
+
+            if (movesCount >= maxMoves)
+            {
+                Debug.Log("Reached max move count");
+                break;
+            }
+            else
+                movesCount++;
         }
 
         //now search for paths that are marked as successful and return them
@@ -345,11 +357,44 @@ public class SolutionTree
 
             //add the covered tiles to the pawn list
             m_pawn.AddCurrentCoveredTilesToRolledOnTiles();
-
-            if (m_pawn.IsCycling(m_currentNode.m_distanceFromRoot))
+           
+            //test if we ended up on a cycle
+            List<Brick.CoveredTiles> cycle;
+            bool isCycling = m_pawn.IsCycling(m_currentNode.m_distanceFromRoot, out cycle);
+            if (isCycling)
             {
-                //Debug.Log("CYCLING");
-                m_currentNode.SetAsLeaf();
+                //There is an exception to this rule, as we are allowed to cycle if we rolled on a tile that adds something to the gameplay (bonus, switch...)
+                //So we need to check if the covered tiles inside a cycle contains such a tile
+                for (int i = 0; i != cycle.Count; i++)
+                {
+                    Tile[] cycleTiles = cycle[i].GetAsTruncatedArray();
+                    for (int j = 0; j != cycleTiles.Length; j++)
+                    {
+                        //check bonuses
+                        if (cycleTiles[j].AttachedBonus != null && !m_traversedBonusTiles.Contains(cycleTiles[j]))
+                        {
+                            isCycling = false;
+                            break;
+                        }
+                    }
+
+                    if (!isCycling)
+                        break;
+                }
+
+                if (isCycling)
+                {
+                    //if we end up on a cycle set the node as a leaf node
+                    m_currentNode.SetAsLeaf();
+                }
+            }
+
+            //check if the covered tiles contains some bonus
+            Tile[] coveredTiles = m_pawn.m_coveredTiles.GetAsTruncatedArray();
+            for (int i = 0; i != coveredTiles.Length; i++)
+            {
+                if (coveredTiles[i].AttachedBonus != null)
+                    m_traversedBonusTiles.Add(coveredTiles[i]);
             }
         }
     }
@@ -378,11 +423,13 @@ public class SolutionTree
 
         //rollback actions
         Tile[] currentCoveredTiles = m_pawn.m_coveredTiles.GetAsTruncatedArray();
-        //on switches
+        //on switches and bonuses
         for (int i = 0; i != currentCoveredTiles.Length; i++)
         {
             if (currentCoveredTiles[i].CurrentState == Tile.State.SWITCH)
                 ((SwitchTile)currentCoveredTiles[i]).Toggle();
+            if (currentCoveredTiles[i].AttachedBonus != null)
+                m_traversedBonusTiles.Remove(currentCoveredTiles[i]);
         }
 
         //on ice tiles

@@ -13,6 +13,7 @@ public class BrickController : MonoBehaviour
     }
 
     /**
+    * DEPRECATED - now use GUI buttons to process touch on screen
     * Process the touch that has been raycast to a plane parallel to the floor with y-coordinate equals to zero
     **/
     public void ProcessTouch(Vector2 touchPlaneProjection)

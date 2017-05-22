@@ -493,7 +493,6 @@ public class BrickRenderer : MonoBehaviour
 
     public void OnFinishTeleportation()
     {
-        Debug.Log("OnFinishTeleportation");
         m_brickTeleporting = false;
 
         Tile landedTile = m_brick.m_coveredTiles.GetTileAtIndex(0);

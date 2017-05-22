@@ -100,8 +100,6 @@ public class GameWindow : MonoBehaviour
 
     protected virtual IEnumerator ShowContentAfterDelay(GameWindowContent content, float delay)
     {
-        content.MakeInvisible();
-
         if (delay > 0)
             yield return new WaitForSeconds(delay);
 
@@ -114,11 +112,11 @@ public class GameWindow : MonoBehaviour
         yield return null;
     }
 
-    protected virtual IEnumerator DismissCurrentContent()
+    protected virtual IEnumerator DismissCurrentContent(bool bDestroy = false)
     {
         GameWindowContent dismissedContent = m_content;
         m_content = null;
-        yield return dismissedContent.Dismiss();
+        yield return dismissedContent.Dismiss(bDestroy);
 
         yield return null;
     }
@@ -137,6 +135,7 @@ public class GameWindow : MonoBehaviour
     {
         m_backBtn.gameObject.SetActive(true);
         m_backBtn.m_animationDelay = delay;
+        m_backBtn.SetOpacity(0);
         m_backBtn.Show();
     }
 
@@ -154,6 +153,7 @@ public class GameWindow : MonoBehaviour
     {
         m_creditsAmounts.gameObject.SetActive(true);
         m_creditsAmounts.m_animationDelay = delay;
+        m_creditsAmounts.SetOpacity(0);
         m_creditsAmounts.Show();
     }
 

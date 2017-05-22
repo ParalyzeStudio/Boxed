@@ -1,4 +1,4 @@
-﻿//#define START_FROM_SCENE //use this to start from one particular scene defined inside the inspector
+﻿#define START_FROM_SCENE //use this to start from one particular scene defined inside the inspector
 
 using System.Collections;
 using UnityEngine;
@@ -229,10 +229,10 @@ public class GameController : MonoBehaviour
 
         m_gameStatus = GameStatus.IDLE;
 
+        //TODO replace tutorials
         //show tutorial if relevant by searching for a tutorial matching this level
-        GameGUI gameGUI = ((GameGUI)GetComponent<GUIManager>().m_currentGUI);
-        if (!gameGUI.ShowFirstTutorial())
-            m_gameStatus = GameStatus.RUNNING;
+        //GameGUI gameGUI = ((GameGUI)GetComponent<GUIManager>().m_currentGUI);
+        //gameGUI.ShowFirstTutorial();
     }
 
     public bool StartNextLevel()

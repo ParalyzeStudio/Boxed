@@ -15,18 +15,30 @@ public class MainPageMenu : GameWindow
 
     public void OnClickShop()
     {
+        StartCoroutine(DismissCurrentContent());
         m_shopWindowContent = Instantiate(m_shopWindowContentPfb);
         m_shopWindowContent.transform.SetParent(this.transform, false);
-        StartCoroutine(DismissCurrentContent());
-        StartCoroutine(ShowContentAfterDelay(m_shopWindowContent, 1.5f * GameWindowElement.ELEMENT_ANIMATION_DURATION));
+        m_shopWindowContent.gameObject.SetActive(false);
+        StartCoroutine(ShowContentAfterDelay(m_shopWindowContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
     }
 
     public void OnClickSettings()
     {
+        StartCoroutine(DismissCurrentContent());
         m_settingsContent = Instantiate(m_settingsContentPfb);
         m_settingsContent.transform.SetParent(this.transform, false);
-        StartCoroutine(DismissCurrentContent());
-        StartCoroutine(ShowContentAfterDelay(m_settingsContent, 1.5f * GameWindowElement.ELEMENT_ANIMATION_DURATION));
+        m_settingsContent.gameObject.SetActive(false);
+        StartCoroutine(ShowContentAfterDelay(m_settingsContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
+    }
+
+    public void OnClickInfo()
+    {
+        Debug.Log(">>>>OnClickInfo");
+    }
+
+    public void OnClickGameCenter()
+    {
+        Debug.Log(">>>>OnClickGameCenter");
     }
 
     public override void OnClickBack()
@@ -39,7 +51,7 @@ public class MainPageMenu : GameWindow
                     m_settingsContent.SaveSettings();
 
                 StartCoroutine(ShowContentAfterDelay(m_mainContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
-                StartCoroutine(DismissCurrentContent());
+                StartCoroutine(DismissCurrentContent(true));
             }
             else
                 base.OnClickBack();

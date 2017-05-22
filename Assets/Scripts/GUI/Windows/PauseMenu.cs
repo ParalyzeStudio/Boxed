@@ -63,7 +63,7 @@ public class PauseMenu : GameWindow
         DismissBackButton();
 
         //display confirmation
-        StartCoroutine(ShowContentAfterDelay(m_confirmHomeWindowContent, 1.5f * GameWindowElement.ELEMENT_ANIMATION_DURATION));
+        StartCoroutine(ShowContentAfterDelay(m_confirmHomeWindowContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
     }
 
     public void OnClickSolution()
@@ -93,7 +93,8 @@ public class PauseMenu : GameWindow
         m_settingsContent = Instantiate(m_settingsContentPfb);
         m_settingsContent.transform.SetParent(this.transform, false);
         StartCoroutine(DismissCurrentContent());
-        StartCoroutine(ShowContentAfterDelay(m_settingsContent, 1.5f * GameWindowElement.ELEMENT_ANIMATION_DURATION));
+        m_settingsContent.gameObject.SetActive(false);
+        StartCoroutine(ShowContentAfterDelay(m_settingsContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
     }
 
     public void OnClickShop()
@@ -101,7 +102,7 @@ public class PauseMenu : GameWindow
         m_shopWindowContent = Instantiate(m_shopWindowContentPfb);
         m_shopWindowContent.transform.SetParent(this.transform, false);
         StartCoroutine(DismissCurrentContent());
-        StartCoroutine(ShowContentAfterDelay(m_shopWindowContent, 1.5f * GameWindowElement.ELEMENT_ANIMATION_DURATION));
+        StartCoroutine(ShowContentAfterDelay(m_shopWindowContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
     }
 
     public void OnClickGameCenter()
@@ -119,7 +120,7 @@ public class PauseMenu : GameWindow
                     m_settingsContent.SaveSettings();
 
                 StartCoroutine(ShowContentAfterDelay(m_mainWindowContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
-                StartCoroutine(DismissCurrentContent());
+                StartCoroutine(DismissCurrentContent(true));
             }
             else
                 base.OnClickBack();
@@ -154,7 +155,6 @@ public class PauseMenu : GameWindow
     {
         StartCoroutine(DismissCurrentContent());
         ShowBackButton(GameWindowElement.ELEMENT_ANIMATION_DURATION);
-        //StartCoroutine(ResetElementAfterDelay(m_confirmHomeWindow, GameWindowElement.ELEMENT_ANIMATION_DURATION));
         StartCoroutine(ShowContentAfterDelay(m_mainWindowContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
     }
 

@@ -202,9 +202,4 @@ public class GameGUI : BaseGUI
             GameController.GetInstance().m_gameStatus = GameController.GameStatus.PAUSED;
         }
     }
-
-    public void OnClickSolution()
-    {
-        ToggleSolution();
-    }
 }
