@@ -5,11 +5,11 @@ public class SolutionConfirmPurchase : GameWindowElement
 {
     public Text m_solutionConfirmPurchaseMessage;
 
-    public override void Show()
+    public override void Show(float delay = 0.0f)
     {
         m_solutionConfirmPurchaseMessage.text = "Confirm the purchase of the solution for 12 credits?";
 
-        base.Show();
+        base.Show(delay);
     }
 
     public void OnClickConfirmPurchaseSolution()

@@ -23,7 +23,7 @@ public class LevelSlot : MonoBehaviour
     public void InvalidateLevel()
     {
         int localLevelNumber = m_index + 1;
-        int chapterIndex = m_parentGUI.GetPersistentDataManager().GetCurrentChapterIndex();
+        int chapterIndex = GameController.GetInstance().GetPersistentDataManager().GetCurrentChapterIndex();
         int absoluteLevelNumber = chapterIndex * LevelManager.NUM_LEVELS_PER_CHAPTER + localLevelNumber;
         m_level = GameController.GetInstance().GetLevelManager().GetLevelForNumber(absoluteLevelNumber);
 
@@ -79,7 +79,7 @@ public class LevelSlot : MonoBehaviour
         {
             GameController.GetInstance().GetLevelManager().m_currentLevel = m_level;
 
-            m_parentGUI.GetPersistentDataManager().SavePrefs();
+            GameController.GetInstance().GetPersistentDataManager().SavePrefs();
 
             //LevelsGUI levelsGUI = (LevelsGUI)GameController.GetInstance().GetComponent<GUIManager>().m_currentGUI;
             //levelsGUI.OnSlotClick(this);

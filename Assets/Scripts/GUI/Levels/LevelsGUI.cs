@@ -21,12 +21,16 @@ public class LevelsGUI : BaseGUI
     public Text m_chapterNumberText;
     public Button m_prevChapterBtn;
     public Button m_nextChapterBtn;
-    
+
+    //chapter lock
+    public ChapterLock m_chapterLockPfb;
+    private ChapterLock m_chapterLock;
+
     private PersistentDataManager m_persistentDataManager;
     
     public override void Show()
     {
-        SetChapterNumber(GetPersistentDataManager().GetCurrentChapterIndex() + 1);
+        SetChapterNumber(GameController.GetInstance().GetPersistentDataManager().GetCurrentChapterIndex() + 1);
 
         //Slots
         StartCoroutine(BuildSlots());
@@ -38,6 +42,9 @@ public class LevelsGUI : BaseGUI
         backButtonAnimator.TranslateBy(new Vector3(150, 0, 0), 0.3f);
         backButtonAnimator.SetOpacity(0);
         backButtonAnimator.FadeTo(1.0f, 0.5f);
+
+        //lock
+        ShowOrHideLock();
     }
 
     private IEnumerator BuildSlots()
@@ -124,7 +131,7 @@ public class LevelsGUI : BaseGUI
 
     public void SetChapterNumber(int chapterNumber)
     {
-        GetPersistentDataManager().SetCurrentChapterIndex(chapterNumber - 1);
+        GameController.GetInstance().GetPersistentDataManager().SetCurrentChapterIndex(chapterNumber - 1);
         m_chapterNumberText.text = "Chapter " + chapterNumber.ToString();
 
         if (chapterNumber == 1)
@@ -228,7 +235,7 @@ public class LevelsGUI : BaseGUI
 
     public void OnClickBack()
     {
-        GetPersistentDataManager().SavePrefs();
+        GameController.GetInstance().GetPersistentDataManager().SavePrefs();
 
         StartCoroutine(DismissSlots());
 
@@ -237,7 +244,7 @@ public class LevelsGUI : BaseGUI
 
     public void OnClickPreviousChapter()
     {
-        int chapterNumber = m_persistentDataManager.GetCurrentChapterIndex() + 1;
+        int chapterNumber = GameController.GetInstance().GetPersistentDataManager().GetCurrentChapterIndex() + 1;
         if (chapterNumber > 1)
         {
             SetChapterNumber(chapterNumber - 1);
@@ -248,7 +255,7 @@ public class LevelsGUI : BaseGUI
 
     public void OnClickNextChapter()
     {
-        int chapterNumber = m_persistentDataManager.GetCurrentChapterIndex() + 1;
+        int chapterNumber = GameController.GetInstance().GetPersistentDataManager().GetCurrentChapterIndex() + 1;
         if (chapterNumber < LevelManager.NUM_CHAPTERS)
         {
             SetChapterNumber(chapterNumber + 1);
@@ -273,7 +280,7 @@ public class LevelsGUI : BaseGUI
         Color overlayBottomColor = theme.m_backgroundGradientBottomColor;
 
         //background
-        GUIManager guiManager = GameController.GetInstance().GetComponent<GUIManager>();
+        GUIManager guiManager = GameController.GetInstance().GetGUIManager();
         guiManager.m_background.ChangeColorsTo(overlayTopColor, overlayBottomColor, 0.5f);
 
         //overlay     
@@ -286,8 +293,45 @@ public class LevelsGUI : BaseGUI
             guiManager.m_overlay.InvalidateColors();
         }
 
+        //show lock window if necessary
+        ShowOrHideLock();
+
         //Update levels on each slot
         //InvalidateLevelsOnSlots();
+    }
+
+    /**
+    * Display a lock if the chapter currently displayed has not been purchased yet
+    **/
+    private void ShowOrHideLock()
+    {
+        PersistentDataManager pDataManager = GameController.GetInstance().GetPersistentDataManager();
+        if (pDataManager.GetCurrentChapterIndex() > pDataManager.GetLastUnlockedChapterIndex())
+        {
+            if (m_chapterLock == null)
+            {
+                m_chapterLock = Instantiate(m_chapterLockPfb);
+                m_chapterLock.transform.SetParent(GameController.GetInstance().GetGUIManager().m_canvas.transform, false);
+            }
+
+            m_chapterLock.InvalidateContent();
+        }
+        else
+        {
+            if (m_chapterLock != null)
+                DismissChapterLock();
+        }
+    }
+
+    private void DismissChapterLock()
+    {
+        Destroy(m_chapterLock.gameObject);
+        m_chapterLock = null;
+    }
+
+    public void OnChapterUnlocked()
+    {
+        DismissChapterLock();
     }
 
     //public void ProcessClickOnSlots(Vector2 clickLocation)
@@ -313,12 +357,4 @@ public class LevelsGUI : BaseGUI
     //            RenderSlots();
     //    }
     //}
-
-    public PersistentDataManager GetPersistentDataManager()
-    {
-        if (m_persistentDataManager == null)
-            m_persistentDataManager = GameController.GetInstance().GetComponent<PersistentDataManager>();
-
-        return m_persistentDataManager;
-    }
 }

@@ -14,6 +14,7 @@ public class GameController : MonoBehaviour
 
     private GUIManager m_guiManager; //to speed up a bit instead of calling GetComponent<>
     private LevelManager m_levelManager; //to speed up a bit instead of calling GetComponent<>
+    private PersistentDataManager m_persistentDataManager; //to speed up a bit instead of calling GetComponent<>
 
     public enum GameMode
     {
@@ -95,8 +96,6 @@ public class GameController : MonoBehaviour
 
         m_gameMode = GameMode.LEVEL_EDITOR;
         GetGUIManager().RebuildGUI();
-
-        yield return null;
     }
 
     public IEnumerator StartMainMenu(float delay = 0)
@@ -108,8 +107,6 @@ public class GameController : MonoBehaviour
 
         m_gameMode = GameMode.MAIN_MENU;
         GetGUIManager().RebuildGUI();
-
-        yield return null;
     }
 
     public IEnumerator StartLevels(float delay = 0)
@@ -119,8 +116,6 @@ public class GameController : MonoBehaviour
 
         m_gameMode = GameMode.LEVELS;
         GetGUIManager().RebuildGUI();
-
-        yield return null;
     }
 
     public IEnumerator ShowEndScreen(float delay = 0)
@@ -130,8 +125,6 @@ public class GameController : MonoBehaviour
 
         m_gameMode = GameMode.END_SCREEN;
         GetGUIManager().RebuildGUI();
-
-        yield return null;
     }
 
     public void ClearLevel()
@@ -329,15 +322,15 @@ public class GameController : MonoBehaviour
     /**
     * Reset the game
     **/
-    public void ResetGame()
-    {
-        //reset the last level reached
-        PersistentDataManager persistentDataManager = GameController.GetInstance().GetComponent<PersistentDataManager>();
-        persistentDataManager.SetMaxLevelReached(0, true);
+    //public void ResetGame()
+    //{
+    //    //reset the last level reached
+    //    PersistentDataManager persistentDataManager = GameController.GetInstance().GetComponent<PersistentDataManager>();
+    //    //persistentDataManager.SetMaxLevelReached(0, true);
 
-        //reset data for every level
-        GetLevelManager().CreateOrOverwriteAllLevelData();
-    }
+    //    //reset data for every level
+    //    GetLevelManager().CreateOrOverwriteAllLevelData();
+    //}
 
     //public IEnumerator ShowInterlevelScreenAfterDelay(float delay, GameStatus gameStatus)
     //{
@@ -355,8 +348,6 @@ public class GameController : MonoBehaviour
             yield return new WaitForSeconds(delay);
 
         GetGUIManager().ShowInterLevelWindow(gameStatus);
-
-        yield return null;
     }
 
     public GUIManager GetGUIManager()
@@ -373,6 +364,14 @@ public class GameController : MonoBehaviour
             m_levelManager = GetComponent<LevelManager>();
 
         return m_levelManager;
+    }
+
+    public PersistentDataManager GetPersistentDataManager()
+    {
+        if (m_persistentDataManager == null)
+            m_persistentDataManager = GetComponent<PersistentDataManager>();
+
+        return m_persistentDataManager;
     }
 
     public void Update()

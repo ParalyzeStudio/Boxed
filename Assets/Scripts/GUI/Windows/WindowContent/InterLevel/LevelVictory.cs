@@ -12,7 +12,7 @@ public class LevelVictory : GameWindowContent
             currentLevelData.SaveToFile();
         }
 
-        yield return base.Show(timeSpacing);
+        yield return StartCoroutine(base.Show(timeSpacing));
     }
 
     public void OnClickSkip()
@@ -24,7 +24,7 @@ public class LevelVictory : GameWindowContent
 
         //update the current level
         int nextLevelNumber = GameController.GetInstance().GetLevelManager().m_currentLevel.m_number + 1;      
-        GameController.GetInstance().GetComponent<PersistentDataManager>().SetMaxLevelReached(nextLevelNumber); //we reached the next level  
+        //GameController.GetInstance().GetComponent<PersistentDataManager>().SetMaxLevelReached(nextLevelNumber); //we reached the next level  
 
         Level nextLevel = GameController.GetInstance().GetLevelManager().GetNextLevel();
         if (nextLevel != null)

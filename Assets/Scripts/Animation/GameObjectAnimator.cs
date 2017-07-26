@@ -7,11 +7,11 @@ public class GameObjectAnimator : ValueAnimator
                                     //is at the transform.localposition of the object then the pivot point is Vector3.zero
     private Vector3 m_objectSize; //the size of the object that will serve to position correctly our object in conjunction with the pivot point
 
-    public override void Awake()
-    {
-        m_pivotPoint = Vector3.zero;
-        m_objectSize = Vector3.zero;
-    }
+    //public override void Awake()
+    //{
+    //    m_pivotPoint = Vector3.zero;
+    //    m_objectSize = Vector3.zero;
+    //}
 
     public virtual Vector3 GetGameObjectSize()
     {

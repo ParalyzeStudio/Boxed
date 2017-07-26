@@ -9,11 +9,11 @@ public class SolutionReveal : GameWindowElement
 
     private const int SOLUTION_MAX_ICONS_PER_LINE = 15;
 
-    public override void Show()
+    public override void Show(float delay = 0.0f)
     {
         BuildSolution();
 
-        base.Show();
+        base.Show(delay);
     }
 
     private void BuildSolution()

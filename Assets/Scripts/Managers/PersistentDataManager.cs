@@ -8,9 +8,10 @@ public class PersistentDataManager : MonoBehaviour
 {
     private const string MUSIC_ON = "music_on";
     private const string SOUND_ON = "sound_on";
-    private const string MAX_LEVEL_REACHED = "max_level_reached";
+    //private const string MAX_LEVEL_REACHED = "max_level_reached";
     private const string FIRST_LAUNCH = "first_launch"; //tells if this is the application first launch that follows a fresh install
     private const string CURRENT_CHAPTER_INDEX = "current_chapter_index";
+    private const string LAST_UNLOCKED_CHAPTER_INDEX = "last_unlocked_chapter_index";
     private const string ADS_ENABLED = "ads_enabled";
     private const string CREDITS_AMOUNT = "credits_amount";
 
@@ -25,7 +26,7 @@ public class PersistentDataManager : MonoBehaviour
     {
         Debug.Log("MUSIC_ON " + IsMusicOn());
         Debug.Log("SOUND_ON " + IsSoundOn());
-        Debug.Log("MAX_LEVEL_REACHED " + GetMaxLevelReached());
+        //Debug.Log("MAX_LEVEL_REACHED " + GetMaxLevelReached());
         Debug.Log("FIRST_LAUNCH " + IsFirstLaunch());
         Debug.Log("CURRENT_CHAPTER_INDEX " + GetCurrentChapterIndex());
         Debug.Log("ADS_ENABLED " + AreAdsEnabled());
@@ -56,20 +57,20 @@ public class PersistentDataManager : MonoBehaviour
         return (soundStatus == 1);
     }
 
-    public void SetMaxLevelReached(int levelNumber, bool forced = false)
-    {
-        int previousMaxLevelReached = GetMaxLevelReached();
-        if (!forced && levelNumber <= previousMaxLevelReached)
-            return;
+    //public void SetMaxLevelReached(int levelNumber, bool forced = false)
+    //{
+    //    int previousMaxLevelReached = GetMaxLevelReached();
+    //    if (!forced && levelNumber <= previousMaxLevelReached)
+    //        return;
 
-        PlayerPrefs.SetInt(MAX_LEVEL_REACHED, levelNumber);
-        m_prefsDirty = true;
-    }
+    //    PlayerPrefs.SetInt(MAX_LEVEL_REACHED, levelNumber);
+    //    m_prefsDirty = true;
+    //}
 
-    public int GetMaxLevelReached()
-    {
-        return PlayerPrefs.GetInt(MAX_LEVEL_REACHED, 0);
-    }
+    //public int GetMaxLevelReached()
+    //{
+    //    return PlayerPrefs.GetInt(MAX_LEVEL_REACHED, 0);
+    //}
 
     public bool IsFirstLaunch()
     {
@@ -90,6 +91,17 @@ public class PersistentDataManager : MonoBehaviour
     public void SetCurrentChapterIndex(int index)
     {
         PlayerPrefs.SetInt(CURRENT_CHAPTER_INDEX, index);
+        m_prefsDirty = true;
+    }
+
+    public int GetLastUnlockedChapterIndex()
+    {
+        return PlayerPrefs.GetInt(LAST_UNLOCKED_CHAPTER_INDEX, 0);
+    }
+
+    public void SetLastUnlockedChapterIndex(int index)
+    {
+        PlayerPrefs.SetInt(LAST_UNLOCKED_CHAPTER_INDEX, index);
         m_prefsDirty = true;
     }
 
@@ -122,6 +134,17 @@ public class PersistentDataManager : MonoBehaviour
     {
         if (m_prefsDirty)
             PlayerPrefs.Save();
+    }
+
+    /**
+    * Reset prefs to default values when player resets the entire game
+    **/
+    public void OnGameReset()
+    {
+        SetCurrentChapterIndex(0);
+        SetLastUnlockedChapterIndex(0);
+        SetCreditsAmount(0);
+        SavePrefs();
     }
 
     /**

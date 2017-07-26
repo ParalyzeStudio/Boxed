@@ -15,7 +15,7 @@ public class ValueAnimator : MonoBehaviour
 
     //Variables to handle fading
     protected bool m_fading;
-    public float m_opacity;
+    public float m_opacity { get; set; }
     protected float m_fromOpacity;
     protected float m_toOpacity;
     protected float m_fadingDuration;
@@ -26,7 +26,7 @@ public class ValueAnimator : MonoBehaviour
 
     //Variables to handle scaling
     protected bool m_scaling;
-    public Vector3 m_scale;
+    protected Vector3 m_scale;
     protected Vector3 m_fromScale;
     protected Vector3 m_toScale;
     protected float m_scalingDuration;
@@ -60,8 +60,7 @@ public class ValueAnimator : MonoBehaviour
 
     //Variables to handle color variation
     protected bool m_colorChanging;
-    public Color m_color;
-    public Vector4 m_vec4Color;
+    protected Color m_color;
     protected Color m_fromColor;
     protected Color m_toColor;
     protected float m_colorChangingDuration;
@@ -69,16 +68,10 @@ public class ValueAnimator : MonoBehaviour
     protected float m_colorChangingElapsedTime;
     protected InterpolationType m_colorChangingInterpolationType;
 
-    //Store previous values to change them dynamically in inspector
-    protected float m_prevOpacity;
-    protected Color m_prevColor;
-
     public virtual void Awake()
     {
         m_opacity = 1;
-        m_prevOpacity = 1;
-        m_color = Color.black;
-        m_prevColor = m_color;
+        m_color = Color.white;
     }
 
     public void FadeTo(float toOpacity, float duration, float delay = 0.0f, InterpolationType interpolType = InterpolationType.LINEAR, bool bDestroyObjectOnFinish = false)
@@ -155,9 +148,7 @@ public class ValueAnimator : MonoBehaviour
         fOpacity = Mathf.Clamp(fOpacity, 0, 1);
 
         m_opacity = fOpacity;
-        m_prevOpacity = fOpacity;
         m_color.a = fOpacity;
-        m_prevColor.a = fOpacity;
         OnOpacityChanged();
 
         ValueAnimator[] childAnimators = this.GetComponentsInChildren<ValueAnimator>();
@@ -218,9 +209,7 @@ public class ValueAnimator : MonoBehaviour
     public virtual void SetColor(Color color)
     {
         m_color = color;
-        m_prevColor = color;
         m_opacity = color.a;
-        m_prevOpacity = color.a;
 
         OnColorChanged();
     }
@@ -510,25 +499,6 @@ public class ValueAnimator : MonoBehaviour
     protected virtual void Update()
     {
         float dt = Time.deltaTime;
-
-        //when we modify the opacity value directly in the inspector in edit mode
-        if (m_prevOpacity != m_opacity)
-        {
-            SetOpacity(m_opacity);
-            return;
-        }
-
-        if (m_prevColor != m_color)
-        {
-            SetColor(m_color);
-            return;
-        }
-
-        if (m_vec4Color.x != m_color.r ||
-            m_vec4Color.y != m_color.g ||
-            m_vec4Color.z != m_color.b ||
-            m_vec4Color.w != m_color.a)
-            m_vec4Color = m_color;
 
         //update values that have to be modified through time
         UpdateOpacity(dt);

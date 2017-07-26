@@ -1,59 +1,64 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameWindowContent : MonoBehaviour
 {
-    private GameWindowElement[] m_elements;
-
-    protected const float DEFAULT_TIME_SPACING = 0.032f; //the default time spent between two elements animations (~2 frames)
+    public const float DEFAULT_TIME_SPACING = 0.05f; //the default time spent between two elements animations (~2 frames)
 
     public virtual IEnumerator Show(float timeSpacing = DEFAULT_TIME_SPACING)
     {
-        gameObject.SetActive(true);
+        //gameObject.SetActive(true);
 
-        //make elements invisible
-        for (int i = 0; i != GetElements().Length; i++)
+        //make elements invisible and buttons interactable       
+        GameWindowElement[] elts = GetComponentsInChildren<GameWindowElement>();
+        for (int i = 0; i != elts.Length; i++)
         {
-            GetElements()[i].SetOpacity(0);
+            GameWindowElement elt = elts[i];
+            //if element has a button, make it interactable
+            Button button = elt.GetButton();
+            if (button != null)
+                button.interactable = true;
+            elt.SetOpacity(0);
         }
 
-        for (int i = 0; i != GetElements().Length; i++)
+        //fade them in
+        //also store the duration of the whole entering animation including time spacings
+        for (int i = 0; i != elts.Length; i++)
         {
-            GetElements()[i].Show();
-            yield return new WaitForSeconds(timeSpacing);
+            elts[i].Show();
+            if (i < elts.Length - 1)
+                yield return new WaitForSeconds(timeSpacing);
         }
-
-        yield return null;
     }
 
-    public virtual IEnumerator Dismiss(bool bDestroy = false, float timeSpacing = DEFAULT_TIME_SPACING)
+    public virtual IEnumerator Dismiss(float timeSpacing = DEFAULT_TIME_SPACING)
     {
-        for (int i = 0; i != GetElements().Length; i++)
+        GameWindowElement[] elts = GetComponentsInChildren<GameWindowElement>();
+        for (int i = 0; i != elts.Length; i++)
         {
-            GetElements()[i].Dismiss();
-            StartCoroutine(GetElements()[i].ResetPositionAfterDelay(GameWindowElement.ELEMENT_ANIMATION_DURATION));
-            //StartCoroutine(GetElements()[i].DeactivateAfterDelay(GameWindowElement.ELEMENT_ANIMATION_DURATION));
-            yield return new WaitForSeconds(timeSpacing);
+            //if element has a button, make it not interactable
+            Button button = elts[i].GetButton();
+            if (button != null)
+                button.interactable = false;
         }
 
-        //for (int i = 0; i != GetElements().Length; i++)
-        //{
-        //    StartCoroutine(GetElements()[i].ResetPositionAfterDelay(GameWindowElement.ELEMENT_ANIMATION_DURATION));
-        //    StartCoroutine(GetElements()[i].DeactivateAfterDelay(GameWindowElement.ELEMENT_ANIMATION_DURATION));
-        //}
+        //also disable back button
+        GameWindow parentWindow = this.transform.parent.gameObject.GetComponent<GameWindow>();
+        parentWindow.DisableBackButton();
+        
+        for (int i = 0; i != elts.Length; i++)
+        {
+            elts[i].Dismiss();
+            StartCoroutine(elts[i].ResetPositionAfterDelay(elts[i].m_animationDuration));
+            if (i < elts.Length - 1)
+                yield return new WaitForSeconds(timeSpacing);
+        }
 
-        if (bDestroy)
-            Destroy(this.gameObject, GameWindowElement.ELEMENT_ANIMATION_DURATION);
-        else
-            StartCoroutine(DeactivateAfterDelay(GameWindowElement.ELEMENT_ANIMATION_DURATION));
-    }
+        yield return new WaitForSeconds(elts[elts.Length - 1].m_animationDuration);
 
-    public GameWindowElement[] GetElements()
-    {
-        if (m_elements == null)
-            m_elements = GetComponentsInChildren<GameWindowElement>();
-
-        return m_elements;
+        //enable the back button
+        parentWindow.EnableBackButton();
     }
 
     public IEnumerator DeactivateAfterDelay(float delay)

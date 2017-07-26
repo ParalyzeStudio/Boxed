@@ -77,4 +77,11 @@ public class LevelData
         }
         return levelData;
     }
+
+    public void Reset()
+    {
+        m_movesCount = 0;
+        m_solutionPurchased = false;
+        SaveToFile();
+    }
 }

@@ -8,8 +8,8 @@ public class PauseMenu : GameWindow
     public GameWindowContent m_confirmHomeWindowContent;
     public Shop m_shopWindowContentPfb;
     private Shop m_shopWindowContent;
-    public SettingsContent m_settingsContentPfb;
-    private SettingsContent m_settingsContent;
+    public Settings m_settingsContentPfb;
+    private Settings m_settingsContent;
 
     //Popup windows that show when clicking the solution button
     public Image m_darkFullScreenBackground;
@@ -63,7 +63,7 @@ public class PauseMenu : GameWindow
         DismissBackButton();
 
         //display confirmation
-        StartCoroutine(ShowContentAfterDelay(m_confirmHomeWindowContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
+        StartCoroutine(ShowContentAfterDelay(m_confirmHomeWindowContent, GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
     }
 
     public void OnClickSolution()
@@ -84,8 +84,7 @@ public class PauseMenu : GameWindow
             solutionPopup = Instantiate(m_solutionConfirmPurchasePfb);
         solutionPopup.transform.SetParent(this.transform, false);
         solutionPopup.gameObject.SetActive(true);
-        solutionPopup.m_animationDelay = delay;
-        solutionPopup.Show();
+        solutionPopup.Show(delay);
     }
 
     public void OnClickSettings()
@@ -94,7 +93,7 @@ public class PauseMenu : GameWindow
         m_settingsContent.transform.SetParent(this.transform, false);
         StartCoroutine(DismissCurrentContent());
         m_settingsContent.gameObject.SetActive(false);
-        StartCoroutine(ShowContentAfterDelay(m_settingsContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
+        StartCoroutine(ShowContentAfterDelay(m_settingsContent, GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
     }
 
     public void OnClickShop()
@@ -102,7 +101,7 @@ public class PauseMenu : GameWindow
         m_shopWindowContent = Instantiate(m_shopWindowContentPfb);
         m_shopWindowContent.transform.SetParent(this.transform, false);
         StartCoroutine(DismissCurrentContent());
-        StartCoroutine(ShowContentAfterDelay(m_shopWindowContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
+        StartCoroutine(ShowContentAfterDelay(m_shopWindowContent, GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
     }
 
     public void OnClickGameCenter()
@@ -119,8 +118,8 @@ public class PauseMenu : GameWindow
                 if (m_content == m_settingsContent)
                     m_settingsContent.SaveSettings();
 
-                StartCoroutine(ShowContentAfterDelay(m_mainWindowContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
-                StartCoroutine(DismissCurrentContent(true));
+                StartCoroutine(ShowContentAfterDelay(m_mainWindowContent, GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
+                StartCoroutine(DismissCurrentContent());
             }
             else
                 base.OnClickBack();
@@ -154,8 +153,8 @@ public class PauseMenu : GameWindow
     public void OnClickCancelHome()
     {
         StartCoroutine(DismissCurrentContent());
-        ShowBackButton(GameWindowElement.ELEMENT_ANIMATION_DURATION);
-        StartCoroutine(ShowContentAfterDelay(m_mainWindowContent, GameWindowElement.ELEMENT_ANIMATION_DURATION));
+        ShowBackButton(GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION);
+        StartCoroutine(ShowContentAfterDelay(m_mainWindowContent, GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
     }
 
     private IEnumerator DeactivateBackgroundAfterDelay(float delay)

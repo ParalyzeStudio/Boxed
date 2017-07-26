@@ -13,13 +13,13 @@ public class GameWindow : MonoBehaviour
         DISMISSED
     }
 
-    protected const float BACKGROUND_FADE_DURATION = 0.3f;
+    protected const float BACKGROUND_FADE_DURATION = 0.55f;
 
     public Color m_backgroundTopColor;
     public Color m_backgroundBottomColor;
 
     public GameWindowElement m_backBtn; //the back button to dismiss a content or the whole window
-    public GameWindowElement m_creditsAmounts; //label displaying the current amount of credits
+    public CreditsAmount m_creditsAmounts; //label displaying the current amount of credits
     private Text m_creditsAmountText;
     protected GameWindowContent m_content; //the content currently displayed in this window
 
@@ -39,9 +39,12 @@ public class GameWindow : MonoBehaviour
         if (bHasBackButton)
             ShowBackButton(BACKGROUND_FADE_DURATION);
 
-        //fade out the gameGUI canvas group
-        CanvasGroupFade gameGUICanvasGroupAnimator = (GameController.GetInstance().GetGUIManager().m_currentGUI).GetComponent<CanvasGroupFade>();
-        gameGUICanvasGroupAnimator.FadeTo(0.0f, BACKGROUND_FADE_DURATION);
+        //always display credits amount
+        ShowCreditsAmount(BACKGROUND_FADE_DURATION);
+
+        //fade out the GUI canvas group
+        CanvasGroupFade GUICanvasGroupAnimator = (GameController.GetInstance().GetGUIManager().m_currentGUI).GetComponent<CanvasGroupFade>();
+        GUICanvasGroupAnimator.FadeTo(0.0f, BACKGROUND_FADE_DURATION);
 
         //also display a gradient background for this menu
         GUIManager guiManager = GameController.GetInstance().GetComponent<GUIManager>();
@@ -68,57 +71,48 @@ public class GameWindow : MonoBehaviour
         m_state = State.LEAVING;
 
         DismissBackButton();
+        DismissCreditsAmount();
 
         if (m_content != null)
             StartCoroutine(DismissCurrentContent());
 
-        float delay = 0.3f; //delay for removing background
+        float delay = 0.0f; //delay for removing background
         //fade in the GUI canvas group
         CanvasGroupFade guiCanvasGroupAnimator = (GameController.GetInstance().GetGUIManager().m_currentGUI).GetComponent<CanvasGroupFade>();
-        guiCanvasGroupAnimator.FadeTo(1.0f, BACKGROUND_FADE_DURATION, delay);
+        guiCanvasGroupAnimator.FadeTo(1.0f, 2 * BACKGROUND_FADE_DURATION, delay);
 
         //dismiss the gradient background for this menu
         GUIManager guiManager = GameController.GetInstance().GetGUIManager();
         QuadAnimator overlayAnimator = guiManager.m_overlay.GetComponent<QuadAnimator>();
-        overlayAnimator.FadeTo(0.0f, BACKGROUND_FADE_DURATION, delay, ValueAnimator.InterpolationType.LINEAR, true);
+        overlayAnimator.FadeTo(0.0f, 2 * BACKGROUND_FADE_DURATION, delay, ValueAnimator.InterpolationType.LINEAR, true);
 
         //deactivate after some time
-        StartCoroutine(DestroyAfterDelay(BACKGROUND_FADE_DURATION + delay));
+        StartCoroutine(DestroyAfterDelay(2 * BACKGROUND_FADE_DURATION + delay));
 
         return true;
     }
 
-    //protected virtual IEnumerator ShowContentAfterDelay(GameWindowContent content, float delay)
-    //{
-    //    if (delay > 0)
-    //        yield return new WaitForSeconds(delay);
-
-    //    m_content = content;
-
-    //    yield return null;
-    //}
-
-    protected virtual IEnumerator ShowContentAfterDelay(GameWindowContent content, float delay)
+    protected virtual IEnumerator ShowContentAfterDelay(GameWindowContent content, float delay, float timeSpacing = GameWindowContent.DEFAULT_TIME_SPACING)
     {
         if (delay > 0)
             yield return new WaitForSeconds(delay);
 
         m_content = content;
-
-        yield return content.Show();
+        content.gameObject.SetActive(true);
+        yield return StartCoroutine(content.Show(timeSpacing));
 
         m_state = State.SET;
-
-        yield return null;
     }
 
-    protected virtual IEnumerator DismissCurrentContent(bool bDestroy = false)
+    public virtual IEnumerator DismissCurrentContent()
     {
-        GameWindowContent dismissedContent = m_content;
-        m_content = null;
-        yield return dismissedContent.Dismiss(bDestroy);
-
-        yield return null;
+        if (m_content != null)
+        {
+            GameWindowContent dismissedContent = m_content;
+            m_content = null;
+            yield return StartCoroutine(dismissedContent.Dismiss());
+            dismissedContent.gameObject.SetActive(false);
+        }
     }
 
     protected IEnumerator DestroyAfterDelay(float delay)
@@ -127,41 +121,63 @@ public class GameWindow : MonoBehaviour
 
         Destroy(this.gameObject);
         m_state = State.DISMISSED;
-
-        yield return null;
     }
 
     public void ShowBackButton(float delay = 0.0f)
     {
+        EnableBackButton();
         m_backBtn.gameObject.SetActive(true);
-        m_backBtn.m_animationDelay = delay;
         m_backBtn.SetOpacity(0);
-        m_backBtn.Show();
+        m_backBtn.Show(delay);
     }
 
     public void DismissBackButton()
     {
         if (m_backBtn != null)
         {
+            DisableBackButton();
             m_backBtn.Dismiss();
-            StartCoroutine(m_backBtn.ResetPositionAfterDelay(GameWindowElement.ELEMENT_ANIMATION_DURATION));
-            StartCoroutine(m_backBtn.DeactivateAfterDelay(GameWindowElement.ELEMENT_ANIMATION_DURATION));
+            StartCoroutine(m_backBtn.ResetPositionAfterDelay(GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
+            StartCoroutine(m_backBtn.DeactivateAfterDelay(GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
         }
+    }
+
+    public void DisableBackButton()
+    {
+        m_backBtn.GetComponent<Button>().interactable = false;
+
+        //tmp, visual debug
+        Image arrow = m_backBtn.GetComponentsInChildren<Image>()[1];
+        arrow.color = ColorUtils.FadeColor(arrow.color, 0.3f);
+        Text backText = m_backBtn.GetComponentInChildren<Text>();
+        backText.color = ColorUtils.FadeColor(backText.color, 0.3f);
+    }
+
+    public void EnableBackButton()
+    {
+        m_backBtn.GetComponent<Button>().interactable = true;
+
+        //tmp, visual debug
+        Image arrow = m_backBtn.GetComponentsInChildren<Image>()[1];
+        arrow.color = ColorUtils.FadeColor(arrow.color, 1.0f);
+        Text backText = m_backBtn.GetComponentInChildren<Text>();
+        backText.color = ColorUtils.FadeColor(backText.color, 1.0f);
     }
 
     public void ShowCreditsAmount(float delay = 0.0f)
     {
         m_creditsAmounts.gameObject.SetActive(true);
-        m_creditsAmounts.m_animationDelay = delay;
+        m_creditsAmounts.InvalidateAmount();
         m_creditsAmounts.SetOpacity(0);
-        m_creditsAmounts.Show();
+        m_creditsAmounts.m_animationDuration = 0.2f;
+        m_creditsAmounts.Show(delay);
     }
 
     public void DismissCreditsAmount()
     {
         m_creditsAmounts.Dismiss();
-        StartCoroutine(m_creditsAmounts.ResetPositionAfterDelay(GameWindowElement.ELEMENT_ANIMATION_DURATION));
-        StartCoroutine(m_creditsAmounts.DeactivateAfterDelay(GameWindowElement.ELEMENT_ANIMATION_DURATION));
+        StartCoroutine(m_creditsAmounts.ResetPositionAfterDelay(GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
+        StartCoroutine(m_creditsAmounts.DeactivateAfterDelay(GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
     }
     
     public void InvalidateCreditsAmount(int newAmount)

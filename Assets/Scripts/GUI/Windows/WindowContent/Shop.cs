@@ -17,12 +17,12 @@ public class Shop : GameWindowContent
         return base.Show(timeSpacing);
     }
 
-    public override IEnumerator Dismiss(bool bDestroy = false, float timeSpacing = 0.032F)
+    public override IEnumerator Dismiss(float timeSpacing = 0.032F)
     {
         GameWindow parentWindow = this.transform.parent.GetComponent<GameWindow>();
         if (parentWindow is MainPageMenu)
             parentWindow.DismissCreditsAmount();
-        return base.Dismiss(bDestroy, timeSpacing);
+        return base.Dismiss(timeSpacing);
     }
 
     public void OnClickBuyOption1()

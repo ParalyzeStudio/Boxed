@@ -194,6 +194,17 @@ public class LevelManager : MonoBehaviour
     }
 
     /**
+    * Called when the player performs a manual reset on the game
+    **/
+    public void OnGameReset()
+    {
+        for (int i = 0; i != m_cachedLevelData.Length; i++)
+        {
+            m_cachedLevelData[i].Reset();
+        }
+    }
+
+    /**
     * Return all levels save on disk through a list of Level objects
     **/
     public List<Level> GetAllEditedLevelsFromDisk()
@@ -270,12 +281,14 @@ public class LevelManager : MonoBehaviour
 
         //Destroy old data if any
         string levelDataPath = Application.persistentDataPath + "/LevelData";
-        string[] files = Directory.GetFiles(levelDataPath);
+        Directory.Delete(levelDataPath);
+        Directory.CreateDirectory(levelDataPath);
+        //string[] files = Directory.GetFiles(levelDataPath);
 
-        foreach (string file in files)
-        {
-            File.Delete(file);
-        }
+        //foreach (string file in files)
+        //{
+        //    File.Delete(file);
+        //}
 
         //create new one
         for (int i = 0; i != levelsCount; i++)
