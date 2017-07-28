@@ -54,7 +54,7 @@ public class PolygonEmitter : MonoBehaviour
         poly.gameObject.SetActive(true);
         poly.gameObject.SetActive(true);
         poly.transform.SetParent(this.transform, false);
-        GUIImageAnimator animator = poly.GetComponent<GUIImageAnimator>();
+        GUIElementAnimator animator = poly.GetComponent<GUIElementAnimator>();
         animator.SetScale(m_startScale * Vector3.one);
         animator.FadeTo(0.0f, m_lifespan);
         animator.ScaleTo(m_endScale * Vector3.one, m_lifespan, 0, ValueAnimator.InterpolationType.LINEAR, true); //delete the polygon when animation ends

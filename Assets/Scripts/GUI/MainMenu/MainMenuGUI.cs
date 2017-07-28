@@ -9,12 +9,12 @@ public class MainMenuGUI : BaseGUI
     private const float MENU_BUTTON_SHOW_DELAY = 1.5f;
     private const float TOUCH_TO_PLAY_SHOW_DELAY = 1.5f;
 
-    public GUIImageAnimator m_menuBtnAnimator;
+    public GUIElementAnimator m_menuBtnAnimator;
     public MainPageMenu m_menuPfb;
     public MainPageMenu m_menu { get; set; }
 
     public Button m_playBtn;
-    public GUIImageAnimator m_fingerIconAnimator;
+    public GUIElementAnimator m_fingerIconAnimator;
     public GUITextAnimator m_touchToPlayAnimator;
 
     public PolygonEmitter m_circleEmitter;
@@ -59,7 +59,7 @@ public class MainMenuGUI : BaseGUI
         //m_confirmResetWindowVisible = false;
 
         //Translate down and fade in title
-        GUIImageAnimator titleAnimator = m_title.GetComponent<GUIImageAnimator>();
+        GUIElementAnimator titleAnimator = m_title.GetComponent<GUIElementAnimator>();
         titleAnimator.SyncPositionFromTransform();
         titleAnimator.SetPosition(titleAnimator.GetPosition() + new Vector3(0, 50, 0));
         titleAnimator.TranslateBy(new Vector3(0, -50, 0), 0.75f, TITLE_SHOW_DELAY);
@@ -126,7 +126,7 @@ public class MainMenuGUI : BaseGUI
             return;
 
         //Translate up and fade out title
-        GUIImageAnimator titleAnimator = m_title.GetComponent<GUIImageAnimator>();
+        GUIElementAnimator titleAnimator = m_title.GetComponent<GUIElementAnimator>();
         titleAnimator.TranslateBy(new Vector3(0, 50, 0), 0.75f, 0);
         titleAnimator.FadeTo(0.0f, 1.0f, 0, ValueAnimator.InterpolationType.LINEAR, true);
 

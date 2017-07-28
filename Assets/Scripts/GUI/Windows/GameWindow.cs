@@ -147,10 +147,10 @@ public class GameWindow : MonoBehaviour
         m_backBtn.GetComponent<Button>().interactable = false;
 
         //tmp, visual debug
-        Image arrow = m_backBtn.GetComponentsInChildren<Image>()[1];
-        arrow.color = ColorUtils.FadeColor(arrow.color, 0.3f);
-        Text backText = m_backBtn.GetComponentInChildren<Text>();
-        backText.color = ColorUtils.FadeColor(backText.color, 0.3f);
+        //Image arrow = m_backBtn.GetComponentsInChildren<Image>()[1];
+        //arrow.color = ColorUtils.FadeColor(arrow.color, 0.3f);
+        //Text backText = m_backBtn.GetComponentInChildren<Text>();
+        //backText.color = ColorUtils.FadeColor(backText.color, 0.3f);
     }
 
     public void EnableBackButton()
@@ -158,10 +158,10 @@ public class GameWindow : MonoBehaviour
         m_backBtn.GetComponent<Button>().interactable = true;
 
         //tmp, visual debug
-        Image arrow = m_backBtn.GetComponentsInChildren<Image>()[1];
-        arrow.color = ColorUtils.FadeColor(arrow.color, 1.0f);
-        Text backText = m_backBtn.GetComponentInChildren<Text>();
-        backText.color = ColorUtils.FadeColor(backText.color, 1.0f);
+        //Image arrow = m_backBtn.GetComponentsInChildren<Image>()[1];
+        //arrow.color = ColorUtils.FadeColor(arrow.color, 1.0f);
+        //Text backText = m_backBtn.GetComponentInChildren<Text>();
+        //backText.color = ColorUtils.FadeColor(backText.color, 1.0f);
     }
 
     public void ShowCreditsAmount(float delay = 0.0f)

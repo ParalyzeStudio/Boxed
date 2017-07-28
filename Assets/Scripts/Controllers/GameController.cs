@@ -103,8 +103,6 @@ public class GameController : MonoBehaviour
         if (delay > 0)
             yield return new WaitForSeconds(delay);
 
-        Debug.Log(">>>>StartMainMenu");
-
         m_gameMode = GameMode.MAIN_MENU;
         GetGUIManager().RebuildGUI();
     }

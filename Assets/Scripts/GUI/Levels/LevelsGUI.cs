@@ -9,6 +9,8 @@ public class LevelsGUI : BaseGUI
 
     private const float SLOTS_HORIZONTAL_SPACING = 50;
     private const float SLOTS_VERTICAL_SPACING = 100;
+    private const float SLOT_ANIMATION_DURATION = 0.3f;
+    private const float SLOT_ANIMATION_SPACING = 0.04f;
 
     public GameObject[] m_lines;
     public Text m_levelSlotNumberPfb;
@@ -16,7 +18,8 @@ public class LevelsGUI : BaseGUI
 
     private LevelSlot[] m_slots;
 
-    public Button m_backBtn;
+    public GUIElementAnimator m_backBtn;
+    public GUIElementAnimator m_chapterSelection;
 
     public Text m_chapterNumberText;
     public Button m_prevChapterBtn;
@@ -25,8 +28,6 @@ public class LevelsGUI : BaseGUI
     //chapter lock
     public ChapterLock m_chapterLockPfb;
     private ChapterLock m_chapterLock;
-
-    private PersistentDataManager m_persistentDataManager;
     
     public override void Show()
     {
@@ -36,12 +37,18 @@ public class LevelsGUI : BaseGUI
         StartCoroutine(BuildSlots());
 
         //back button
-        GUIImageAnimator backButtonAnimator = m_backBtn.GetComponent<GUIImageAnimator>();
-        backButtonAnimator.SyncPositionFromTransform();
-        backButtonAnimator.SetPosition(backButtonAnimator.GetPosition() - new Vector3(150, 0, 0));
-        backButtonAnimator.TranslateBy(new Vector3(150, 0, 0), 0.3f);
-        backButtonAnimator.SetOpacity(0);
-        backButtonAnimator.FadeTo(1.0f, 0.5f);
+        m_backBtn.SyncPositionFromTransform();
+        m_backBtn.SetPosition(m_backBtn.GetPosition() - new Vector3(150, 0, 0));
+        m_backBtn.TranslateBy(new Vector3(150, 0, 0), 0.4f);
+        m_backBtn.SetOpacity(0);
+        m_backBtn.FadeTo(1.0f, 0.5f);
+
+        //animate also the chapter selection block
+        m_chapterSelection.SyncPositionFromTransform();
+        m_chapterSelection.SetPosition(m_chapterSelection.GetPosition() - new Vector3(0, 200, 0));
+        m_chapterSelection.TranslateBy(new Vector3(0, 200, 0), 0.5f);
+        m_chapterSelection.SetOpacity(0);
+        m_chapterSelection.FadeTo(1.0f, 0.5f);
 
         //lock
         ShowOrHideLock();
@@ -56,19 +63,14 @@ public class LevelsGUI : BaseGUI
         {
             m_slots[i] = Instantiate(m_levelSlotPfb);
             m_slots[i].Init(this, i);
-            GUIImageAnimator slotAnimator = m_slots[i].GetComponent<GUIImageAnimator>();
+            GUIElementAnimator slotAnimator = m_slots[i].GetComponent<GUIElementAnimator>();
             slotAnimator.SetScale(Vector3.zero);
             slotAnimator.SetOpacity(0);
             m_slots[i].transform.SetParent(m_lines[i / numSlotsPerLine].transform, false);
             yield return new WaitForEndOfFrame(); //build only one slot per frame to avoid small lagging
         }
 
-        OnFinishBuildingSlots();
-    }
-
-    private void OnFinishBuildingSlots()
-    {
-        StartCoroutine(ShowSlots());
+        OnSlotsBuilt();
     }
 
     private IEnumerator ShowSlots()
@@ -76,11 +78,13 @@ public class LevelsGUI : BaseGUI
         for (int i = 0; i != NUM_SLOTS; i++)
         {
             //animate every slot by scaling them up with increasing delay
-            GUIImageAnimator slotAnimator = m_slots[i].GetComponent<GUIImageAnimator>();
-            slotAnimator.ScaleTo(Vector3.one, 0.3f);
-            slotAnimator.FadeTo(1.0f, 0.3f);
-            yield return new WaitForSeconds(0.04f);
+            GUIElementAnimator slotAnimator = m_slots[i].GetComponent<GUIElementAnimator>();
+            slotAnimator.ScaleTo(Vector3.one, SLOT_ANIMATION_DURATION);
+            slotAnimator.FadeTo(1.0f, SLOT_ANIMATION_DURATION);
+            yield return new WaitForSeconds(SLOT_ANIMATION_SPACING);
         }
+
+        OnSlotsShown();
     }
 
     private IEnumerator DismissSlots()
@@ -88,11 +92,13 @@ public class LevelsGUI : BaseGUI
         for (int i = 0; i != NUM_SLOTS; i++)
         {
             //animate every slot by scaling them up with increasing delay
-            GUIImageAnimator slotAnimator = m_slots[i].GetComponent<GUIImageAnimator>();
-            slotAnimator.ScaleTo(Vector3.zero, 0.3f);
-            slotAnimator.FadeTo(0, 0.3f);
-            yield return new WaitForSeconds(0.04f);
+            GUIElementAnimator slotAnimator = m_slots[i].GetComponent<GUIElementAnimator>();
+            slotAnimator.ScaleTo(Vector3.zero, SLOT_ANIMATION_DURATION);
+            slotAnimator.FadeTo(0, SLOT_ANIMATION_DURATION);
+            yield return new WaitForSeconds(i == NUM_SLOTS - 1 ? SLOT_ANIMATION_DURATION : SLOT_ANIMATION_SPACING); //on the last loop wait for the last slot animation to finish
         }
+
+        OnSlotsDismissed();
     }
 
     //private Text[] GetSlotNumbers()
@@ -233,13 +239,45 @@ public class LevelsGUI : BaseGUI
     //    }
     //}
 
+
+
+    /**
+    * Callback when slots have been created
+    **/
+    private void OnSlotsBuilt()
+    {
+        StartCoroutine(ShowSlots());
+    }
+
+    /**
+    * Callback when slots entering animation has finished
+    **/
+    private void OnSlotsShown()
+    {
+        
+    }
+
+    /**
+    * Callback when slots exiting animation has finished
+    **/
+    private void OnSlotsDismissed()
+    {
+        StartCoroutine(GameController.GetInstance().StartMainMenu());
+    }
+
     public void OnClickBack()
     {
         GameController.GetInstance().GetPersistentDataManager().SavePrefs();
 
         StartCoroutine(DismissSlots());
 
-        StartCoroutine(GameController.GetInstance().StartMainMenu(0.5f));
+        //back button
+        m_backBtn.TranslateBy(new Vector3(-150, 0, 0), 0.4f);
+        m_backBtn.FadeTo(0.0f, 0.5f);
+
+        //chapter selection
+        m_chapterSelection.TranslateBy(new Vector3(0, -200, 0), 0.5f);
+        m_chapterSelection.FadeTo(0.0f, 0.5f);
     }
 
     public void OnClickPreviousChapter()

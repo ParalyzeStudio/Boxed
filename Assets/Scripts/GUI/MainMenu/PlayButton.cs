@@ -13,7 +13,7 @@ public class PlayButton : MonoBehaviour
     public void Show(float delay)
     {
         //fade in the base polygon before emitting new ones
-        GUIImageAnimator basePolygonAnimator = m_polygonEmitter.GetComponent<GUIImageAnimator>();
+        GUIElementAnimator basePolygonAnimator = m_polygonEmitter.GetComponent<GUIElementAnimator>();
         basePolygonAnimator.SetOpacity(0);
         basePolygonAnimator.FadeTo(1.0f, BASE_POLYGON_FADEIN_DURATION, delay);
 
@@ -32,7 +32,7 @@ public class PlayButton : MonoBehaviour
         m_polygonEmitter.m_active = false;
 
         //fade out the base polygon before emitting new ones
-        GUIImageAnimator basePolygonAnimator = m_polygonEmitter.GetComponent<GUIImageAnimator>();
+        GUIElementAnimator basePolygonAnimator = m_polygonEmitter.GetComponent<GUIElementAnimator>();
         basePolygonAnimator.FadeTo(0.0f, BASE_POLYGON_FADEIN_DURATION, 0, ValueAnimator.InterpolationType.LINEAR, true);
     }
 

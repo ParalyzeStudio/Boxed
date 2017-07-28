@@ -25,7 +25,7 @@ public class InterLevelScreen : MonoBehaviour
     private GameController.GameStatus m_gameStatus; //the game status associated to the display of this screen
     private bool m_showingResults; //in case of victory, are we displaying the first part with game results
 
-    private GUIImageAnimator m_animator;
+    private GUIElementAnimator m_animator;
 
     private const float ANIMATION_DURATION = 1.5f; //fixed duration of the entering/leaving animations
 
@@ -234,10 +234,10 @@ public class InterLevelScreen : MonoBehaviour
         m_touchToContinueText.gameObject.SetActive(true);
     }
 
-    private GUIImageAnimator GetAnimator()
+    private GUIElementAnimator GetAnimator()
     {
         if (m_animator == null)
-            m_animator = this.GetComponent<GUIImageAnimator>();
+            m_animator = this.GetComponent<GUIElementAnimator>();
 
         return m_animator;
     }

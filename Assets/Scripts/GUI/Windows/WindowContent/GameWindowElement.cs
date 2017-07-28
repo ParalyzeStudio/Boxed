@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(GUIImageAnimator))]
+[RequireComponent(typeof(GUIElementAnimator))]
 public class GameWindowElement : CanvasGroupFade
 {
     public float m_animationDuration = DEFAULT_ELEMENT_ANIMATION_DURATION;
@@ -27,7 +27,7 @@ public class GameWindowElement : CanvasGroupFade
     public virtual void Dismiss(float delay = 0.0f)
     {
         //translate the button
-        GUIImageAnimator elementAnimator = GetComponent<GUIImageAnimator>();
+        GUIElementAnimator elementAnimator = GetComponent<GUIElementAnimator>();
         elementAnimator.SyncPositionFromTransform();
         elementAnimator.TranslateBy(new Vector3(0, DEFAULT_ELEMENT_TRANSLATION_LENGTH, 0), m_animationDuration, delay);
 
@@ -60,7 +60,7 @@ public class GameWindowElement : CanvasGroupFade
         if (delay > 0)
             yield return new WaitForSeconds(delay);
 
-        GUIImageAnimator elementAnimator = GetComponent<GUIImageAnimator>();
+        GUIElementAnimator elementAnimator = GetComponent<GUIElementAnimator>();
         elementAnimator.SyncPositionFromTransform();
         elementAnimator.SetPosition(elementAnimator.GetPosition() - new Vector3(0, DEFAULT_ELEMENT_TRANSLATION_LENGTH, 0));
     }

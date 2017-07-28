@@ -43,7 +43,7 @@ public class PauseMenu : GameWindow
     public void ShowDarkBackground()
     {
         //fade in dark background
-        GUIImageAnimator backgroundAnimator = m_darkFullScreenBackground.GetComponent<GUIImageAnimator>();
+        GUIElementAnimator backgroundAnimator = m_darkFullScreenBackground.GetComponent<GUIElementAnimator>();
         backgroundAnimator.gameObject.SetActive(true);
         backgroundAnimator.SetOpacity(0);
         backgroundAnimator.FadeTo(0.75f, 0.3f);
@@ -51,7 +51,7 @@ public class PauseMenu : GameWindow
 
     public void DismissDarkBackground()
     {
-        GUIImageAnimator backgroundAnimator = m_darkFullScreenBackground.GetComponent<GUIImageAnimator>();
+        GUIElementAnimator backgroundAnimator = m_darkFullScreenBackground.GetComponent<GUIElementAnimator>();
         backgroundAnimator.FadeTo(0, 0.3f);
         StartCoroutine(DeactivateBackgroundAfterDelay(0.3f));
     }
