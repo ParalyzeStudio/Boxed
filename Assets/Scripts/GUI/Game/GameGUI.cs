@@ -197,7 +197,7 @@ public class GameGUI : BaseGUI
         {
             PauseMenu pauseMenu = Instantiate(m_pauseMenuPfb);
             pauseMenu.transform.SetParent(GameController.GetInstance().GetGUIManager().m_canvas.transform, false);
-            pauseMenu.Show(pauseMenu.m_mainWindowContent, true);
+            pauseMenu.Show();
 
             GameController.GetInstance().m_gameStatus = GameController.GameStatus.PAUSED;
         }

@@ -6,7 +6,7 @@ public class InterLevelWindow : GameWindow
     public LevelVictory m_levelVictory;
     public LevelDefeat m_levelDefeat;
 
-    public bool Show(GameController.GameStatus gameStatus)
+    public bool ShowForStatus(GameController.GameStatus gameStatus)
     {
         GameWindowContent content;
         //select the right content for the parameter 'gameStatus'
@@ -33,7 +33,7 @@ public class InterLevelWindow : GameWindow
         m_backgroundTopColor = currentTheme.m_backgroundGradientTopColor;
         m_backgroundBottomColor = currentTheme.m_backgroundGradientBottomColor;
 
-        return base.Show(content, false);
+        return base.ShowContent(content);
     }
 
     public void TransitionFromVictoryToIntroContent()

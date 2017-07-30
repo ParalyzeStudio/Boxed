@@ -178,7 +178,7 @@ public class ThemeManager : MonoBehaviour
     **/
     public Theme GetSelectedTheme()
     {
-        return m_themes[GetPersistentDataManager().GetCurrentChapterIndex()];
+        return m_themes[GameController.GetInstance().GetPersistentDataManager().GetCurrentChapterIndex()];
     }
 
     public Theme GetThemeForNumber(int number)
@@ -235,14 +235,6 @@ public class ThemeManager : MonoBehaviour
         }
     }
 
-    private PersistentDataManager GetPersistentDataManager()
-    {
-        if (m_persistentDataManager == null)
-            m_persistentDataManager = GameController.GetInstance().GetComponent<PersistentDataManager>();
-
-        return m_persistentDataManager;
-    }
-
     /**
     * Callback from the custom inspector save button
     **/
@@ -280,7 +272,7 @@ public class ThemeManager : MonoBehaviour
 
     public void Update()
     {
-        //if (GetSelectedTheme().ParametersAreDirty())
-        //    InvalidateSelectedTheme();
+        if (GetSelectedTheme().ParametersAreDirty())
+            InvalidateSelectedTheme();
     }
 }

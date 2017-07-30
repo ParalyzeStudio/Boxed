@@ -229,7 +229,7 @@ public class GUIManager : MonoBehaviour
 
         m_interLevelWindow.transform.SetAsLastSibling();
         m_interLevelWindow.transform.SetParent(m_canvas.transform, false);               
-        m_interLevelWindow.Show(gameStatus);
+        m_interLevelWindow.ShowForStatus(gameStatus);
     }
 
     //public void DismissInterLevelScreen()

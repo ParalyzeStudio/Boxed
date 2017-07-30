@@ -28,19 +28,17 @@ public class GameWindow : MonoBehaviour
         m_state = State.DISMISSED;
     }
 
-    public virtual bool Show(GameWindowContent content, bool bHasBackButton = true)
+    public virtual bool Show()
+    {
+        return false;
+    }
+
+    protected virtual bool ShowContent(GameWindowContent content)
     {
         if (m_state == State.ENTERING || m_state == State.LEAVING)
             return false;
 
         m_state = State.ENTERING;
-        
-        //display back button
-        if (bHasBackButton)
-            ShowBackButton(BACKGROUND_FADE_DURATION);
-
-        //always display credits amount
-        ShowCreditsAmount(BACKGROUND_FADE_DURATION);
 
         //fade out the GUI canvas group
         CanvasGroupFade GUICanvasGroupAnimator = (GameController.GetInstance().GetGUIManager().m_currentGUI).GetComponent<CanvasGroupFade>();
@@ -175,9 +173,12 @@ public class GameWindow : MonoBehaviour
 
     public void DismissCreditsAmount()
     {
-        m_creditsAmounts.Dismiss();
-        StartCoroutine(m_creditsAmounts.ResetPositionAfterDelay(GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
-        StartCoroutine(m_creditsAmounts.DeactivateAfterDelay(GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
+        if (m_creditsAmounts != null)
+        {
+            m_creditsAmounts.Dismiss();
+            StartCoroutine(m_creditsAmounts.ResetPositionAfterDelay(GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
+            StartCoroutine(m_creditsAmounts.DeactivateAfterDelay(GameWindowElement.DEFAULT_ELEMENT_ANIMATION_DURATION));
+        }
     }
     
     public void InvalidateCreditsAmount(int newAmount)

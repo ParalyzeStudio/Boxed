@@ -25,9 +25,12 @@ public class GUIElementAnimator : ValueAnimator
     public override void OnOpacityChanged()
     {
         Image image = GetImageComponent();
-        Color color = image.color;
-        color.a = m_opacity;
-        image.color = color;
+        if (image != null)
+        { 
+            Color color = image.color;
+            color.a = m_opacity;
+            image.color = color;
+        }
     }
 
     private Image GetImageComponent()

@@ -16,9 +16,9 @@ public class PauseMenu : GameWindow
     public SolutionReveal m_solutionRevealPfb;
     public SolutionConfirmPurchase m_solutionConfirmPurchasePfb;
 
-    public override bool Show(GameWindowContent content, bool bHasBackButton = true)
+    public override bool Show()
     {
-        if (base.Show(content, true))
+        if (base.ShowContent(m_mainWindowContent))
         {
             ShowCreditsAmount(BACKGROUND_FADE_DURATION);
 

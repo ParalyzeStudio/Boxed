@@ -30,9 +30,14 @@ public class MainPageMenu : GameWindow
         RESET_DONE
     }
 
-    public bool Show()
+    public override bool Show()
     {
-        return base.Show(m_mainContent, true);
+        if (!base.ShowContent(m_mainContent))
+            return false;
+
+        ShowBackButton(BACKGROUND_FADE_DURATION);
+        ShowCreditsAmount(BACKGROUND_FADE_DURATION);
+        return true;
     }
 
     public void OnClickShop()
