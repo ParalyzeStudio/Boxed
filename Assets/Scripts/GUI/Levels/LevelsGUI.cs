@@ -80,7 +80,6 @@ public class LevelsGUI : BaseGUI
             //animate every slot by scaling them up with increasing delay
             GUIElementAnimator slotAnimator = m_slots[i].GetComponent<GUIElementAnimator>();
             slotAnimator.ScaleTo(Vector3.one, SLOT_ANIMATION_DURATION);
-            slotAnimator.FadeTo(1.0f, SLOT_ANIMATION_DURATION);
             yield return new WaitForSeconds(SLOT_ANIMATION_SPACING);
         }
 
@@ -329,6 +328,12 @@ public class LevelsGUI : BaseGUI
             guiManager.m_overlay.m_topColor = overlayTopColor;
             guiManager.m_overlay.m_bottomColor = overlayBottomColor;
             guiManager.m_overlay.InvalidateColors();
+        }
+
+        //slots
+        for (int i = 0; i != m_slots.Length; i++)
+        {
+            m_slots[i].InvalidateSprite();
         }
 
         //show lock window if necessary

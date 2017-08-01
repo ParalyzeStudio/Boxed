@@ -12,12 +12,22 @@ public class LevelSlot : MonoBehaviour
 
     private bool m_interactable;
 
+    //two icons for fade animation
+    public Image m_icon1;
+    public Image m_icon2;
+    private int m_currentIcon; //which one of the two icons is currently active (1 or 2 or 0 if no icon has been set yet as current)
+    public Sprite[] m_textures;
+
     public void Init(LevelsGUI parentGUI, int index)
     {
         m_parentGUI = parentGUI;
         m_index = index;
 
         InvalidateLevel();
+
+        //set correct texture for chapter index
+        m_currentIcon = 0; //no icon at start
+        InvalidateSprite();
     }
 
     public void InvalidateLevel()
@@ -29,6 +39,51 @@ public class LevelSlot : MonoBehaviour
 
         m_levelNumberText.text = localLevelNumber.ToString();
         Invalidate();
+    }
+
+    public void InvalidateSprite()
+    {
+        int chapterIndex = GameController.GetInstance().GetPersistentDataManager().GetCurrentChapterIndex();
+        Sprite updatedSprite = m_textures[chapterIndex];
+        
+        //fade animation to new icon texture
+        if (m_currentIcon == 0)
+        {
+            m_currentIcon = 1;
+            m_icon1.sprite = updatedSprite;
+
+            GUIElementAnimator currentIconAnimator = m_icon1.GetComponent<GUIElementAnimator>();
+            currentIconAnimator.SetOpacity(0);
+            currentIconAnimator.FadeTo(1.0f, 0.5f);
+
+            m_icon2.GetComponent<GUIElementAnimator>().SetOpacity(0);
+        }
+        else if (m_currentIcon == 1)
+        {
+            m_icon2.sprite = updatedSprite;
+
+            GUIElementAnimator currentIconAnimator = m_icon1.GetComponent<GUIElementAnimator>();
+            currentIconAnimator.FadeTo(0.0f, 0.5f);
+
+            GUIElementAnimator icon2Animator = m_icon2.GetComponent<GUIElementAnimator>();
+            icon2Animator.SetOpacity(0);
+            icon2Animator.FadeTo(1.0f, 0.5f);
+
+            m_currentIcon = 2;
+        }
+        else
+        {
+            m_icon1.sprite = updatedSprite;
+
+            GUIElementAnimator currentIconAnimator = m_icon2.GetComponent<GUIElementAnimator>();
+            currentIconAnimator.FadeTo(0.0f, 0.5f);
+
+            GUIElementAnimator icon1Animator = m_icon1.GetComponent<GUIElementAnimator>();
+            icon1Animator.SetOpacity(0);
+            icon1Animator.FadeTo(1.0f, 0.5f);
+
+            m_currentIcon = 1;
+        }
     }
 
     private void Disable(bool bNullLevel)

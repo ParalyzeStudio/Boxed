@@ -26,7 +26,7 @@ public class GUIElementAnimator : ValueAnimator
     {
         Image image = GetImageComponent();
         if (image != null)
-        { 
+        {
             Color color = image.color;
             color.a = m_opacity;
             image.color = color;
